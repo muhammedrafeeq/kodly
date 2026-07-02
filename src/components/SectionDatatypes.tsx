@@ -2,16 +2,20 @@
 
 import React, { useState } from "react";
 import TypeChef from "./TypeChef";
+import RamTetris from "./RamTetris";
+import ByteSniper from "./ByteSniper";
 
 interface SectionDatatypesProps {
   onComplete: (xpAward: number) => void;
 }
 
 export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) {
-  // Sub-step: 0 = Types & Specifiers, 1 = Byte Sniper Game
+  // Sub-step: 0 = Basic Types, 1 = Type Chef, 2 = RAM Tetris, 3 = Byte Sniper
   const [subStep, setSubStep] = useState<number>(0);
 
   const [chefCompleted, setChefCompleted] = useState<boolean>(false);
+  const [ramTetrisCompleted, setRamTetrisCompleted] = useState<boolean>(false);
+  const [byteSniperCompleted, setByteSniperCompleted] = useState<boolean>(false);
 
   // Sub-step 0: Active type inspect
   const [selectedType, setSelectedType] = useState<"int" | "float" | "char" | "double">("int");
@@ -29,14 +33,14 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
     <div className="space-y-6">
       
       {/* Sub-step selector */}
-      <div className="flex justify-between items-center bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
+      <div className="flex flex-wrap gap-2 justify-between items-center bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
         <button
           onClick={() => setSubStep(0)}
           className={`px-3 py-1.5 rounded transition-all cursor-pointer ${
             subStep === 0 ? "bg-secondary text-on-secondary font-bold" : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          1. Basic Types
+          1. Shape Sorters 🟢
         </button>
         <button
           onClick={() => setSubStep(1)}
@@ -45,6 +49,24 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
           }`}
         >
           2. Type Chef 🍳
+        </button>
+        <button
+          disabled={!chefCompleted}
+          onClick={() => setSubStep(2)}
+          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
+            subStep === 2 ? "bg-secondary text-on-secondary font-bold" : "text-on-surface-variant hover:text-on-surface"
+          }`}
+        >
+          3. RAM Tetris 🧱
+        </button>
+        <button
+          disabled={!ramTetrisCompleted}
+          onClick={() => setSubStep(3)}
+          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
+            subStep === 3 ? "bg-secondary text-on-secondary font-bold" : "text-on-surface-variant hover:text-on-surface"
+          }`}
+        >
+          4. Byte Sniper 🎯
         </button>
       </div>
 
@@ -55,14 +77,14 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
           <section className="glass-panel p-4 rounded-xl space-y-2">
             <h3 className="text-sm font-bold text-secondary flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[18px]">category</span>
-              Why Datatypes Exist
+              Why Datatypes Exist: Shape Sorters 🟢
             </h3>
             <p className="text-body-md text-on-surface-variant leading-relaxed">
-              Computers store different types of data differently. A **datatype** tells the computer what kind of value is being stored, what **shape** of container to allocate in RAM, and how much memory space (measured in **Bytes**) to reserve.
+              Computers store different types of data in different shapes. A **datatype** tells the computer what kind of value is being stored, what **shape** of container to build in RAM, and how many spaces (measured in **Bytes**) to reserve.
             </p>
             <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-xs text-on-surface-variant/90 leading-relaxed font-sans">
               <span className="text-secondary font-bold font-mono">What is a Byte?</span>
-              <br />A **Byte** is a unit of digital storage space. Think of it like locker shelves. A larger variable type (like a decimal) requires more shelves (bytes) to store than a small type (like a single letter).
+              <br />A **Byte** is a unit of storage space. Think of it like **space slots** in a toy box. Some toys are small and take only 1 slot (like a single sticker), while other toys are big and need 4 or 8 slots (like numbers)!
             </div>
           </section>
 
@@ -79,7 +101,7 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                     : "bg-surface-container-high border-white/5 text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                <span>int (4 Bytes)</span>
+                <span>int (4 space slots)</span>
                 <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">%d</span>
               </button>
               <button
@@ -90,7 +112,7 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                     : "bg-surface-container-high border-white/5 text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                <span>float (4 Bytes)</span>
+                <span>float (4 space slots)</span>
                 <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">%f</span>
               </button>
               <button
@@ -101,7 +123,7 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                     : "bg-surface-container-high border-white/5 text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                <span>char (1 Byte)</span>
+                <span>char (1 space slot)</span>
                 <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">%c</span>
               </button>
               <button
@@ -112,7 +134,7 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                     : "bg-surface-container-high border-white/5 text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                <span>double (8 Bytes)</span>
+                <span>double (8 space slots)</span>
                 <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">%lf</span>
               </button>
             </div>
@@ -129,10 +151,10 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                   <div className="space-y-2">
                     <h4 className="text-sm font-bold text-primary font-mono">int — Integer</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Used to store **whole numbers** (positive or negative) without any decimals (e.g. `25`, `-10`). Consumes 4 bytes of storage.
+                      Used to store **whole numbers** (like whole apples, positive or negative, e.g. `25`, `-10`). No half-eaten pieces allowed! Takes up **4 space slots** (4 Bytes) in memory.
                     </p>
                     <div className="text-xs font-mono bg-white/5 p-2 rounded space-y-1">
-                      <div><span className="text-on-surface-variant">Declaration:</span> <code className="text-primary-fixed-dim">int age;</code></div>
+                      <div><span className="text-on-surface-variant">Declaration:</span> <code className="text-primary-fixed-dim">int score;</code></div>
                       <div><span className="text-on-surface-variant">Placeholder:</span> <code className="text-secondary font-bold">%d</code> (decimal integer)</div>
                     </div>
                   </div>
@@ -142,7 +164,7 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                   <div className="space-y-2">
                     <h4 className="text-sm font-bold text-primary font-mono">float — Floating Point</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Used to store **decimal numbers** (e.g. `3.14`, `-0.05`). Consumes 4 bytes of storage.
+                      Used to store **decimal numbers** (like half-eaten cookies or cups of milk, e.g. `3.14`, `-0.05`). Takes up **4 space slots** (4 Bytes) in memory.
                     </p>
                     <div className="text-xs font-mono bg-white/5 p-2 rounded space-y-1">
                       <div><span className="text-on-surface-variant">Declaration:</span> <code className="text-primary-fixed-dim">float price;</code></div>
@@ -155,7 +177,7 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                   <div className="space-y-2">
                     <h4 className="text-sm font-bold text-primary font-mono">char — Character</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Holds a **single letter, number, or symbol** (e.g. <code>&apos;A&apos;</code>, <code>&apos;$&apos;</code>) enclosed in single quotes. Consumes 1 byte of memory. Under the hood, C maps characters to integers using a translator system called the **ASCII Table**!
+                      Holds a **single character sticker** (like `'A'` or `'$'`) inside single quotes. Takes up exactly **1 space slot** (1 Byte) in memory. Under the hood, the computer maps letters to numbers using a translator guide called the **ASCII Table**!
                     </p>
                     <div className="text-xs font-mono bg-white/5 p-2 rounded space-y-1">
                       <div><span className="text-on-surface-variant">Declaration:</span> <code className="text-primary-fixed-dim">char grade;</code></div>
@@ -168,7 +190,7 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
                   <div className="space-y-2">
                     <h4 className="text-sm font-bold text-primary font-mono">double — Double Precision</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      A **larger, more precise float**. It occupies 8 bytes of storage, allowing you to store massive decimal fractions with twice as many digits of accuracy.
+                      A **larger, super-precise decimal box** (like a massive bucket of water). It takes up **8 space slots** (8 Bytes) in memory, allowing you to store huge decimal numbers with extra accuracy!
                     </p>
                     <div className="text-xs font-mono bg-white/5 p-2 rounded space-y-1">
                       <div><span className="text-on-surface-variant">Declaration:</span> <code className="text-primary-fixed-dim">double ratio;</code></div>
@@ -200,8 +222,47 @@ export default function SectionDatatypes({ onComplete }: SectionDatatypesProps) 
           
           <TypeChef onComplete={() => setChefCompleted(true)} />
 
-          {/* Section Submit Action */}
           {chefCompleted && (
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setSubStep(2)}
+                className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
+              >
+                NEXT: RAM TETRIS 🧱
+              </button>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* SUB-STEP 3: RAM TETRIS */}
+      {subStep === 2 && (
+        <div className="space-y-6 animate-fadeIn text-left">
+          
+          <RamTetris onComplete={() => setRamTetrisCompleted(true)} />
+
+          {ramTetrisCompleted && (
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setSubStep(3)}
+                className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
+              >
+                NEXT: BYTE SNIPER 🎯
+              </button>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* SUB-STEP 4: BYTE SNIPER */}
+      {subStep === 3 && (
+        <div className="space-y-6 animate-fadeIn text-left">
+          
+          <ByteSniper onComplete={() => setByteSniperCompleted(true)} />
+
+          {byteSniperCompleted && (
             <div className="flex justify-end pt-2">
               <button
                 disabled={hasCompleted}

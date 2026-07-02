@@ -343,7 +343,7 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
                 Arithmetic Operators: +, -, *, /, %
               </h3>
               <p className="text-body-md text-on-surface-variant leading-relaxed">
-                C performs basic mathematical calculations using operators.
+                C performs basic mathematical calculations using operators, just like you do in school!
               </p>
             </div>
 
@@ -351,23 +351,23 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-white/10">
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">+</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Addition:</strong> adds two values.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Addition:</strong> Adds toys to a pile!</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">-</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Subtraction:</strong> subtracts right from left.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Subtraction:</strong> Takes toys away from the pile.</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">*</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Multiplication:</strong> multiplies values.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Multiplication:</strong> Clones toys into multiple piles!</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left col-span-1">
                 <div className="text-primary font-bold text-xs mb-0.5">/</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Division:</strong> cuts fractions on integers (5/2 = 2).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Division:</strong> Shares toys equally, throwing away any leftovers! (5/2 = 2).</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left col-span-2 sm:col-span-1">
                 <div className="text-secondary font-bold text-xs mb-0.5">%</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Modulus:</strong> gets the leftover remainder (5%2 = 1).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Modulus:</strong> Finds the leftover candy that cannot be shared equally! (5%2 = 1).</div>
               </div>
             </div>
           </section>
@@ -468,7 +468,7 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
                 Assignment Operators: =, +=, -=, *=, /=, %=
               </h3>
               <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Compound assignment operators are <strong>shorthand</strong>. Instead of writing <code className="text-secondary font-mono">x = x + 5</code>, C lets you write <code className="text-primary font-mono font-bold">x += 5</code>. Same result, less typing!
+                Assignment operators are **shorthand machines** to update the toy box value! Instead of writing <code className="text-secondary font-mono">x = x + 5</code>, C lets you write <code className="text-primary font-mono font-bold">x += 5</code>. Same result, less typing!
               </p>
             </div>
 
@@ -476,27 +476,27 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Assignment:</strong> assigns right side value directly to variable.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Assignment:</strong> Drops a new toy directly into the toy box.</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">+=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Add-Assign:</strong> adds right value to variable (x = x + y).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Add-Assign:</strong> Adds toys to the box (x = x + y).</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">-=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Sub-Assign:</strong> subtracts right value from variable (x = x - y).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Sub-Assign:</strong> Takes toys away from the box (x = x - y).</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">*=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Mul-Assign:</strong> multiplies variable by right value (x = x * y).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Mul-Assign:</strong> Clones the toys inside the box (x = x * y).</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">/=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Div-Assign:</strong> divides variable by right value (x = x / y).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Div-Assign:</strong> Shares the toys inside the box (x = x / y).</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">%=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Mod-Assign:</strong> saves leftover division remainder to variable (x = x % y).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Mod-Assign:</strong> Puts only the leftover candy inside the box (x = x % y).</div>
               </div>
             </div>
           </section>
@@ -577,10 +577,10 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">exposure_plus_1</span>
-                Increment &amp; Decrement: ++, --
+                Add-One Machine: ++, --
               </h3>
               <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Operators to increase or decrease variable values by exactly 1.
+                Special machines to add or subtract exactly 1 toy from a toy box!
               </p>
             </div>
 
@@ -588,19 +588,19 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-white/10">
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-tertiary font-bold text-xs mb-0.5">x++</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Post-Increment:</strong> uses the current value first, then increments variable.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Post-Increment (Use then Add):</strong> The computer plays with the toy value FIRST, and then adds 1 to the box afterward.</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-tertiary font-bold text-xs mb-0.5">++x</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Pre-Increment:</strong> increments variable first, then uses updated value.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Pre-Increment (Add then Use):</strong> The computer adds 1 to the box FIRST, and then plays with the new value.</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-tertiary font-bold text-xs mb-0.5">x--</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Post-Decrement:</strong> uses the current value first, then decrements variable.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Post-Decrement (Use then Sub):</strong> The computer plays with the toy value FIRST, and then subtracts 1 afterward.</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-tertiary font-bold text-xs mb-0.5">--x</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Pre-Decrement:</strong> decrements variable first, then uses updated value.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Pre-Decrement (Sub then Use):</strong> The computer subtracts 1 FIRST, and then plays with the new value.</div>
               </div>
             </div>
           </section>
@@ -703,10 +703,10 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-primary flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
-                Relational Operators: ==, !=, &lt;, &gt;, &lt;=, &gt;=
+                Truth Detector Gate: ==, !=, &lt;, &gt;, &lt;=, &gt;=
               </h3>
               <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Relational operators <strong>compare two values</strong> and output <code className="text-primary font-mono font-bold">1</code> (representing TRUE) or <code className="text-error font-mono font-bold">0</code> (representing FALSE) in C.
+                Relational operators are **Truth Detector Gates**! They compare two values and output <code className="text-primary font-mono font-bold">1</code> (representing TRUE) or <code className="text-error font-mono font-bold">0</code> (representing FALSE) in C.
               </p>
             </div>
 
@@ -714,27 +714,27 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">==</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Equal to:</strong> checks if both values are equivalent.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Equal to:</strong> checks if both values are exactly equal!</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">!=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Not equal:</strong> checks if both values differ.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Not equal:</strong> checks if both values are different!</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">&lt;</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Less than:</strong> strictly smaller left side.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Less than:</strong> is the left side smaller than the right?</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">&gt;</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Greater than:</strong> strictly larger left side.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Greater than:</strong> is the left side bigger than the right?</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">&lt;=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Less/Equal:</strong> smaller or identical left side.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Less/Equal:</strong> is the left side smaller or identical?</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-primary font-bold text-xs mb-0.5">&gt;=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Greater/Equal:</strong> larger or identical left side.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Greater/Equal:</strong> is the left side bigger or identical?</div>
               </div>
             </div>
           </section>
@@ -844,10 +844,10 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-secondary flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">filter_list</span>
-                Logical Operators: &amp;&amp;, ||, !
+                Logical combination: &amp;&amp;, ||, ! ⚡
               </h3>
               <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Logical operators are used to <strong>combine multiple conditions</strong> or invert true/false states.
+                Logical operators combine multiple condition checks or flip a true/false state around!
               </p>
             </div>
 
@@ -855,15 +855,15 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
               <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">&amp;&amp;</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical AND:</strong> returns TRUE only if <strong>both</strong> conditions are true.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical AND:</strong> Both must be TRUE! E.g. you can enter the play area only if you are age 5 AND have a ticket.</div>
               </div>
               <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">||</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical OR:</strong> returns TRUE if <strong>at least one</strong> condition is true.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical OR:</strong> At least one must be TRUE! E.g. you can enter if you are a student OR have a ticket.</div>
               </div>
               <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-secondary font-bold text-xs mb-0.5">!</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical NOT:</strong> inverts state (turns TRUE to FALSE and vice versa).</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical NOT:</strong> Opposite day! Flips TRUE to FALSE, and FALSE to TRUE.</div>
               </div>
             </div>
           </section>
@@ -990,10 +990,10 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">format_list_numbered</span>
-                Operator Precedence
+                Precedence order: Who is the Boss? 👑
               </h3>
               <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Precedence rules dictate the order in which operators are evaluated inside complex math statements.
+                Precedence rules decide which operator gets evaluated first inside complex math statements.
               </p>
             </div>
 
@@ -1001,15 +1001,15 @@ export default function SectionOperators({ sectionIndex, onComplete }: SectionOp
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-tertiary font-bold text-xs mb-0.5">Priority 1: ( )</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Parentheses:</strong> override standard order and evaluate first.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Parentheses:</strong> The absolute Boss! Whatever is inside parentheses must be solved first.</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-tertiary font-bold text-xs mb-0.5">Priority 2: *, /, %</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Multiplication, Division, Remainder:</strong> evaluate left-to-right next.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Multipliers &amp; Remainder:</strong> Solved next, going from left to right.</div>
               </div>
               <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
                 <div className="text-tertiary font-bold text-xs mb-0.5">Priority 3: +, -</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Addition &amp; Subtraction:</strong> have lowest precedence.</div>
+                <div className="text-on-surface-variant font-sans leading-tight"><strong>Adders &amp; Subtractors:</strong> Solved last of all.</div>
               </div>
             </div>
           </section>

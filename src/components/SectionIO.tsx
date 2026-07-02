@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import FormatChemistry from "./FormatChemistry";
+import RobotSim from "./RobotSim";
 
 interface SectionIOProps {
   onComplete: (xpAward: number) => void;
 }
 
 export default function SectionIO({ onComplete }: SectionIOProps) {
-  // Sub-step: 0 = Printf & Alignment, 1 = Scanf & Address Bug, 2 = Mismatch & Order
+  // Sub-step: 0 = Printf & Alignment, 1 = Scanf & Address Bug, 2 = Specifier Chemistry, 3 = Code-a-Robot
   const [subStep, setSubStep] = useState<number>(0);
 
   // Sub-step 1: Escape sequences demo output
@@ -21,6 +22,7 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
 
   const [chemistryCompleted, setChemistryCompleted] = useState<boolean>(false);
+  const [robotCompleted, setRobotCompleted] = useState<boolean>(false);
 
   // Section completion
   const [hasCompleted, setHasCompleted] = useState<boolean>(false);
@@ -39,7 +41,7 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
       if (hasFixedBug) {
         setDebugLog("Program output: Enter age: 25\nStored age: 25\nProcess exited successfully.");
       } else {
-        setDebugLog("⚠️ SEGMENTATION FAULT (CRASH)!\n\nThis is computer speak for: 'The program crashed because you told me to deliver keyboard inputs, but you forgot to give me the locker's mailing address (&)! I got lost trying to find where to store the number.'");
+        setDebugLog("⚠️ SEGMENTATION FAULT (CRASH)!\n\nThis is computer speak for: 'The program crashed because you told me to deliver keyboard inputs, but you forgot to give me the toy box's mailing address (&)! I got lost trying to find where to store the number.'");
       }
     }, 1000);
   };
@@ -66,14 +68,14 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
     <div className="space-y-6">
       
       {/* Sub-step selector */}
-      <div className="flex justify-between items-center bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
+      <div className="flex flex-wrap gap-2 justify-between items-center bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
         <button
           onClick={() => setSubStep(0)}
           className={`px-3 py-1.5 rounded transition-all cursor-pointer ${
             subStep === 0 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          1. Output (printf)
+          1. Loudspeaker (printf) 📢
         </button>
         <button
           onClick={() => setSubStep(1)}
@@ -81,7 +83,7 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
             subStep === 1 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          2. Input &amp; Address Bug
+          2. Listening Ear &amp; Bug 👂
         </button>
         <button
           disabled={!hasFixedBug}
@@ -92,6 +94,15 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
         >
           3. Specifier Chemistry 🧪
         </button>
+        <button
+          disabled={!chemistryCompleted}
+          onClick={() => setSubStep(3)}
+          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
+            subStep === 3 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
+          }`}
+        >
+          4. Code-a-Robot 🤖
+        </button>
       </div>
 
       {/* SUB-STEP 1: OUTPUT (printf) & ALIGNMENT */}
@@ -101,22 +112,22 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
           <section className="glass-panel p-4 rounded-xl space-y-2">
             <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[18px]">output</span>
-              Output Basics — printf
+              Loudspeaker — printf 📢
             </h3>
             <p className="text-body-md text-on-surface-variant leading-relaxed">
-              Programs write outputs to the screen using **`printf`**. By combining plain text, variables, and format placeholders, you can print messages dynamically:
+              Programs shout messages onto the screen using the **`printf`** loudspeaker! By combining plain text, variables, and format placeholders, you can print messages dynamically:
             </p>
             <div className="text-xs font-mono bg-white/5 p-3 rounded space-y-2">
               <div>
-                <span className="text-on-surface-variant/70">// 1. Printing plain text</span>
+                <span className="text-on-surface-variant/70">// 1. Shouting plain words</span>
                 <br /><code className="text-primary-fixed-dim">printf(&quot;Hello, World!\n&quot;);</code>
               </div>
               <div>
-                <span className="text-on-surface-variant/70">// 2. Printing variable values using specifiers</span>
+                <span className="text-on-surface-variant/70">// 2. Shouting toy box values using placeholders</span>
                 <br /><code className="text-primary-fixed-dim">printf(&quot;Age is %d\n&quot;, age);</code>
               </div>
               <div>
-                <span className="text-on-surface-variant/70">// 3. Printing multiple values together</span>
+                <span className="text-on-surface-variant/70">// 3. Shouting multiple values together</span>
                 <br /><code className="text-primary-fixed-dim">printf(&quot;Grade: %c, Score: %f\n&quot;, grade, score);</code>
               </div>
             </div>
@@ -131,7 +142,7 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
               </p>
               <ul className="list-disc list-inside text-xs text-on-surface-variant space-y-1 pl-2 font-mono">
                 <li><span className="text-on-surface font-bold">\n</span> — Newline (presses &apos;Enter&apos; to push text down to the next line)</li>
-                <li><span className="text-on-surface font-bold">\t</span> — Tab (presses &apos;Tab&apos; to create horizontal spacing gaps)</li>
+                <li><span className="text-on-surface font-bold">\t</span> — Tab (presses &apos;Tab&apos; to make a wide horizontal space gap)</li>
               </ul>
             </div>
 
@@ -155,7 +166,7 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
               {/* Terminal */}
               <div className="glass-panel rounded-xl overflow-hidden flex flex-col justify-between border border-white/5">
                 <div className="bg-surface-container-high px-3 py-1.5 text-[10px] font-mono text-on-surface-variant">
-                  CONSOLE OUTPUT
+                  SCREEN OUTPUT
                 </div>
                 <div className="p-4 bg-surface-container-lowest font-code-md text-xs text-primary-fixed-dim flex-1 flex flex-col justify-center">
                   {showConsole1 ? (
@@ -183,7 +194,7 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
               onClick={() => setSubStep(1)}
               className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
             >
-              NEXT: INPUT &amp; ADDRESS BUG
+              NEXT: LISTENING EAR &amp; BUG 👂
             </button>
           </div>
 
@@ -197,16 +208,16 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
           <section className="glass-panel p-4 rounded-xl space-y-2.5">
             <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[18px]">input</span>
-              Input Basics — scanf &amp; the &apos;&amp;&apos; Address Symbol
+              Listening Ear &amp; Mailing Address — scanf &amp; &amp; 👂
             </h3>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              We read keyboard inputs into variable containers using **`scanf`**. 
-              However, `scanf` needs to know *where* to deliver the user&apos;s keystrokes.
+              We read keyboard entries using the **`scanf`** listening ear! 
+              However, the ear needs to know *where* to store the typed values.
             </p>
             <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-xs text-on-surface-variant/90 leading-relaxed font-sans">
-              <span className="text-secondary font-bold font-mono">The &amp; (Address-of) Operator:</span>
-              <br />Think of the **`&amp;`** symbol as the **mailing address** of the variable box in memory. 
-              Writing <code className="text-primary-fixed-dim bg-white/5 px-1 rounded">&amp;age</code> tells `scanf` the exact RAM coordinates of the locker, so it can deliver the user&apos;s typed numbers directly inside it.
+              <span className="text-secondary font-bold font-mono">The &amp; Address Symbol:</span>
+              <br />Think of the **`&amp;`** symbol as the **mailing address** of the toy box in memory. 
+              Writing <code className="text-primary-fixed-dim bg-white/5 px-1 rounded">&amp;age</code> tells `scanf` the exact playroom coordinates of the toy box, so it can drop the typed numbers directly inside it! If you don&apos;t give the address, the computer gets lost trying to deliver the toy and crashes with a **Segmentation Fault**!
             </div>
           </section>
 
@@ -298,8 +309,27 @@ export default function SectionIO({ onComplete }: SectionIOProps) {
           
           <FormatChemistry onComplete={() => setChemistryCompleted(true)} />
 
-          {/* Section Submit Action */}
           {chemistryCompleted && (
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setSubStep(3)}
+                className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
+              >
+                NEXT: CODE-A-ROBOT 🤖
+              </button>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* SUB-STEP 4: CODE-A-ROBOT SIMULATION */}
+      {subStep === 3 && (
+        <div className="space-y-6 animate-fadeIn text-left">
+          
+          <RobotSim onComplete={() => setRobotCompleted(true)} />
+
+          {robotCompleted && (
             <div className="flex justify-end pt-2">
               <button
                 disabled={hasCompleted}
