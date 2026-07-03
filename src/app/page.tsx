@@ -8,6 +8,10 @@ import SectionOperators from "@/components/SectionOperators";
 import SectionComments from "@/components/SectionComments";
 import SectionIfStatement from "@/components/SectionIfStatement";
 import SectionSwitch from "@/components/SectionSwitch";
+import SectionLoops from "@/components/SectionLoops";
+import SectionFunctions from "@/components/SectionFunctions";
+import SectionArrays from "@/components/SectionArrays";
+import SectionStrings from "@/components/SectionStrings";
 
 // Structure for a C Quiz Question
 interface QuizQuestion {
@@ -106,6 +110,38 @@ export default function Home() {
         { id: "lesson_2_2", title: "Lesson 2: The switch Statement", locked: true },
       ],
     },
+    {
+      id: "mod_3",
+      title: "Module 3: Loops",
+      locked: true,
+      lessons: [
+        { id: "lesson_3_1", title: "Lesson 1: for, while, do-while & break/continue", locked: true },
+      ],
+    },
+    {
+      id: "mod_4",
+      title: "Module 4: Functions",
+      locked: true,
+      lessons: [
+        { id: "lesson_4_1", title: "Lesson 1: Define, Parameters, Return & Scope", locked: true },
+      ],
+    },
+    {
+      id: "mod_5",
+      title: "Module 5: Arrays",
+      locked: true,
+      lessons: [
+        { id: "lesson_5_1", title: "Lesson 1: Declare, Index, Loops & 2D Arrays", locked: true },
+      ],
+    },
+    {
+      id: "mod_6",
+      title: "Module 6: Strings",
+      locked: true,
+      lessons: [
+        { id: "lesson_6_1", title: "Lesson 1: char Arrays, Null Terminator & String Functions", locked: true },
+      ],
+    },
   ];
 
   // Load progress from localStorage on mount
@@ -189,6 +225,18 @@ export default function Home() {
       { label: "Falling Dominoes", index: 1 },
       { label: "Capstone", index: 2 },
     ],
+    lesson_3_1: [
+      { label: "for · while · do-while · break/continue", index: 0 },
+    ],
+    lesson_4_1: [
+      { label: "Define · Params · Return · Scope", index: 0 },
+    ],
+    lesson_5_1: [
+      { label: "Lockers · Index · Loops · Cinema Grid", index: 0 },
+    ],
+    lesson_6_1: [
+      { label: "Bead Necklace · Tools · Spot the Bugs", index: 0 },
+    ],
   };
 
   // Complete section helper
@@ -215,6 +263,10 @@ export default function Home() {
         else if (activeLessonId === "lesson_1_2") nextUnlocked.add("lesson_1_3");
         else if (activeLessonId === "lesson_1_3") nextUnlocked.add("lesson_2_1");
         else if (activeLessonId === "lesson_2_1") nextUnlocked.add("lesson_2_2");
+        else if (activeLessonId === "lesson_2_2") nextUnlocked.add("lesson_3_1");
+        else if (activeLessonId === "lesson_3_1") nextUnlocked.add("lesson_4_1");
+        else if (activeLessonId === "lesson_4_1") nextUnlocked.add("lesson_5_1");
+        else if (activeLessonId === "lesson_5_1") nextUnlocked.add("lesson_6_1");
         setUnlockedLessons(nextUnlocked);
 
         if (typeof window !== "undefined") {
@@ -225,6 +277,10 @@ export default function Home() {
         const lessonTitles: Record<string, string> = {
           lesson_1_1: "Lesson 1", lesson_1_2: "Lesson 2", lesson_1_3: "Lesson 3",
           lesson_2_1: "Module 2 — Lesson 1", lesson_2_2: "Module 2 — Lesson 2",
+          lesson_3_1: "Module 3 — Loops",
+          lesson_4_1: "Module 4 — Functions",
+          lesson_5_1: "Module 5 — Arrays",
+          lesson_6_1: "Module 6 — Strings",
         };
         triggerXP(20, `+20 XP (${lessonTitles[activeLessonId ?? ""] ?? "Lesson"} Completed!)`);
         setActiveLessonId(null); // Back to syllabus homepage
@@ -333,11 +389,14 @@ export default function Home() {
                     const modMeta: Record<string, { icon: string; color: string; desc: string }> = {
                       mod_1: { icon: "📦", color: "#00D9C0", desc: "Variables, types, and I/O — everything a program needs to remember and communicate." },
                       mod_2: { icon: "🚦", color: "#A78BFA", desc: "Make programs smart — branch on conditions with if, else if, and switch." },
+                      mod_3: { icon: "🔁", color: "#5EEAD4", desc: "Repeat actions without copy-pasting — for, while, do-while, and how to break out early." },
+                      mod_4: { icon: "📋", color: "#38BDF8", desc: "Write code once, reuse it anywhere — define functions, pass ingredients, get results back." },
+                      mod_5: { icon: "🗄️", color: "#FFB800", desc: "Store lists of things with one name — arrays as rows of lockers, indexed from 0." },
+                      mod_6: { icon: "🔤", color: "#FF5F6E", desc: "Text in C is just a row of characters — build and manipulate strings safely." },
                     };
                     return modules.map((mod, modIdx) => {
                       const meta = modMeta[mod.id] ?? { icon: "📋", color: "#5EEAD4", desc: "" };
-                      const isModLocked = mod.locked &&
-                        !(mod.id === "mod_2" ? unlockedLessons.has("lesson_2_1") : unlockedLessons.has("lesson_1_2"));
+                      const isModLocked = mod.locked && !unlockedLessons.has(mod.lessons[0]?.id ?? "");
                       const completedCount = mod.lessons.filter(l => completedLessons.has(l.id)).length;
 
                       return (
@@ -457,10 +516,10 @@ export default function Home() {
                   {/* Coming soon modules (grayed) */}
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
                     {[
-                      { icon: "🔁", title: "Loops", num: "04", color: "#5EEAD4" },
-                      { icon: "📋", title: "Functions", num: "05", color: "#38BDF8" },
-                      { icon: "📚", title: "Arrays & Strings", num: "06–07", color: "#FFB800" },
-                      { icon: "📌", title: "Pointers & Structs", num: "08–09", color: "#FF5F6E" },
+                      { icon: "📌", title: "Pointers", num: "07", color: "#FF5F6E" },
+                      { icon: "🪪", title: "Structs", num: "08", color: "#A78BFA" },
+                      { icon: "🗂️", title: "File I/O", num: "09", color: "#5EEAD4" },
+                      { icon: "🧠", title: "Dynamic Memory", num: "10", color: "#38BDF8" },
                     ].map(item => (
                       <div key={item.num} style={{ background: "rgba(13,17,23,0.70)", border: "1px solid var(--border)", borderRadius: 11, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, opacity: 0.45 }}>
                         <div style={{ width: 34, height: 34, borderRadius: 9, background: `${item.color}0F`, border: `1px solid ${item.color}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
@@ -666,6 +725,22 @@ export default function Home() {
 
                       {activeLessonId === "lesson_2_2" && (
                         <SectionSwitch onComplete={handleSectionComplete} />
+                      )}
+
+                      {activeLessonId === "lesson_3_1" && (
+                        <SectionLoops onComplete={handleSectionComplete} />
+                      )}
+
+                      {activeLessonId === "lesson_4_1" && (
+                        <SectionFunctions onComplete={handleSectionComplete} />
+                      )}
+
+                      {activeLessonId === "lesson_5_1" && (
+                        <SectionArrays onComplete={handleSectionComplete} />
+                      )}
+
+                      {activeLessonId === "lesson_6_1" && (
+                        <SectionStrings onComplete={handleSectionComplete} />
                       )}
                     </div>
 
