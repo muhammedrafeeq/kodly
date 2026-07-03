@@ -1,407 +1,468 @@
 "use client";
+
 import React, { useState } from "react";
 
-interface Props { onComplete: (xp: number) => void; }
+const KEYFRAMES = `
+@keyframes swingOpen { 0%{transform:scaleX(1)} 100%{transform:scaleX(0)} }
+@keyframes popIn { 0%{transform:scale(0)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+@keyframes glow { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.5)} }
+.arr-pop-in { animation: popIn 0.3s ease forwards; }
+.arr-glow { animation: glow 1s ease infinite; }
+`;
 
-function Analogy({ children }: { children: React.ReactNode }) {
-  return <div style={{ background:"rgba(255,184,0,.09)", border:"1px solid rgba(255,184,0,.22)", borderRadius:10, padding:14, display:"flex", gap:10, marginBottom:12 }}><span style={{fontSize:18,flexShrink:0}}>💡</span><div style={{fontSize:13.5,lineHeight:1.65,color:"#E9EDF8"}}>{children}</div></div>;
-}
 function ConceptLock({ children }: { children: React.ReactNode }) {
-  return <div style={{ background:"linear-gradient(135deg,rgba(167,139,250,.12),rgba(0,217,192,.08))", border:"1px solid rgba(167,139,250,.35)", borderRadius:10, padding:"12px 16px", marginBottom:12 }}><div style={{fontFamily:"'Courier New',monospace",fontSize:9,letterSpacing:".18em",textTransform:"uppercase" as const,color:"#A78BFA",fontWeight:700,marginBottom:6}}>🔒 Non-Replaceable Concept</div><div style={{fontSize:13.5,fontWeight:600,color:"#E9EDF8",lineHeight:1.6}}>{children}</div></div>;
-}
-function Gotcha({ children }: { children: React.ReactNode }) {
-  return <div style={{ background:"rgba(255,95,110,.09)", border:"1px solid rgba(255,95,110,.22)", borderRadius:10, padding:12, display:"flex", gap:8, marginBottom:12 }}><span style={{flexShrink:0}}>⚠️</span><div style={{fontSize:12.5,lineHeight:1.55,color:"#E9EDF8"}}>{children}</div></div>;
-}
-function CodeBlock({ label, code }: { label:string; code:string }) {
-  return <div style={{ border:"1px solid rgba(0,218,243,.18)", borderRadius:10, overflow:"hidden", marginBottom:12 }}><div style={{padding:"6px 14px",background:"rgba(0,218,243,.08)",color:"#00D9C0",fontFamily:"'Courier New',monospace",fontSize:9,letterSpacing:".16em",textTransform:"uppercase" as const,fontWeight:700}}>{label}</div><pre style={{padding:16,background:"#0D1117",fontFamily:"'Courier New',monospace",fontSize:12.5,lineHeight:1.7,margin:0,overflowX:"auto" as const,color:"#E9EDF8"}}>{code}</pre></div>;
+  return (
+    <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.12),rgba(0,217,192,.08))", border: "1px solid rgba(167,139,250,.35)", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
+      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase" as const, color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>🔒 Concept</div>
+      <div style={{ fontSize: 13.5, fontWeight: 600, color: "#E9EDF8", lineHeight: 1.6 }}>{children}</div>
+    </div>
+  );
 }
 
-function DeclaringStep() {
-  const [values, setValues] = useState(["", "", "", "", ""]);
+function Gotcha({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: 12, display: "flex", gap: 8, marginBottom: 12 }}>
+      <span style={{ flexShrink: 0 }}>⚠️</span>
+      <div style={{ fontSize: 12.5, lineHeight: 1.55, color: "#E9EDF8" }}>{children}</div>
+    </div>
+  );
+}
+
+function CodeBlock({ label, code }: { label: string; code: string }) {
+  return (
+    <div style={{ border: "1px solid rgba(0,218,243,.18)", borderRadius: 10, overflow: "hidden", marginBottom: 12 }}>
+      <div style={{ padding: "6px 14px", background: "rgba(0,218,243,.08)", color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, fontWeight: 700 }}>{label}</div>
+      <pre style={{ padding: 16, background: "#0D1117", fontFamily: "'Courier New',monospace", fontSize: 12.5, lineHeight: 1.7, margin: 0, overflowX: "auto" as const, color: "#E9EDF8" }}>{code}</pre>
+    </div>
+  );
+}
+
+// ─── Sub-step 0: Row of Lockers ───────────────────────────────────────────────
+
+function LockerStep() {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const [values, setValues] = useState<string[]>(["", "", "", "", ""]);
   const [declared, setDeclared] = useState(false);
 
+  const LOCKER_W = 54;
+  const LOCKER_H = 90;
+  const LOCKER_START_X = 14;
+  const LOCKER_Y = 42;
+  const GAP = 8;
+
+  function handleValueChange(val: string) {
+    if (activeIdx === null) return;
+    const next = [...values];
+    next[activeIdx] = val;
+    setValues(next);
+  }
+
   return (
     <div>
-      <h3 style={{color:"#00D9C0",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:700,marginBottom:12,marginTop:0}}>Sub-step 1 — Declaring: "A Row of School Lockers"</h3>
-      <Analogy>
-        Imagine a school corridor with 5 numbered lockers in a row — all holding the same type of thing. The array name is the sign at the start of the row. Each locker has a number starting from <strong>0</strong>. <code>scores[0]</code> is the first locker. <code>scores[4]</code> is the last one — <em>not scores[5]</em>, that locker doesn&apos;t exist!
-      </Analogy>
+      <svg viewBox="0 0 380 150" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Array sign */}
+        <rect x="62" y="8" width="180" height="22" rx="4" fill="rgba(0,217,192,0.1)" stroke="#00D9C0" strokeWidth="1" />
+        <text x="152" y="23" textAnchor="middle" fill="#00D9C0" fontSize="11" fontFamily="'Courier New',monospace" fontWeight="700">scores[5]</text>
 
-      <div style={{marginBottom:16}}>
-        <div style={{fontSize:12,color:"#7B85A8",marginBottom:8,fontFamily:"'Courier New',monospace"}}>Click a locker number to select it. Type values inside each locker.</div>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap" as const}}>
-          {values.map((val, i) => (
-            <div key={i} style={{display:"flex",flexDirection:"column" as const,alignItems:"center",gap:6}}>
-              <div style={{
-                width:64,height:80,borderRadius:8,
-                border:`2px solid ${activeIdx===i?"#00D9C0":"rgba(255,255,255,0.15)"}`,
-                background:activeIdx===i?"rgba(0,217,192,.10)":"rgba(13,17,23,0.8)",
-                display:"flex",flexDirection:"column" as const,alignItems:"center",justifyContent:"center",gap:6,
-                boxShadow:activeIdx===i?"0 0 12px rgba(0,217,192,.3)":"none",
-                transition:"all 0.2s"
-              }}>
-                <div style={{fontSize:10,color:"#7B85A8",fontFamily:"'Courier New',monospace"}}>scores[{i}]</div>
-                <input
-                  type="text"
-                  value={val}
-                  onChange={e => { const v=[...values]; v[i]=e.target.value; setValues(v); }}
-                  style={{width:44,textAlign:"center",background:"transparent",border:"1px solid rgba(255,255,255,0.15)",borderRadius:4,color:"#E9EDF8",fontFamily:"'Courier New',monospace",fontSize:13,padding:"2px 4px"}}
-                  placeholder="?"
-                />
-              </div>
-              <button
-                onClick={() => setActiveIdx(i)}
-                style={{
-                  padding:"2px 10px",borderRadius:6,fontSize:11,fontWeight:700,
-                  fontFamily:"'Courier New',monospace",cursor:"pointer",
-                  border:`1px solid ${activeIdx===i?"#00D9C0":"rgba(255,255,255,0.12)"}`,
-                  background:activeIdx===i?"rgba(0,217,192,.15)":"transparent",
-                  color:activeIdx===i?"#00D9C0":"#7B85A8"
-                }}
-              >{i}</button>
-            </div>
-          ))}
-          <div style={{display:"flex",flexDirection:"column" as const,alignItems:"center",justifyContent:"center",gap:6}}>
-            <div style={{width:64,height:80,borderRadius:8,border:"2px dashed rgba(255,95,110,.3)",background:"rgba(255,95,110,.05)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <span style={{color:"#FF5F6E",fontSize:20}}>✕</span>
-            </div>
-            <div style={{fontSize:10,color:"#FF5F6E",fontFamily:"'Courier New',monospace"}}>scores[5]</div>
-          </div>
+        {/* 5 lockers */}
+        {[0, 1, 2, 3, 4].map(i => {
+          const x = LOCKER_START_X + i * (LOCKER_W + GAP);
+          const isActive = activeIdx === i;
+          return (
+            <g key={i} onClick={() => setActiveIdx(i)} style={{ cursor: "pointer" }}>
+              <rect
+                x={x} y={LOCKER_Y} width={LOCKER_W} height={LOCKER_H} rx="4"
+                fill="rgba(10,15,30,0.8)"
+                stroke={isActive ? "#00D9C0" : "rgba(255,255,255,0.15)"}
+                strokeWidth={isActive ? 2 : 1}
+                className={isActive ? "arr-glow" : undefined}
+              />
+              {/* Handle */}
+              <circle cx={x + LOCKER_W / 2} cy={LOCKER_Y + 10} r="4" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+              {/* Value */}
+              {values[i] ? (
+                <text x={x + LOCKER_W / 2} y={LOCKER_Y + 58} textAnchor="middle" fill={isActive ? "#00D9C0" : "#E9EDF8"} fontSize="12" fontFamily="'Courier New',monospace" fontWeight="700">
+                  {values[i].substring(0, 4)}
+                </text>
+              ) : (
+                <text x={x + LOCKER_W / 2} y={LOCKER_Y + 58} textAnchor="middle" fill="#7B85A8" fontSize="9" fontFamily="'Courier New',monospace">empty</text>
+              )}
+              {/* Index badge */}
+              <text x={x + LOCKER_W / 2} y={LOCKER_Y + LOCKER_H + 14} textAnchor="middle" fill="#7B85A8" fontSize="10" fontFamily="'Courier New',monospace">[{i}]</text>
+            </g>
+          );
+        })}
+
+        {/* Out of bounds locker */}
+        <text x="348" y="38" textAnchor="middle" fill="#FF5F6E" fontSize="7" fontFamily="'Courier New',monospace" letterSpacing="1">OUT OF</text>
+        <text x="348" y="48" textAnchor="middle" fill="#FF5F6E" fontSize="7" fontFamily="'Courier New',monospace" letterSpacing="1">BOUNDS</text>
+        <rect x="324" y="52" width="48" height="70" rx="4" fill="rgba(255,95,110,0.05)" stroke="#FF5F6E" strokeWidth="1.5" strokeDasharray="4 3" />
+        <text x="348" y="92" textAnchor="middle" fill="#FF5F6E" fontSize="18">✕</text>
+        <text x="348" y="134" textAnchor="middle" fill="#FF5F6E" fontSize="8" fontFamily="'Courier New',monospace">scores[5]</text>
+      </svg>
+
+      {activeIdx !== null && (
+        <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+          <label style={{ color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 13 }}>
+            scores[{activeIdx}] =&nbsp;
+          </label>
+          <input
+            type="text"
+            value={values[activeIdx]}
+            onChange={e => handleValueChange(e.target.value.substring(0, 6))}
+            style={{ background: "#0D1117", border: "1px solid #00D9C0", borderRadius: 6, color: "#00D9C0", padding: "4px 10px", fontSize: 13, fontFamily: "'Courier New',monospace", width: 100 }}
+          />
         </div>
+      )}
 
-        {activeIdx !== null && (
-          <div style={{marginTop:12,padding:"8px 14px",background:"rgba(0,217,192,.08)",border:"1px solid rgba(0,217,192,.2)",borderRadius:8}}>
-            <span style={{fontFamily:"'Courier New',monospace",color:"#00D9C0",fontSize:13}}>
-              scores[{activeIdx}] {values[activeIdx] ? `= ${values[activeIdx]}` : "← selected"}
-            </span>
-          </div>
-        )}
-
+      <div style={{ marginBottom: 12 }}>
         <button
           onClick={() => setDeclared(true)}
-          style={{marginTop:12,padding:"8px 18px",background:declared?"rgba(0,217,192,.15)":"#00D9C0",color:declared?"#00D9C0":"#003838",borderRadius:8,border:declared?"1px solid #00D9C0":"none",fontFamily:"'Courier New',monospace",fontWeight:700,fontSize:12,cursor:"pointer"}}
+          style={{ background: declared ? "rgba(0,217,192,0.15)" : "linear-gradient(135deg,#00D9C0,#A78BFA)", border: "none", borderRadius: 8, padding: "8px 20px", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
         >
-          {declared ? "✓ Array declared!" : "Declare the array"}
+          {declared ? "✓ Declared!" : "Declare!"}
         </button>
-        {declared && (
-          <div style={{marginTop:8,fontFamily:"'Courier New',monospace",fontSize:13,color:"#E9EDF8",padding:"8px 14px",background:"#0D1117",borderRadius:8,border:"1px solid rgba(0,217,192,.2)"}}>
-            int scores[5];
-          </div>
-        )}
       </div>
 
-      <ConceptLock>An array is a fixed-size row of same-type containers with one name. You access each one by its index, starting from 0.</ConceptLock>
-      <Gotcha><code>int scores[5]</code> creates indices 0–4. There is NO <code>scores[5]</code>. Accessing it is like opening a locker that doesn&apos;t exist — no warning, just garbage or a crash.</Gotcha>
-      <CodeBlock label="array declaration" code={`int scores[5];        // 5 lockers: scores[0] to scores[4]
-scores[0] = 95;       // first locker
-scores[4] = 78;       // last locker
+      {declared && (
+        <div style={{ background: "#0D1117", border: "1px solid rgba(0,218,243,.18)", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontFamily: "'Courier New',monospace", fontSize: 13, color: "#00D9C0" }}>
+          int scores[5];
+        </div>
+      )}
+
+      <CodeBlock label="C Example" code={`int scores[5];      // 5 lockers: [0] to [4]
+scores[0] = 95;     // first locker
 // scores[5] — DOES NOT EXIST! Never go here.`} />
+      <ConceptLock>Arrays start at index 0. Last index = size-1.</ConceptLock>
+      <Gotcha>`scores[5]` on a `scores[5]` array = out of bounds. Undefined behaviour.</Gotcha>
     </div>
   );
 }
 
-function IndexStep() {
+// ─── Sub-step 1: Tape Measure ─────────────────────────────────────────────────
+
+function TapeStep() {
   const [pos, setPos] = useState(0);
   const [showOob, setShowOob] = useState(false);
-  const arr = [10, 20, 30, 40, 50];
+
+  const TICK_START = 42;
+  const TICK_SPACING = 64;
+
+  function stepLeft() {
+    setPos(p => Math.max(0, p - 1));
+    setShowOob(false);
+  }
+
+  function stepRight() {
+    if (pos >= 4) {
+      setShowOob(true);
+    } else {
+      setPos(p => p + 1);
+      setShowOob(false);
+    }
+  }
+
+  function tryOob() {
+    setShowOob(true);
+  }
 
   return (
     <div>
-      <h3 style={{color:"#00D9C0",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:700,marginBottom:12,marginTop:0}}>Sub-step 2 — Index from 0: "Why the First Locker Is Zero"</h3>
-      <Analogy>
-        Imagine standing at the entrance and counting <strong>steps</strong> to reach each locker. The first locker needs <strong>0 steps</strong> — you&apos;re already there. That&apos;s index [0]. The second needs 1 step → [1]. Counting starts from where you&apos;re standing, not from 1.
-      </Analogy>
+      <svg viewBox="0 0 380 150" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Tape */}
+        <rect x="10" y="118" width="360" height="14" rx="3" fill="rgba(255,184,0,0.15)" stroke="rgba(255,184,0,0.4)" strokeWidth="1" />
+        {/* Ticks */}
+        {[0, 1, 2, 3, 4].map(i => (
+          <g key={i}>
+            <line x1={TICK_START + i * TICK_SPACING} y1="118" x2={TICK_START + i * TICK_SPACING} y2="132" stroke="rgba(255,184,0,0.6)" strokeWidth="2" />
+            <text x={TICK_START + i * TICK_SPACING} y="144" textAnchor="middle" fill="#FFB800" fontSize="10" fontFamily="'Courier New',monospace">{i}</text>
+          </g>
+        ))}
+        {/* Lockers above each tick */}
+        {[0, 1, 2, 3, 4].map(i => (
+          <rect key={i}
+            x={TICK_START + i * TICK_SPACING - 22} y="50" width="44" height="60" rx="4"
+            fill={pos === i ? "rgba(0,217,192,0.15)" : "rgba(10,15,30,0.8)"}
+            stroke={pos === i ? "#00D9C0" : "rgba(255,255,255,0.15)"}
+            strokeWidth={pos === i ? 2 : 1}
+          />
+        ))}
+        {/* Stick person */}
+        <g style={{ transform: `translateX(${pos * TICK_SPACING}px)`, transition: "transform 0.4s ease" }}>
+          <circle cx={TICK_START} cy="32" r="10" fill="none" stroke="#00D9C0" strokeWidth="2" />
+          <line x1={TICK_START} y1="42" x2={TICK_START} y2="56" stroke="#00D9C0" strokeWidth="2" />
+          <line x1={TICK_START} y1="47" x2={TICK_START - 8} y2="54" stroke="#00D9C0" strokeWidth="2" />
+          <line x1={TICK_START} y1="47" x2={TICK_START + 8} y2="54" stroke="#00D9C0" strokeWidth="2" />
+          <line x1={TICK_START} y1="56" x2={TICK_START - 6} y2="68" stroke="#00D9C0" strokeWidth="2" />
+          <line x1={TICK_START} y1="56" x2={TICK_START + 6} y2="68" stroke="#00D9C0" strokeWidth="2" />
+        </g>
+        {/* Label */}
+        <text x="190" y="18" textAnchor="middle" fill="#E9EDF8" fontSize="12" fontFamily="'Courier New',monospace">arr[{pos}]</text>
+      </svg>
 
-      <div style={{marginBottom:16}}>
-        <div style={{fontSize:12,color:"#7B85A8",marginBottom:10,fontFamily:"'Courier New',monospace"}}>Move the figure along the measuring tape:</div>
-
-        <div style={{position:"relative",marginBottom:16}}>
-          <div style={{display:"flex",gap:0,marginBottom:8}}>
-            {arr.map((v, i) => (
-              <div key={i} style={{
-                width:64,height:60,border:`2px solid ${pos===i?"#00D9C0":"rgba(255,255,255,0.12)"}`,
-                background:pos===i?"rgba(0,217,192,.12)":"rgba(13,17,23,0.7)",
-                display:"flex",flexDirection:"column" as const,alignItems:"center",justifyContent:"center",
-                transition:"all 0.2s",borderRadius:i===0?"8px 0 0 8px":i===4?"0 8px 8px 0":"0",
-                boxShadow:pos===i?"0 0 10px rgba(0,217,192,.3)":"none"
-              }}>
-                <div style={{color:pos===i?"#00D9C0":"#7B85A8",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:700}}>{v}</div>
-                <div style={{color:"#4A5070",fontSize:10,fontFamily:"'Courier New',monospace"}}>[{i}]</div>
-              </div>
-            ))}
-            <div style={{
-              width:64,height:60,border:"2px dashed rgba(255,95,110,.3)",
-              background:"rgba(255,95,110,.05)",
-              display:"flex",alignItems:"center",justifyContent:"center",
-              borderRadius:"0 8px 8px 0",
-              opacity:showOob?1:0.4,transition:"opacity 0.3s"
-            }}>
-              {showOob ? <span style={{color:"#FF5F6E",fontSize:20}}>💥</span> : <span style={{color:"#FF5F6E",fontSize:11,fontFamily:"'Courier New',monospace"}}>[5]</span>}
-            </div>
-          </div>
-
-          <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:8}}>
-            {[0,1,2,3,4].map(i => (
-              <div key={i} style={{width:64,textAlign:"center",fontSize:10,color:"#4A5070",fontFamily:"'Courier New',monospace"}}>{i} step{i!==1?"s":""}</div>
-            ))}
-          </div>
-
-          <div style={{fontSize:22,textAlign:"left",paddingLeft:(pos*64+22)+"px",transition:"padding-left 0.3s",marginBottom:8}}>🚶</div>
-        </div>
-
-        <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap" as const}}>
-          <button onClick={() => { setPos(p => Math.max(0,p-1)); setShowOob(false); }} disabled={pos===0} style={{padding:"6px 14px",borderRadius:7,border:"1px solid rgba(255,255,255,0.12)",background:"transparent",color:pos===0?"#4A5070":"#E9EDF8",fontFamily:"'Courier New',monospace",fontSize:11,cursor:pos===0?"not-allowed":"pointer"}}>← Step left</button>
-          <button onClick={() => { if(pos<4){setPos(p=>p+1);setShowOob(false);}else{setShowOob(true);} }} style={{padding:"6px 14px",borderRadius:7,border:"1px solid rgba(255,255,255,0.12)",background:"transparent",color:"#E9EDF8",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer"}}>Step right →</button>
-          <button onClick={() => { setPos(0); setShowOob(false); }} style={{padding:"6px 14px",borderRadius:7,border:"1px solid rgba(255,255,255,0.12)",background:"transparent",color:"#7B85A8",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer"}}>Reset</button>
-        </div>
-
-        <div style={{padding:"8px 14px",background:"rgba(0,217,192,.08)",border:"1px solid rgba(0,217,192,.2)",borderRadius:8,fontFamily:"'Courier New',monospace",color:"#00D9C0",fontSize:13}}>
-          {showOob ? <span style={{color:"#FF5F6E"}}>arr[5] — OUT OF BOUNDS! ⚠️ Locker doesn&apos;t exist!</span> : `arr[${pos}] = ${arr[pos]}`}
-        </div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" as const }}>
+        <button onClick={stepLeft} disabled={pos === 0}
+          style={{ background: pos === 0 ? "rgba(255,255,255,0.05)" : "rgba(0,217,192,0.15)", border: "1px solid rgba(0,217,192,0.3)", borderRadius: 8, padding: "8px 18px", color: pos === 0 ? "#7B85A8" : "#00D9C0", fontWeight: 700, fontSize: 13, cursor: pos === 0 ? "not-allowed" : "pointer" }}>
+          ← Step
+        </button>
+        <button onClick={stepRight}
+          style={{ background: "rgba(0,217,192,0.15)", border: "1px solid rgba(0,217,192,0.3)", borderRadius: 8, padding: "8px 18px", color: "#00D9C0", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          → Step
+        </button>
+        <button onClick={tryOob}
+          style={{ background: "rgba(255,95,110,0.15)", border: "1px solid rgba(255,95,110,0.3)", borderRadius: 8, padding: "8px 18px", color: "#FF5F6E", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          Try [5]!
+        </button>
       </div>
 
-      <ConceptLock>The first element is always index 0. The last is always <code>(size - 1)</code>. This never changes — all C arrays start at 0.</ConceptLock>
-      <Gotcha>Writing <code>array[1]</code> thinking it&apos;s the first element — it&apos;s the SECOND. <code>array[0]</code> is always first.</Gotcha>
-      <CodeBlock label="index from 0" code={`int arr[5] = {10, 20, 30, 40, 50};
-//            [0]  [1]  [2]  [3]  [4]
-printf("%d\\n", arr[0]);  // prints 10 (first)
-printf("%d\\n", arr[4]);  // prints 50 (last)
-// arr[5] is OUT OF BOUNDS — undefined behaviour`} />
+      {showOob && (
+        <div style={{ background: "rgba(255,95,110,0.1)", border: "1px solid rgba(255,95,110,0.4)", borderRadius: 8, padding: "10px 14px", marginBottom: 12, color: "#FF5F6E", fontSize: 13, fontWeight: 600 }}>
+          ⚠ Index 5 doesn&apos;t exist!
+        </div>
+      )}
+
+      <ConceptLock>Index 0 = first. Index (size-1) = last. Never changes.</ConceptLock>
     </div>
   );
 }
 
-function LoopsArraysStep() {
-  const [lockers, setLockers] = useState([88, 75, 92, 61, 84, 70]);
+// ─── Sub-step 2: Inspection Loop ──────────────────────────────────────────────
+
+function InspectionStep() {
+  const [scores, setScores] = useState<number[]>([88, 75, 92, 61, 84, 70]);
   const [running, setRunning] = useState(false);
   const [currentI, setCurrentI] = useState<number | null>(null);
   const [runningTotal, setRunningTotal] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const LOCKER_W = 50;
+  const LOCKER_H = 70;
+  const GAP = 8;
+  const START_X = 10;
+  const LOCKER_Y = 40;
 
   function runInspection() {
+    if (running) return;
     setRunning(true);
     setCurrentI(null);
     setRunningTotal(0);
+    setDone(false);
+
     let total = 0;
-    lockers.forEach((score, i) => {
+    for (let i = 0; i < scores.length; i++) {
+      const idx = i;
+      const score = scores[idx];
       setTimeout(() => {
-        setCurrentI(i);
+        setCurrentI(idx);
         total += score;
         setRunningTotal(total);
-        if (i === lockers.length - 1) setTimeout(() => setRunning(false), 600);
-      }, i * 700);
-    });
+        if (idx === scores.length - 1) {
+          setDone(true);
+          setRunning(false);
+        }
+      }, idx * 700);
+    }
   }
 
   return (
     <div>
-      <h3 style={{color:"#00D9C0",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:700,marginBottom:12,marginTop:0}}>Sub-step 3 — Loops + Arrays: "The Teacher Checking Every Locker"</h3>
-      <Analogy>
-        The teacher starts at locker 0, checks it, moves to locker 1... all the way to the last one. She doesn&apos;t teleport randomly. A <strong>for loop</strong> does this perfectly — the counter <strong>IS</strong> the index.
-      </Analogy>
-
-      <div style={{marginBottom:16}}>
-        <div style={{fontSize:12,color:"#7B85A8",marginBottom:8,fontFamily:"'Courier New',monospace"}}>Edit locker scores, then run the inspection:</div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap" as const,marginBottom:12}}>
-          {lockers.map((score, i) => (
-            <div key={i} style={{
-              width:60,padding:"8px 4px",borderRadius:8,
-              border:`2px solid ${currentI===i?"#00D9C0":"rgba(255,255,255,0.12)"}`,
-              background:currentI===i?"rgba(0,217,192,.12)":"rgba(13,17,23,0.7)",
-              display:"flex",flexDirection:"column" as const,alignItems:"center",gap:4,
-              transition:"all 0.25s",
-              boxShadow:currentI===i?"0 0 12px rgba(0,217,192,.35)":"none"
-            }}>
-              <div style={{fontSize:9,color:"#7B85A8",fontFamily:"'Courier New',monospace"}}>i={i}</div>
-              <input
-                type="number"
-                value={score}
-                onChange={e => { const v=[...lockers]; v[i]=Number(e.target.value)||0; setLockers(v); }}
-                style={{width:46,textAlign:"center",background:"transparent",border:"1px solid rgba(255,255,255,0.15)",borderRadius:4,color:"#E9EDF8",fontFamily:"'Courier New',monospace",fontSize:13,padding:"2px 0"}}
-                disabled={running}
+      <svg viewBox="0 0 380 140" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Lockers */}
+        {scores.map((_, i) => {
+          const x = START_X + i * (LOCKER_W + GAP);
+          const isActive = currentI === i;
+          return (
+            <g key={i}>
+              <rect x={x} y={LOCKER_Y} width={LOCKER_W} height={LOCKER_H} rx="4"
+                fill={isActive ? "rgba(0,217,192,0.15)" : "rgba(10,15,30,0.8)"}
+                stroke={isActive ? "#00D9C0" : "rgba(255,255,255,0.15)"}
+                strokeWidth={isActive ? 2 : 1}
+                className={isActive ? "arr-glow" : undefined}
               />
-              <div style={{fontSize:9,color:"#4A5070",fontFamily:"'Courier New',monospace"}}>scores[{i}]</div>
-            </div>
-          ))}
-        </div>
+              <text x={x + LOCKER_W / 2} y={LOCKER_Y + 42} textAnchor="middle" fill={isActive ? "#00D9C0" : "#7B85A8"} fontSize="12" fontFamily="'Courier New',monospace" fontWeight="700">
+                {scores[i]}
+              </text>
+              <text x={x + LOCKER_W / 2} y={LOCKER_Y + LOCKER_H + 14} textAnchor="middle" fill="#7B85A8" fontSize="9" fontFamily="'Courier New',monospace">[{i}]</text>
+            </g>
+          );
+        })}
+        {/* Teacher figure */}
+        <g style={{ transform: `translateX(${currentI !== null ? currentI * (LOCKER_W + GAP) : 0}px)`, transition: "transform 0.7s ease" }}>
+          <circle cx={START_X + LOCKER_W / 2} cy="18" r="8" fill="none" stroke="#FFB800" strokeWidth="2" />
+          <line x1={START_X + LOCKER_W / 2} y1="26" x2={START_X + LOCKER_W / 2} y2="38" stroke="#FFB800" strokeWidth="2" />
+          <line x1={START_X + LOCKER_W / 2} y1="30" x2={START_X + LOCKER_W / 2 - 8} y2="36" stroke="#FFB800" strokeWidth="2" />
+          <line x1={START_X + LOCKER_W / 2} y1="30" x2={START_X + LOCKER_W / 2 + 8} y2="36" stroke="#FFB800" strokeWidth="2" />
+        </g>
+        {/* Counter box */}
+        <rect x="10" y="122" width="360" height="14" rx="3" fill="rgba(0,217,192,0.05)" stroke="rgba(0,217,192,0.2)" strokeWidth="1" />
+        <text x="20" y="133" fill="#00D9C0" fontSize="9" fontFamily="'Courier New',monospace">
+          i = {currentI !== null ? currentI : "—"}  |  Total: {runningTotal}{done ? "  ✓ DONE" : ""}
+        </text>
+      </svg>
 
-        {currentI !== null && (
-          <div style={{marginBottom:10,padding:"8px 14px",background:"rgba(0,217,192,.08)",border:"1px solid rgba(0,217,192,.2)",borderRadius:8,fontFamily:"'Courier New',monospace",fontSize:12,color:"#E9EDF8"}}>
-            <span style={{color:"#00D9C0"}}>i = {currentI}</span> → checking scores[{currentI}] = {lockers[currentI]}
-            <span style={{marginLeft:16,color:"#A78BFA"}}>total so far: {runningTotal}</span>
-          </div>
-        )}
-
-        <div style={{marginBottom:10,display:"flex",gap:6,alignItems:"center"}}>
-          <div style={{fontFamily:"'Courier New',monospace",fontSize:12,color:"#E9EDF8",padding:"6px 14px",background:"rgba(0,217,192,.06)",borderRadius:7,border:"1px solid rgba(0,217,192,.15)"}}>
-            {`for (i = 0; i < 6; i++)`}
-          </div>
-          <span style={{color:"#7B85A8",fontSize:12}}>← loop drives the index</span>
-        </div>
-
-        <button
-          onClick={runInspection}
-          disabled={running}
-          style={{padding:"8px 20px",background:running?"rgba(0,217,192,.12)":"#00D9C0",color:running?"#00D9C0":"#003838",borderRadius:8,border:running?"1px solid #00D9C0":"none",fontFamily:"'Courier New',monospace",fontWeight:700,fontSize:12,cursor:running?"not-allowed":"pointer"}}
-        >
-          {running ? "🔍 Inspecting..." : "Run inspection"}
-        </button>
-
-        {!running && runningTotal > 0 && (
-          <div style={{marginTop:10,padding:"8px 14px",background:"rgba(167,139,250,.08)",border:"1px solid rgba(167,139,250,.25)",borderRadius:8,fontFamily:"'Courier New',monospace",fontSize:13,color:"#A78BFA"}}>
-            Total: {runningTotal}
-          </div>
-        )}
+      {/* Editable scores */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" as const }}>
+        {scores.map((s, i) => (
+          <input key={i} type="number" value={s}
+            onChange={e => { const next = [...scores]; next[i] = Number(e.target.value); setScores(next); }}
+            disabled={running}
+            style={{ width: 52, background: "#0D1117", border: "1px solid rgba(0,217,192,0.3)", borderRadius: 6, color: "#E9EDF8", padding: "4px 6px", fontSize: 12, textAlign: "center" as const }} />
+        ))}
       </div>
 
-      <ConceptLock>Arrays and for loops are made for each other. The loop counter acts as the index. Always loop from 0 to <code>size - 1</code>.</ConceptLock>
-      <Gotcha><code>for (i = 1; i &lt;= size; i++)</code> skips locker 0 and reads past the end. Always start at 0 and use <code>&lt;</code>, not <code>&lt;=</code>.</Gotcha>
-      <CodeBlock label="loops + arrays" code={`int scores[5] = {88, 75, 92, 61, 84};
-int total = 0;
+      <button onClick={runInspection} disabled={running}
+        style={{ background: running ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#FFB800,#FF5F6E)", border: "none", borderRadius: 8, padding: "10px 24px", color: "#fff", fontWeight: 700, fontSize: 14, cursor: running ? "not-allowed" : "pointer", marginBottom: 16 }}>
+        {running ? "Inspecting..." : "Run Inspection"}
+      </button>
 
-for (int i = 0; i < 5; i++) {
-    total += scores[i];  // i is the index
-    printf("Locker %d: %d\\n", i, scores[i]);
-}
-printf("Total: %d\\n", total);`} />
+      <CodeBlock label="C Example" code={`for (int i = 0; i < 6; i++) {
+    total += scores[i];  // i = index
+}`} />
+      <ConceptLock>Loop counter = array index. `i &lt; size`, never `i &lt;= size`.</ConceptLock>
     </div>
   );
 }
 
-function TwoDStep({ onComplete }: { onComplete: (xp: number) => void }) {
-  const ROWS = 4, COLS = 5;
-  const [selected, setSelected] = useState<[number,number]|null>(null);
-  const [filled, setFilled] = useState<number[][]>(Array.from({length:ROWS},()=>Array(COLS).fill(0)));
+// ─── Sub-step 3: Cinema Grid ──────────────────────────────────────────────────
+
+function CinemaStep({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [selected, setSelected] = useState<[number, number] | null>(null);
+  const [filled, setFilled] = useState<number[][]>([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]);
   const [filling, setFilling] = useState(false);
-  const [fillRow, setFillRow] = useState<number|null>(null);
-  const [fillCol, setFillCol] = useState<number|null>(null);
+  const [fillRow, setFillRow] = useState<number | null>(null);
+  const [fillCol, setFillCol] = useState<number | null>(null);
 
   function fillAll() {
+    if (filling) return;
     setFilling(true);
-    setFilled(Array.from({length:ROWS},()=>Array(COLS).fill(0)));
-    const cells: [number,number][] = [];
-    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) cells.push([r,c]);
-    cells.forEach(([r,c],idx) => {
-      setTimeout(() => {
-        setFillRow(r); setFillCol(c);
-        setFilled(prev => {
-          const next = prev.map(row=>[...row]);
-          next[r][c] = r*COLS+c+1;
-          return next;
-        });
-        if(idx===cells.length-1) setTimeout(()=>{setFilling(false);setFillRow(null);setFillCol(null);},400);
-      }, idx*120);
-    });
+    setFilled([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]);
+    let delay = 0;
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 5; c++) {
+        const row = r;
+        const col = c;
+        const val = row * 5 + col + 1;
+        setTimeout(() => {
+          setFillRow(row);
+          setFillCol(col);
+          setFilled(prev => {
+            const next = prev.map(arr => [...arr]);
+            next[row][col] = val;
+            return next;
+          });
+          if (row === 3 && col === 4) {
+            setFilling(false);
+            setFillRow(null);
+            setFillCol(null);
+          }
+        }, delay);
+        delay += 120;
+      }
+    }
   }
 
   return (
     <div>
-      <h3 style={{color:"#00D9C0",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:700,marginBottom:12,marginTop:0}}>Sub-step 4 — 2D Arrays: "Cinema Seating"</h3>
-      <Analogy>
-        "Row 3, Seat 5" → <code>seats[3][5]</code>. Every seat has two coordinates. First number = which row. Second = which seat within that row. Nested loops walk through every row and every seat in order.
-      </Analogy>
+      <svg viewBox="0 0 380 200" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Screen */}
+        <polygon points="40,20 340,20 310,50 70,50" fill="rgba(150,150,180,0.15)" stroke="rgba(150,150,180,0.4)" strokeWidth="1.5" />
+        <text x="190" y="38" textAnchor="middle" fill="rgba(150,150,180,0.8)" fontSize="10" fontFamily="'Courier New',monospace" letterSpacing="2">SCREEN</text>
+        {/* Row labels */}
+        {[0, 1, 2, 3].map(r => (
+          <text key={r} x="28" y={66 + r * 36 + 16} textAnchor="middle" fill="#7B85A8" fontSize="10" fontFamily="'Courier New',monospace">{r}</text>
+        ))}
+        {/* Col labels */}
+        {[0, 1, 2, 3, 4].map(c => (
+          <text key={c} x={56 + c * 46 + 19} y="62" textAnchor="middle" fill="#7B85A8" fontSize="10" fontFamily="'Courier New',monospace">{c}</text>
+        ))}
+        {/* Seats */}
+        {[0, 1, 2, 3].map(r =>
+          [0, 1, 2, 3, 4].map(c => {
+            const x = 56 + c * 46;
+            const y = 66 + r * 36;
+            const isSelected = selected && selected[0] === r && selected[1] === c;
+            const isFilling = fillRow === r && fillCol === c;
+            const isFilled = filled[r][c] > 0;
+            return (
+              <g key={`${r}-${c}`} onClick={() => setSelected([r, c])} style={{ cursor: "pointer" }}>
+                <rect x={x} y={y} width="38" height="26" rx="4"
+                  fill={isSelected ? "rgba(0,217,192,0.2)" : isFilling ? "rgba(255,184,0,0.3)" : isFilled ? "rgba(0,217,192,0.08)" : "rgba(10,15,30,0.8)"}
+                  stroke={isSelected ? "#00D9C0" : isFilling ? "#FFB800" : isFilled ? "rgba(0,217,192,0.3)" : "rgba(255,255,255,0.1)"}
+                  strokeWidth={isSelected || isFilling ? 2 : 1}
+                />
+                {/* Chair back line */}
+                <line x1={x + 4} y1={y + 5} x2={x + 34} y2={y + 5} stroke={isSelected ? "#00D9C0" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" />
+                {isFilled && (
+                  <text x={x + 19} y={y + 19} textAnchor="middle" fill={isSelected ? "#00D9C0" : "#7B85A8"} fontSize="8" fontFamily="'Courier New',monospace">{filled[r][c]}</text>
+                )}
+              </g>
+            );
+          })
+        )}
+      </svg>
 
-      <div style={{marginBottom:16}}>
-        <div style={{fontSize:12,color:"#7B85A8",marginBottom:10,fontFamily:"'Courier New',monospace"}}>Click any seat to see its coordinates. Then fill all seats.</div>
-
-        <div style={{display:"flex",flexDirection:"column" as const,gap:6,marginBottom:12}}>
-          {Array.from({length:ROWS},(_,r)=>(
-            <div key={r} style={{display:"flex",gap:6,alignItems:"center"}}>
-              <div style={{width:16,fontSize:10,color:"#4A5070",fontFamily:"'Courier New',monospace",textAlign:"right"}}>R{r}</div>
-              {Array.from({length:COLS},(_,c)=>{
-                const isSelected = selected?.[0]===r && selected?.[1]===c;
-                const isActive = fillRow===r && fillCol===c;
-                const val = filled[r][c];
-                return (
-                  <div
-                    key={c}
-                    onClick={() => setSelected([r,c])}
-                    style={{
-                      width:50,height:40,borderRadius:6,cursor:"pointer",
-                      border:`2px solid ${isActive?"#FFB800":isSelected?"#00D9C0":val?"rgba(167,139,250,.4)":"rgba(255,255,255,0.12)"}`,
-                      background:isActive?"rgba(255,184,0,.15)":isSelected?"rgba(0,217,192,.12)":val?"rgba(167,139,250,.08)":"rgba(13,17,23,0.7)",
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      fontFamily:"'Courier New',monospace",fontSize:12,
-                      color:isActive?"#FFB800":isSelected?"#00D9C0":val?"#A78BFA":"#4A5070",
-                      transition:"all 0.15s",fontWeight:700
-                    }}
-                  >
-                    {val||`${r},${c}`}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-          <div style={{display:"flex",gap:6,marginLeft:22}}>
-            {Array.from({length:COLS},(_,c)=><div key={c} style={{width:50,textAlign:"center",fontSize:10,color:"#4A5070",fontFamily:"'Courier New',monospace"}}>C{c}</div>)}
-          </div>
+      {selected && (
+        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 13, color: "#00D9C0", marginBottom: 10 }}>
+          seats[{selected[0]}][{selected[1]}] {filled[selected[0]][selected[1]] > 0 ? `= ${filled[selected[0]][selected[1]]}` : ""}
         </div>
+      )}
 
-        {selected && (
-          <div style={{marginBottom:10,padding:"8px 14px",background:"rgba(0,217,192,.08)",border:"1px solid rgba(0,217,192,.2)",borderRadius:8,fontFamily:"'Courier New',monospace",fontSize:13,color:"#00D9C0"}}>
-            seats[{selected[0]}][{selected[1]}] — Row {selected[0]}, Column {selected[1]}
-          </div>
-        )}
+      <button onClick={fillAll} disabled={filling}
+        style={{ background: filling ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#FFB800,#FF5F6E)", border: "none", borderRadius: 8, padding: "10px 24px", color: "#fff", fontWeight: 700, fontSize: 14, cursor: filling ? "not-allowed" : "pointer", marginBottom: 16 }}>
+        {filling ? "Filling..." : "Fill All Seats!"}
+      </button>
 
-        {filling && fillRow!==null && fillCol!==null && (
-          <div style={{marginBottom:10,padding:"8px 14px",background:"rgba(255,184,0,.08)",border:"1px solid rgba(255,184,0,.22)",borderRadius:8,fontFamily:"'Courier New',monospace",fontSize:12,color:"#FFB800"}}>
-            row={fillRow}, col={fillCol} → seats[{fillRow}][{fillCol}] = {fillRow*COLS+fillCol+1}
-          </div>
-        )}
-
-        <button
-          onClick={fillAll}
-          disabled={filling}
-          style={{padding:"8px 20px",background:filling?"rgba(0,217,192,.12)":"#00D9C0",color:filling?"#00D9C0":"#003838",borderRadius:8,border:filling?"1px solid #00D9C0":"none",fontFamily:"'Courier New',monospace",fontWeight:700,fontSize:12,cursor:filling?"not-allowed":"pointer",marginBottom:8}}
-        >
-          {filling ? "Filling seats..." : "Fill all seats"}
-        </button>
-      </div>
-
-      <ConceptLock>A 2D array is a grid. First index = row, second = column. Use nested loops — one for rows, one for columns — to visit every element.</ConceptLock>
-      <Gotcha><code>int grid[3][4]</code> has rows 0-2 and columns 0-3. <code>grid[3][0]</code> and <code>grid[0][4]</code> are both out of bounds.</Gotcha>
-      <CodeBlock label="2d arrays" code={`int seats[4][5];  // 4 rows, 5 seats each
-
-for (int row = 0; row < 4; row++) {
-    for (int col = 0; col < 5; col++) {
-        seats[row][col] = row * 5 + col + 1;
-        printf("Row %d Seat %d\\n", row, col);
-    }
-}`} />
+      <CodeBlock label="C Example" code={`for (int row = 0; row < 4; row++)
+    for (int col = 0; col < 5; col++)
+        seats[row][col] = row*5 + col + 1;`} />
 
       <button
         onClick={() => onComplete(60)}
-        style={{marginTop:8,padding:"11px 28px",background:"linear-gradient(135deg,#00D9C0,#A78BFA)",color:"#0D1117",borderRadius:9,border:"none",fontFamily:"'Courier New',monospace",fontWeight:700,fontSize:13,cursor:"pointer"}}
+        style={{ width: "100%", background: "linear-gradient(135deg,#00D9C0,#A78BFA)", border: "none", borderRadius: 10, padding: "14px 0", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", marginTop: 8 }}
       >
-        Complete Arrays (+60 XP) 🎓
+        Complete — Claim 60 XP
       </button>
     </div>
   );
 }
 
+// ─── Main Export ──────────────────────────────────────────────────────────────
+
+interface Props { onComplete: (xp: number) => void; }
+
+const TABS = ["Lockers", "Index", "Loop", "Cinema"];
+
 export default function SectionArrays({ onComplete }: Props) {
   const [subStep, setSubStep] = useState(0);
-  const steps = ["Row of Lockers", "Index from 0", "Loops + Arrays", "Cinema Grid"];
+
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      <div style={{ display:"flex", gap:6, flexWrap:"wrap" as const }}>
-        {steps.map((s,i) => (
-          <button key={i} onClick={() => setSubStep(i)} style={{ padding:"5px 12px", borderRadius:8, border:`1px solid ${subStep===i?"#00D9C0":"rgba(255,255,255,0.10)"}`, background:subStep===i?"rgba(0,217,192,.12)":"transparent", color:subStep===i?"#00D9C0":"#7B85A8", fontFamily:"'Courier New',monospace", fontSize:10, fontWeight:700, cursor:"pointer" }}>
-            {i+1}. {s}
+    <div style={{ fontFamily: "system-ui,sans-serif", color: "#E9EDF8" }}>
+      <style>{KEYFRAMES}</style>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" as const }}>
+        {TABS.map((t, i) => (
+          <button key={i} onClick={() => setSubStep(i)}
+            style={{ flex: 1, minWidth: 70, background: subStep === i ? "rgba(0,217,192,0.18)" : "rgba(24,29,46,0.9)", border: `1px solid ${subStep === i ? "#00D9C0" : "rgba(255,255,255,0.1)"}`, borderRadius: 8, padding: "8px 0", color: subStep === i ? "#00D9C0" : "#7B85A8", fontWeight: subStep === i ? 700 : 400, fontSize: 13, cursor: "pointer" }}>
+            {t}
           </button>
         ))}
       </div>
-      <div style={{ background:"rgba(24,29,46,0.85)", border:"1px solid rgba(255,255,255,0.065)", borderRadius:14, padding:20 }}>
-        {subStep===0 && <DeclaringStep />}
-        {subStep===1 && <IndexStep />}
-        {subStep===2 && <LoopsArraysStep />}
-        {subStep===3 && <TwoDStep onComplete={onComplete} />}
-        {subStep < 3 && (
-          <button onClick={() => setSubStep(subStep+1)} style={{ marginTop:16, padding:"10px 24px", background:"#00D9C0", color:"#003838", borderRadius:9, border:"none", fontFamily:"'Courier New',monospace", fontWeight:700, fontSize:12, cursor:"pointer" }}>
+
+      <div style={{ background: "rgba(24,29,46,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20 }}>
+        {subStep === 0 && <LockerStep />}
+        {subStep === 1 && <TapeStep />}
+        {subStep === 2 && <InspectionStep />}
+        {subStep === 3 && <CinemaStep onComplete={onComplete} />}
+      </div>
+
+      {subStep < 3 && (
+        <div style={{ textAlign: "right", marginTop: 12 }}>
+          <button onClick={() => setSubStep(s => s + 1)}
+            style={{ background: "rgba(0,217,192,0.15)", border: "1px solid #00D9C0", borderRadius: 8, padding: "10px 24px", color: "#00D9C0", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             NEXT →
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,480 +1,348 @@
 "use client";
-
 import React, { useState } from "react";
 
-interface SectionCommentsProps {
-  onComplete: (xpAward: number) => void;
+interface Props {
+  onComplete: (xp: number) => void;
 }
 
-// ConceptLock: the irreducible truth each sub-step must leave behind
-function ConceptLock({ children }: { children: React.ReactNode }) {
+// ── Sub-step 0 ── Sticky Notes: What Are Comments? ────────────────────────────
+function Step0({ onNext }: { onNext: () => void }) {
+  const [notesOn, setNotesOn] = useState(true);
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const notes = [
+    { x: 40, y: 28, rot: -5, text: "// greet the user", codeLine: 1, color: "#FFB800" },
+    { x: 155, y: 58, rot: 3, text: "/* loop 10 times */", codeLine: 3, color: "#A78BFA" },
+    { x: 270, y: 18, rot: -3, text: "// print result", codeLine: 5, color: "#00D9C0" },
+  ];
+
+  const codeLines = [
+    "printf(\"Hello!\");",
+    "int i = 0;",
+    "for(i=0; i<10; i++)",
+    "  total += i;",
+    "printf(\"%d\", total);",
+    "return 0;",
+  ];
+
   return (
-    <div className="rounded-xl p-4 text-left space-y-1.5"
-      style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,218,243,.07))", border: "1px solid rgba(167,139,250,.30)" }}>
-      <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-widest"
-        style={{ color: "#A78BFA" }}>
-        🔒 Non-Replaceable Concept
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes peelUp { 0%{transform:scale(1) rotate(var(--rot,0deg))} 100%{transform:scale(1.12) rotate(calc(var(--rot,0deg) + 3deg)) translateY(-4px)} }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        .note-hover { animation: peelUp 0.2s ease-out forwards; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        .sticky-note { cursor: pointer; transition: filter 0.15s; }
+        .sticky-note:hover { filter: brightness(1.15); }
+      `}</style>
+
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0, lineHeight: 1.6 }}>
+        Comments are <strong style={{ color: "#FFB800" }}>sticky notes</strong> for humans. The compiler completely ignores them!
+        Hover over each note to see what code it explains.
+      </p>
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        <button onClick={() => setNotesOn(v => !v)}
+          style={{ padding: "8px 18px", borderRadius: 10, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13,
+            background: notesOn ? "#FFB800" : "rgba(24,29,46,0.9)",
+            color: notesOn ? "#0D1117" : "#E9EDF8" }}>
+          {notesOn ? "📝 Sticky Notes ON" : "📝 Sticky Notes OFF"}
+        </button>
       </div>
-      <div className="text-sm text-on-surface leading-relaxed font-sans">{children}</div>
+
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(255,184,0,0.2)" }}>
+        <svg viewBox="0 0 400 180" style={{ width: "100%", display: "block" }}>
+          {/* Code wall */}
+          <rect x="10" y="10" width="380" height="160" rx="10" fill="rgba(13,17,23,0.95)" stroke="#1a2030" strokeWidth="1" />
+
+          {/* Code lines */}
+          {codeLines.map((line, i) => (
+            <g key={i}>
+              <rect x="20" y={18 + i * 24} width={60 + line.length * 5.5} height="16" rx="3"
+                fill={hovered !== null && notes[hovered]?.codeLine === i ? "rgba(255,184,0,0.15)" : "rgba(30,35,50,0.6)"} />
+              <text x="26" y={30 + i * 24} fill={hovered !== null && notes[hovered]?.codeLine === i ? "#FFB800" : "#7B85A8"} fontSize="9" fontFamily="monospace">{line}</text>
+            </g>
+          ))}
+
+          {/* Sticky notes */}
+          {notesOn && notes.map((note, i) => (
+            <g key={i}
+              className={`sticky-note ${hovered === i ? "note-hover" : ""}`}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              style={{ "--rot": `${note.rot}deg` } as React.CSSProperties}>
+              {/* Note body */}
+              <rect x={note.x} y={note.y} width="90" height="38" rx="4"
+                fill={note.color} opacity="0.92"
+                transform={`rotate(${note.rot} ${note.x + 45} ${note.y + 19})`} />
+              {/* Dog ear */}
+              <path d={`M${note.x + 78},${note.y} L${note.x + 90},${note.y + 12} L${note.x + 78},${note.y + 12} Z`}
+                fill="rgba(0,0,0,0.2)"
+                transform={`rotate(${note.rot} ${note.x + 45} ${note.y + 19})`} />
+              <text x={note.x + 45} y={note.y + 16} textAnchor="middle" fill="#0D1117" fontSize="7.5" fontWeight="700"
+                transform={`rotate(${note.rot} ${note.x + 45} ${note.y + 19})`}>{note.text.slice(0, 18)}</text>
+              <text x={note.x + 45} y={note.y + 28} textAnchor="middle" fill="#0D1117" fontSize="7"
+                transform={`rotate(${note.rot} ${note.x + 45} ${note.y + 19})`}>{note.text.slice(18)}</text>
+            </g>
+          ))}
+
+          {!notesOn && (
+            <text x="200" y="170" textAnchor="middle" fill="#FF5F6E" fontSize="9">Notes hidden — compiler sees only code!</text>
+          )}
+        </svg>
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 10, padding: "12px 14px", border: "1px solid rgba(255,184,0,0.2)", fontFamily: "monospace", fontSize: 13 }}>
+        <div style={{ color: "#7B85A8", marginBottom: 6 }}><span style={{ color: "#00D9C0" }}>// </span>single-line comment — ignored to end of line</div>
+        <div style={{ color: "#7B85A8" }}><span style={{ color: "#A78BFA" }}>{"/* */"}</span> multi-line comment — ignored between delimiters</div>
+      </div>
+
+      <div style={{ borderLeft: "3px solid #FFB800", paddingLeft: 12, color: "#E9EDF8", fontSize: 13 }}>
+        <strong style={{ color: "#FFB800" }}>Concept Lock:</strong> Comments are notes for humans — the compiler ignores them completely.{" "}
+        <code style={{ color: "#00D9C0" }}>//</code> = one line, <code style={{ color: "#A78BFA" }}>{"/* */"}</code> = multi-line.
+      </div>
+
+      <button onClick={onNext}
+        style={{ background: "#FFB800", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+        Next: Writing Good Comments →
+      </button>
     </div>
   );
 }
 
-// Analogy block
-function Analogy({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl p-4 text-left space-y-1 text-sm leading-relaxed font-sans"
-      style={{ background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.22)" }}>
-      <div className="text-[10px] font-mono font-bold uppercase tracking-widest mb-1" style={{ color: "#FFB800" }}>
-        💡 Analogy
-      </div>
-      {children}
-    </div>
-  );
-}
+// ── Sub-step 1 ── The Recipe Book: Writing Good Comments ──────────────────────
+function Step1({ onNext }: { onNext: () => void }) {
+  const [showGood, setShowGood] = useState(false);
+  const [flipping, setFlipping] = useState(false);
 
-// Code reveal
-function CodeBlock({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl overflow-hidden text-left" style={{ border: "1px solid rgba(0,218,243,.18)" }}>
-      <div className="px-4 py-2 text-[10px] font-mono font-bold uppercase tracking-widest"
-        style={{ background: "rgba(0,218,243,.08)", color: "#00daf3" }}>
-        {label}
-      </div>
-      <pre className="p-4 text-xs leading-relaxed overflow-x-auto bg-surface-container-lowest font-mono">{children}</pre>
-    </div>
-  );
-}
+  function flip() {
+    setFlipping(true);
+    setTimeout(() => {
+      setShowGood(v => !v);
+      setFlipping(false);
+    }, 300);
+  }
 
-// Gotcha block
-function Gotcha({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl p-3.5 text-left flex gap-2 text-sm leading-relaxed font-sans"
-      style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)" }}>
-      <span className="text-base">⚠️</span>
-      <div style={{ color: "#E9EDF8" }}>{children}</div>
-    </div>
-  );
-}
+  const badCode = [
+    { code: "i++;", comment: "// add 1 to i", bad: true },
+    { code: "x = x * 2;", comment: "// multiply x by 2", bad: true },
+    { code: "arr[n] = 0;", comment: "// set array element", bad: true },
+  ];
 
-// ───── SCRAMBLE GAME lines ─────
-const RECIPE_LINES = [
-  { id: "include", text: '#include <stdio.h>', correct: 0, label: "Bring tools in" },
-  { id: "main",    text: 'int main() {',       correct: 1, label: "Where it starts" },
-  { id: "printf",  text: '  printf("Hello!\\n");', correct: 2, label: "Do something" },
-  { id: "return",  text: '  return 0;',        correct: 3, label: "Done, no errors" },
-  { id: "close",   text: '}',                  correct: 4, label: "End of recipe" },
-];
+  const goodCode = [
+    { code: "i++;", comment: "// advance to next student", bad: false },
+    { code: "x = x * 2;", comment: "// double the speed", bad: false },
+    { code: "arr[n] = 0;", comment: "// mark slot as empty", bad: false },
+  ];
 
-const COMMENT_SORT = [
-  { text: 'printf("Hello!\\n");',         kind: "instruction" as const },
-  { text: '// This greets the user',      kind: "note" as const },
-  { text: 'int age = 25;',                kind: "instruction" as const },
-  { text: '/* Created by Ahmed */',       kind: "note" as const },
-  { text: 'return 0;',                    kind: "instruction" as const },
-];
-
-export default function SectionComments({ onComplete }: SectionCommentsProps) {
-  const [subStep, setSubStep] = useState(0);
-  const [hasCompletedSection, setHasCompletedSection] = useState(false);
-
-  // ── Sub-step 1: Comment sort game ──
-  const [sortAnswers, setSortAnswers] = useState<Record<number, "instruction" | "note" | null>>({});
-  const [sortSubmitted, setSortSubmitted] = useState(false);
-
-  // ── Sub-step 2: Recipe scramble ──
-  const [order, setOrder] = useState([0, 1, 2, 3, 4]);
-  const [scrambled] = useState(() => {
-    // shuffled: move each index
-    const shuffled = [2, 4, 0, 3, 1];
-    return shuffled;
-  });
-  const [recipeOrder, setRecipeOrder] = useState<number[]>([2, 4, 0, 3, 1]);
-  const [recipeChecked, setRecipeChecked] = useState(false);
-  const recipeCorrect = recipeOrder.every((v, i) => v === i);
-
-  // ── Sub-step 3: quiz ──
-  const [bakeAnswer, setBakeAnswer] = useState<string | null>(null);
-  const [bakeSubmitted, setBakeSubmitted] = useState(false);
-
-  const moveItem = (from: number, to: number) => {
-    const next = [...recipeOrder];
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    setRecipeOrder(next);
-    setRecipeChecked(false);
-  };
-
-  const handleFinalSubmit = () => {
-    if (hasCompletedSection) return;
-    setHasCompletedSection(true);
-    onComplete(10);
-  };
+  const items = showGood ? goodCode : badCode;
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes pageFlip { 0%{transform:scaleX(1)} 50%{transform:scaleX(0)} 100%{transform:scaleX(1)} }
+        .flip { animation: pageFlip 0.6s ease-in-out; }
+      `}</style>
 
-      {/* Sub-step nav */}
-      <div className="flex flex-wrap gap-2 bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
-        {[
-          { label: "1. Sticky Notes 📝", step: 0 },
-          { label: "2. A Recipe 📖", step: 1 },
-          { label: "3. Baking the Cake 🎂", step: 2 },
-        ].map(({ label, step }) => (
-          <button
-            key={step}
-            onClick={() => setSubStep(step)}
-            className={`px-3 py-1.5 rounded transition-all cursor-pointer ${
-              subStep === step
-                ? "bg-primary text-on-primary font-bold"
-                : "text-on-surface-variant hover:text-on-surface"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0, lineHeight: 1.6 }}>
+        A good comment explains <strong style={{ color: "#00D9C0" }}>WHY</strong> — not just <em>what</em> the code does.
+        Toggle to see the difference!
+      </p>
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        <button onClick={flip}
+          style={{ padding: "8px 20px", borderRadius: 10, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13,
+            background: showGood ? "#00D9C0" : "#FF5F6E",
+            color: "#0D1117" }}>
+          {showGood ? "✓ Good Comments" : "✗ Bad Comments"}
+        </button>
       </div>
 
-      {/* ── SUB-STEP 1: STICKY NOTES ── */}
-      {subStep === 0 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <Analogy>
-            A recipe card has <strong>instructions</strong> — steps the cook follows. It also has{" "}
-            <strong>sticky notes</strong> — handwritten reminders from the last person who cooked it.
-            The oven completely ignores the sticky notes. It only follows the real instructions.
-            <br /><br />
-            Comments in code work exactly the same way. The compiler sees them and{" "}
-            <strong style={{ color: "#00D9C0" }}>throws them away</strong>. They exist only for humans reading the code.
-          </Analogy>
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: `1px solid ${showGood ? "rgba(0,217,192,0.3)" : "rgba(255,95,110,0.3)"}`, transition: "border-color 0.3s" }}>
+        <svg viewBox="0 0 400 180" style={{ width: "100%", display: "block" }}>
+          {/* Recipe book */}
+          <rect x="15" y="10" width="370" height="160" rx="12" fill="rgba(24,29,46,0.95)" stroke="#7B85A8" strokeWidth="1.5" />
+          {/* Spine */}
+          <line x1="200" y1="15" x2="200" y2="165" stroke="#7B85A8" strokeWidth="1" strokeDasharray="4 4" />
 
-          {/* Sort game */}
-          <section className="glass-panel p-4 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold flex items-center gap-1.5" style={{ color: "#A78BFA" }}>
-              <span className="material-symbols-outlined text-[18px]">sort</span>
-              Sort the Lines — Instruction or Just a Note?
-            </h3>
-            <div className="space-y-2.5">
-              {COMMENT_SORT.map((item, idx) => {
-                const ans = sortAnswers[idx];
-                const submitted = sortSubmitted;
-                const correct = item.kind;
-                const isRight = ans === correct;
-                return (
-                  <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                    <code className="flex-1 text-xs bg-surface-container-lowest px-3 py-2 rounded-lg font-mono border border-white/5 text-on-surface">
-                      {item.text}
-                    </code>
-                    <div className="flex gap-2">
-                      {(["instruction", "note"] as const).map((kind) => {
-                        let style = "border border-white/10 text-on-surface-variant";
-                        if (submitted) {
-                          if (kind === correct) style = "border border-primary bg-primary/15 text-primary-fixed-dim font-bold";
-                          else if (ans === kind && kind !== correct) style = "border border-error bg-error/10 text-error font-bold";
-                          else style = "border border-white/5 opacity-30";
-                        } else if (ans === kind) {
-                          style = "border border-secondary bg-secondary/15 text-secondary font-bold";
-                        }
-                        return (
-                          <button
-                            key={kind}
-                            disabled={sortSubmitted}
-                            onClick={() => setSortAnswers((p) => ({ ...p, [idx]: kind }))}
-                            className={`px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all cursor-pointer active:scale-95 ${style}`}
-                          >
-                            {kind === "instruction" ? "⚙️ Instruction" : "📝 Sticky Note"}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {!sortSubmitted ? (
-              <button
-                disabled={Object.keys(sortAnswers).length < COMMENT_SORT.length}
-                onClick={() => setSortSubmitted(true)}
-                className="px-5 py-2 bg-secondary text-on-secondary rounded-lg text-xs font-bold disabled:opacity-40 cursor-pointer active:scale-95 transition-all"
-              >
-                CHECK ANSWERS
-              </button>
-            ) : (
-              <div className="text-sm font-sans" style={{ color: "#00D9C0" }}>
-                ✓ Done! Green = what the computer runs. Sticky notes = human-only.
-              </div>
-            )}
-          </section>
+          {/* Left page header */}
+          <text x="100" y="30" textAnchor="middle" fill={showGood ? "#7B85A8" : "#FF5F6E"} fontSize="10" fontWeight="700">
+            {showGood ? "✓ Meaningful" : "✗ Obvious"}
+          </text>
+          {/* Right page header */}
+          <text x="300" y="30" textAnchor="middle" fill="#7B85A8" fontSize="10">Code</text>
 
-          <Gotcha>
-            <strong>Unclosed block comment danger:</strong> If you open{" "}
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">{"/*"}</code> and forget to close it with{" "}
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">{"*/"}</code>,{" "}
-            everything below it — including real code — is silently hidden from the compiler. The program stops compiling without obvious errors.
-          </Gotcha>
+          {/* Code items */}
+          <g className={flipping ? "flip" : ""}>
+            {items.map((item, i) => (
+              <g key={i}>
+                {/* Code on right */}
+                <rect x="210" y={42 + i * 40} width="170" height="28" rx="5" fill="rgba(13,17,23,0.8)" />
+                <text x="220" y={60 + i * 40} fill="#E9EDF8" fontSize="10" fontFamily="monospace">{item.code}</text>
 
-          <ConceptLock>
-            Comments are for <strong>humans only</strong>. The compiler sees them and throws them away.
-            A good comment explains <em>why</em> the code does something — not what it literally does.
-            An unclosed <code className="font-mono text-xs bg-white/10 px-1 rounded">{"/* block comment"}</code>{" "}
-            silently swallows all code below it until it finds <code className="font-mono text-xs bg-white/10 px-1 rounded">{"*/"}</code>.
-          </ConceptLock>
+                {/* Comment sticky note on left */}
+                <rect x="20" y={42 + i * 40} width="172" height="28" rx="5"
+                  fill={item.bad ? "rgba(255,95,110,0.12)" : "rgba(0,217,192,0.12)"}
+                  stroke={item.bad ? "#FF5F6E" : "#00D9C0"} strokeWidth="1" />
+                <text x="28" y={60 + i * 40} fill={item.bad ? "#FF5F6E" : "#00D9C0"} fontSize="9" fontFamily="monospace">{item.comment}</text>
+              </g>
+            ))}
+          </g>
 
-          <CodeBlock label="Code Reveal — both comment styles">
-            {`// This is a single-line comment — computer ignores this line
+          <text x="200" y="162" textAnchor="middle" fill="#7B85A8" fontSize="8">
+            {showGood ? "Comments explain the PURPOSE, not the mechanics" : "These comments just repeat what the code already says"}
+          </text>
+        </svg>
+      </div>
 
-/* This is a
-   multi-line block comment
-   The computer ignores everything inside */
-
-printf("This line DOES run.\\n");`}
-          </CodeBlock>
-
-          <div className="flex justify-end">
-            <button
-              onClick={() => setSubStep(1)}
-              className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs code-glow transition-all active:scale-95 cursor-pointer"
-            >
-              NEXT: A RECIPE →
-            </button>
-          </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ background: "rgba(255,95,110,0.08)", border: "1px solid rgba(255,95,110,0.3)", borderRadius: 10, padding: "10px 12px" }}>
+          <div style={{ color: "#FF5F6E", fontWeight: 700, fontSize: 12, marginBottom: 4 }}>✗ Bad</div>
+          <code style={{ color: "#7B85A8", fontSize: 12 }}>i++; // add 1 to i</code>
         </div>
-      )}
-
-      {/* ── SUB-STEP 2: A RECIPE ── */}
-      {subStep === 1 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <Analogy>
-            Every recipe has the same structure: a list of <strong>ingredients to gather</strong>, a clear{" "}
-            <strong>start point</strong>, the <strong>steps</strong> in order, and a <strong>"I&apos;m done"</strong> signal.
-            Every C program follows this exact same recipe format — always.
-          </Analogy>
-
-          {/* Recipe scramble game */}
-          <section className="glass-panel p-4 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold flex items-center gap-1.5" style={{ color: "#5EEAD4" }}>
-              <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
-              Drag to Fix the Recipe Order
-            </h3>
-            <p className="text-xs text-on-surface-variant font-sans">
-              These 5 lines are out of order. Click ↑ / ↓ to move them into the correct position.
-            </p>
-            <div className="space-y-1.5">
-              {recipeOrder.map((lineIdx, pos) => {
-                const line = RECIPE_LINES[lineIdx];
-                const isCorrect = recipeChecked && lineIdx === pos;
-                const isWrong = recipeChecked && lineIdx !== pos;
-                return (
-                  <div
-                    key={lineIdx}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                      isCorrect
-                        ? "border-primary bg-primary/10"
-                        : isWrong
-                        ? "border-error bg-error/10"
-                        : "border-white/10 bg-surface-container-low"
-                    }`}
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <button
-                        disabled={pos === 0}
-                        onClick={() => moveItem(pos, pos - 1)}
-                        className="text-[11px] text-on-surface-variant disabled:opacity-20 cursor-pointer hover:text-primary leading-none"
-                      >▲</button>
-                      <button
-                        disabled={pos === recipeOrder.length - 1}
-                        onClick={() => moveItem(pos, pos + 1)}
-                        className="text-[11px] text-on-surface-variant disabled:opacity-20 cursor-pointer hover:text-primary leading-none"
-                      >▼</button>
-                    </div>
-                    <code className="flex-1 text-xs font-mono text-on-surface">{line.text}</code>
-                    <span className="text-[10px] font-mono text-on-surface-variant">{line.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setRecipeChecked(true)}
-                className="px-5 py-2 bg-secondary text-on-secondary rounded-lg text-xs font-bold cursor-pointer active:scale-95 transition-all"
-              >
-                CHECK ORDER
-              </button>
-              {recipeChecked && recipeCorrect && (
-                <span className="text-sm font-bold self-center" style={{ color: "#00D9C0" }}>
-                  ✓ Perfect recipe!
-                </span>
-              )}
-              {recipeChecked && !recipeCorrect && (
-                <span className="text-sm font-bold self-center" style={{ color: "#FF5F6E" }}>
-                  Not quite — try again
-                </span>
-              )}
-            </div>
-          </section>
-
-          <ConceptLock>
-            Every C program needs <code className="font-mono text-xs bg-white/10 px-1 rounded">{"main()"}</code> — that&apos;s where
-            the computer starts reading.{" "}
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">{"{ }"}</code> braces mark everything that belongs
-            inside. <code className="font-mono text-xs bg-white/10 px-1 rounded">return 0;</code> tells the operating system
-            the program finished without errors. Forgetting any of these breaks the whole program.
-          </ConceptLock>
-
-          <CodeBlock label="Fully Labelled Program Skeleton">
-            {`#include <stdio.h>    // bring in print tools
-
-int main() {           // start here
-    printf("Hello!\\n");  // do something
-    return 0;           // done, no errors
-}`}
-          </CodeBlock>
-
-          <div className="flex justify-end">
-            <button
-              onClick={() => setSubStep(2)}
-              className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs code-glow transition-all active:scale-95 cursor-pointer"
-            >
-              NEXT: BAKING THE CAKE →
-            </button>
-          </div>
+        <div style={{ background: "rgba(0,217,192,0.08)", border: "1px solid rgba(0,217,192,0.3)", borderRadius: 10, padding: "10px 12px" }}>
+          <div style={{ color: "#00D9C0", fontWeight: 700, fontSize: 12, marginBottom: 4 }}>✓ Good</div>
+          <code style={{ color: "#E9EDF8", fontSize: 12 }}>i++; // next student</code>
         </div>
-      )}
+      </div>
 
-      {/* ── SUB-STEP 3: BAKING THE CAKE ── */}
-      {subStep === 2 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <Analogy>
-            Writing code is writing the recipe. <strong>Compiling</strong> is baking — the oven (compiler)
-            checks for mistakes and transforms it into something the computer can actually run.{" "}
-            <strong>Running</strong> is serving the cake.
-            <br /><br />
-            You can&apos;t serve before it&apos;s baked. A mistake in the recipe stops the bake
-            (<strong style={{ color: "#FF5F6E" }}>compile error</strong>).
-            A mistake in execution is like the cake collapsing after it&apos;s out{" "}
-            (<strong style={{ color: "#FF5F6E" }}>runtime error</strong>).
-          </Analogy>
+      <button onClick={onNext}
+        style={{ background: "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+        Next: Program Structure →
+      </button>
+    </div>
+  );
+}
 
-          {/* 3-stage visual */}
-          <section className="glass-panel p-5 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">sync_alt</span>
-              The Three Stages
-            </h3>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              {[
-                { icon: "edit_note", label: "Write", sub: "You type the recipe (code)", color: "#A78BFA" },
-                { icon: "build", label: "Compile", sub: "Oven checks & bakes it", color: "#FFB800" },
-                { icon: "play_arrow", label: "Run", sub: "Serve and eat the cake", color: "#00D9C0" },
-              ].map((s) => (
-                <div key={s.label} className="bg-surface-container-low rounded-xl p-3 border border-white/5 space-y-1.5">
-                  <span className="material-symbols-outlined text-[28px]" style={{ color: s.color }}>{s.icon}</span>
-                  <div className="text-xs font-bold font-mono" style={{ color: s.color }}>{s.label}</div>
-                  <div className="text-[10px] text-on-surface-variant font-sans leading-relaxed">{s.sub}</div>
-                </div>
-              ))}
-            </div>
+// ── Sub-step 2 ── Structure: A Recipe For C Programs ─────────────────────────
+function Step2({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [activeSection, setActiveSection] = useState<number | null>(null);
+  const [done, setDone] = useState(false);
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-surface-container-lowest rounded-xl p-3 border text-xs font-sans space-y-1" style={{ borderColor: "rgba(255,95,110,.25)" }}>
-                <div className="font-bold" style={{ color: "#FF5F6E" }}>Compile Error</div>
-                <p className="text-on-surface-variant">Recipe has a mistake — oven refuses to bake. Fix the code before anything runs.</p>
-                <code className="text-[10px] block mt-1 opacity-70">{`error: missing ';' before '{'`}</code>
-              </div>
-              <div className="bg-surface-container-lowest rounded-xl p-3 border text-xs font-sans space-y-1" style={{ borderColor: "rgba(255,95,110,.18)" }}>
-                <div className="font-bold" style={{ color: "#FF5F6E" }}>Runtime Error</div>
-                <p className="text-on-surface-variant">Recipe was readable, baking succeeded — but the cake collapsed while serving. Program crashes mid-run.</p>
-              </div>
-            </div>
+  const sections = [
+    {
+      label: "#include <stdio.h>", y: 15, height: 28, color: "#A78BFA",
+      icon: "🧂", note: "Ingredients list! These are library files that give your program extra abilities (like printf).",
+    },
+    {
+      label: "int main() {", y: 52, height: 24, color: "#FFB800",
+      icon: "👨‍🍳", note: "The main cooking area! Every C program starts here. The { } are like the pot — everything goes inside.",
+    },
+    {
+      label: "  /* variable declarations */", y: 82, height: 24, color: "#00D9C0",
+      icon: "📝", note: "Prep area: declare the variables you will use. Like setting out your ingredients before cooking.",
+    },
+    {
+      label: "  printf(\"Hello!\\n\");", y: 112, height: 24, color: "#FF5F6E",
+      icon: "🍳", note: "Cooking steps! These instructions run top-to-bottom, one at a time.",
+    },
+    {
+      label: "  return 0;", y: 142, height: 24, color: "#7B85A8",
+      icon: "🍽️", note: "Serve and done! return 0 tells the OS the program finished successfully.",
+    },
+  ];
 
-            {/* Quick quiz */}
-            <div className="space-y-3 pt-1 border-t border-white/5">
-              <p className="text-xs font-bold text-on-surface">
-                Quick Check: You wrote <code className="font-mono bg-white/5 px-1">prnft("Hello");</code> — that&apos;s a typo. What happens?
-              </p>
-              <div className="flex flex-col gap-2">
-                {[
-                  { label: "The program runs but prints nothing", val: "a" },
-                  { label: "Compile error — oven refuses to bake", val: "b" },
-                  { label: "Runtime error — crashes while serving", val: "c" },
-                ].map((opt) => {
-                  let style = "border-white/10 bg-white/5";
-                  if (bakeSubmitted) {
-                    if (opt.val === "b") style = "border-primary bg-primary/10 text-primary-fixed-dim font-bold";
-                    else if (bakeAnswer === opt.val) style = "border-error bg-error/10 text-error font-bold";
-                    else style = "border-white/5 opacity-30";
-                  } else if (bakeAnswer === opt.val) {
-                    style = "border-secondary bg-secondary/15 text-secondary";
-                  }
-                  return (
-                    <button
-                      key={opt.val}
-                      disabled={bakeSubmitted}
-                      onClick={() => setBakeAnswer(opt.val)}
-                      className={`text-left p-3 rounded-lg border text-xs font-mono transition-all cursor-pointer active:scale-[0.99] ${style}`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {!bakeSubmitted && bakeAnswer && (
-                <button
-                  onClick={() => setBakeSubmitted(true)}
-                  className="px-5 py-2 bg-secondary text-on-secondary rounded-lg text-xs font-bold cursor-pointer active:scale-95 transition-all"
-                >
-                  SUBMIT
-                </button>
-              )}
-              {bakeSubmitted && (
-                <div className="text-xs font-sans p-3 rounded-lg bg-surface-container-low border border-white/5 text-on-surface-variant">
-                  <strong className="text-on-surface block">Explanation:</strong>
-                  A misspelled function name is caught before the program ever runs.
-                  The compiler reads the code, sees an unknown word, and stops with an error.
-                  This is a <strong style={{ color: "#FFB800" }}>compile error</strong>.
-                </div>
-              )}
-            </div>
-          </section>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes notePop { 0%{transform:scale(0.8) translateY(8px);opacity:0} 70%{transform:scale(1.04) translateY(-2px)} 100%{transform:scale(1) translateY(0);opacity:1} }
+        .note-pop { animation: notePop 0.35s ease-out; }
+        .section-btn { cursor: pointer; transition: opacity 0.15s; }
+        .section-btn:hover { opacity: 0.85; }
+      `}</style>
 
-          <ConceptLock>
-            Code is for humans to write. The <strong>compiler</strong> translates it into machine language the computer runs.
-            A <strong style={{ color: "#FF5F6E" }}>compile error</strong> means the recipe is unreadable — fix it before anything runs.
-            A <strong style={{ color: "#FF5F6E" }}>runtime error</strong> means the recipe was readable but produced something wrong during execution.
-            These are different problems with different solutions.
-          </ConceptLock>
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0, lineHeight: 1.6 }}>
+        Click each part of the C program to reveal a sticky-note explanation!
+      </p>
 
-          {/* Capstone notice */}
-          <div className="rounded-xl p-4 text-left border text-sm font-sans space-y-2"
-            style={{ background: "rgba(255,184,0,.07)", borderColor: "rgba(255,184,0,.25)" }}>
-            <div className="text-xs font-mono font-bold uppercase tracking-widest" style={{ color: "#FFB800" }}>
-              🏆 Lesson 3 Capstone Unlocked
-            </div>
-            <div className="font-bold text-on-surface">Tidy Up This Program</div>
-            <p className="text-on-surface-variant text-xs leading-relaxed">
-              You&apos;ve learned all three parts: comments, structure, and the compile-run pipeline.
-              Complete this section to earn XP and unlock the next lesson.
-            </p>
-          </div>
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(167,139,250,0.2)" }}>
+          <svg viewBox="0 0 260 180" style={{ width: "100%", display: "block" }}>
+            <rect x="5" y="5" width="250" height="170" rx="10" fill="rgba(13,17,23,0.95)" stroke="#1a2030" strokeWidth="1" />
 
-          <div className="flex justify-end">
-            <button
-              disabled={hasCompletedSection}
-              onClick={handleFinalSubmit}
-              className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                hasCompletedSection
-                  ? "bg-primary/10 text-primary-fixed-dim border border-primary/30"
-                  : "bg-primary text-on-primary code-glow"
-              }`}
-            >
-              {hasCompletedSection ? (
-                <><span className="material-symbols-outlined text-[16px]">verified</span> SECTION COMPLETED</>
-              ) : (
-                "COMPLETE & EARN 10 XP"
-              )}
-            </button>
-          </div>
+            {sections.map((sec, i) => (
+              <g key={i} className="section-btn" onClick={() => setActiveSection(activeSection === i ? null : i)}>
+                <rect x="10" y={sec.y} width="240" height={sec.height} rx="5"
+                  fill={activeSection === i ? `${sec.color}22` : "transparent"}
+                  stroke={activeSection === i ? sec.color : "transparent"} strokeWidth="1.5" />
+                <text x="18" y={sec.y + sec.height - 8} fill={activeSection === i ? sec.color : "#7B85A8"} fontSize="9" fontFamily="monospace">{sec.label}</text>
+              </g>
+            ))}
+
+            <text x="130" y="175" textAnchor="middle" fill="#2a3040" fontSize="8">tap a line to inspect</text>
+          </svg>
         </div>
-      )}
+
+        <div style={{ flex: 1, minHeight: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {activeSection !== null ? (
+            <div className="note-pop" style={{
+              background: `${sections[activeSection].color}18`,
+              border: `1.5px solid ${sections[activeSection].color}`,
+              borderRadius: 12, padding: "14px 16px",
+            }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>{sections[activeSection].icon}</div>
+              <div style={{ color: sections[activeSection].color, fontWeight: 700, fontSize: 12, marginBottom: 4 }}>{sections[activeSection].label}</div>
+              <div style={{ color: "#E9EDF8", fontSize: 13, lineHeight: 1.5 }}>{sections[activeSection].note}</div>
+            </div>
+          ) : (
+            <div style={{ color: "#7B85A8", fontSize: 13, textAlign: "center" }}>
+              ← Click a line<br />to see what it does
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ borderLeft: "3px solid #A78BFA", paddingLeft: 12, color: "#E9EDF8", fontSize: 13 }}>
+        <strong style={{ color: "#A78BFA" }}>Concept Lock:</strong> Every C program is a recipe: <code style={{ color: "#A78BFA" }}>includes</code> (ingredients) → <code style={{ color: "#FFB800" }}>main()</code> (cooking steps) → <code style={{ color: "#7B85A8" }}>return</code> (serve!). Comments explain the WHY.
+      </div>
+
+      <button
+        onClick={() => { if (!done) { setDone(true); onComplete(40); } }}
+        disabled={done}
+        style={{ background: done ? "#7B85A8" : "#A78BFA", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: done ? "default" : "pointer", fontSize: 14 }}>
+        {done ? "✓ 40 XP Earned!" : "Complete Section & Earn 40 XP"}
+      </button>
+    </div>
+  );
+}
+
+// ── Main Export ────────────────────────────────────────────────────────────────
+export default function SectionComments({ onComplete }: Props) {
+  const [step, setStep] = useState(0);
+
+  const stepLabels = ["Sticky Notes", "Good Comments", "Program Structure"];
+
+  return (
+    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <style>{`
+        @keyframes tabIn { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
+        .tab-content { animation: tabIn 0.3s ease-out; }
+      `}</style>
+
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#FFB800" }} />
+          <span style={{ color: "#7B85A8", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>Comments</span>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {stepLabels.map((lbl, i) => (
+            <div key={i} style={{
+              flex: 1, textAlign: "center", padding: "6px 8px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+              background: i === step ? "#FFB800" : i < step ? "rgba(255,184,0,0.2)" : "rgba(24,29,46,0.9)",
+              color: i === step ? "#0D1117" : i < step ? "#FFB800" : "#7B85A8",
+              cursor: i <= step ? "pointer" : "default",
+            }} onClick={() => i <= step && setStep(i)}>
+              {i < step ? "✓ " : ""}{lbl}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="tab-content" key={step}>
+        {step === 0 && <Step0 onNext={() => setStep(1)} />}
+        {step === 1 && <Step1 onNext={() => setStep(2)} />}
+        {step === 2 && <Step2 onComplete={onComplete} />}
+      </div>
     </div>
   );
 }

@@ -1,637 +1,1031 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import FilingGame from "./FilingGame";
+import React, { useState } from "react";
 
 interface SectionVariablesProps {
   onComplete: (xpAward: number) => void;
 }
 
-interface NamingChallenge {
-  name: string;
-  expectedCategory: "valid" | "violation" | "bad_convention";
-  explanation: string;
-  options: { label: string; value: "valid" | "violation" | "bad_convention" }[];
+/* ─── Helper: ConceptLock ─────────────────────────────────────────────────── */
+function ConceptLock({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: "linear-gradient(135deg,rgba(167,139,250,.12),rgba(0,217,192,.08))",
+        border: "1px solid rgba(167,139,250,.35)",
+        borderRadius: 12,
+        padding: "14px 16px",
+        textAlign: "left",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10,
+          fontFamily: "Courier New, monospace",
+          fontWeight: 700,
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          color: "#A78BFA",
+          marginBottom: 6,
+        }}
+      >
+        🔒 Concept Lock
+      </div>
+      <div style={{ fontSize: 13, color: "#E9EDF8", lineHeight: 1.6 }}>{children}</div>
+    </div>
+  );
 }
 
-const NAMING_CHALLENGES: NamingChallenge[] = [
+/* ─── Helper: Gotcha ──────────────────────────────────────────────────────── */
+function Gotcha({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: "rgba(255,95,110,.10)",
+        border: "1px solid rgba(255,95,110,.35)",
+        borderRadius: 10,
+        padding: "12px 16px",
+        textAlign: "left",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10,
+          fontFamily: "Courier New, monospace",
+          fontWeight: 700,
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          color: "#FF5F6E",
+          marginBottom: 5,
+        }}
+      >
+        ⚠️ Gotcha
+      </div>
+      <div style={{ fontSize: 13, color: "#E9EDF8", lineHeight: 1.55 }}>{children}</div>
+    </div>
+  );
+}
+
+/* ─── Helper: CodeSnip ────────────────────────────────────────────────────── */
+function CodeSnip({
+  lines,
+  highlight,
+}: {
+  lines: { code: string; comment: string }[];
+  highlight: number;
+}) {
+  return (
+    <div
+      style={{
+        background: "#0D1117",
+        borderRadius: 10,
+        padding: "14px 16px",
+        fontFamily: "Courier New, monospace",
+        fontSize: 12,
+        textAlign: "left",
+        border: "1px solid rgba(255,184,0,.15)",
+      }}
+    >
+      {lines.map((ln, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            gap: 12,
+            padding: "3px 6px",
+            borderRadius: 4,
+            background:
+              i === highlight
+                ? "rgba(255,184,0,.12)"
+                : "transparent",
+            transition: "background 0.3s",
+            marginBottom: 2,
+          }}
+        >
+          <span
+            style={{
+              color: i === highlight ? "#FFB800" : "#00D9C0",
+              minWidth: 160,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {ln.code}
+          </span>
+          <span style={{ color: "#7B85A8" }}>{ln.comment}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Sub-step 0: The Magic Box ───────────────────────────────────────────── */
+type BoxState = 0 | 1 | 2;
+
+function StepMagicBox({ onNext }: { onNext: () => void }) {
+  const [boxState, setBoxState] = useState<BoxState>(0);
+  const [floatKey, setFloatKey] = useState(0);
+
+  const advance = (next: BoxState) => {
+    setBoxState(next);
+    setFloatKey((k) => k + 1);
+  };
+
+  const codeLines = [
+    { code: "int age;", comment: "// box exists, mystery inside" },
+    { code: "age = 16;", comment: "// value lands in box" },
+    { code: "age = 17;", comment: "// old value replaced" },
+  ];
+
+  /* label tag position */
+  const tagX = 160;
+  const tagY = 57;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* SVG scene */}
+      <svg
+        width="100%"
+        viewBox="0 0 380 160"
+        style={{ display: "block", maxHeight: 160 }}
+      >
+        {/* decorative dots */}
+        <circle cx="30" cy="30" r="3" fill="#A78BFA" opacity="0.3" />
+        <circle cx="350" cy="130" r="4" fill="#FFB800" opacity="0.25" />
+        <circle cx="360" cy="40" r="2" fill="#00D9C0" opacity="0.3" />
+        <circle cx="20" cy="130" r="2.5" fill="#FF5F6E" opacity="0.25" />
+
+        {/* Box body */}
+        <rect
+          x="140"
+          y="80"
+          width="100"
+          height="70"
+          rx="6"
+          fill="#0D1117"
+          stroke="#FFB800"
+          strokeWidth="2"
+          className={boxState === 0 ? "slide-in" : ""}
+        />
+        {/* Lid */}
+        <rect
+          x="135"
+          y="65"
+          width="110"
+          height="22"
+          rx="4"
+          fill="#1a1400"
+          stroke="#FFB800"
+          strokeWidth="2"
+        />
+        {/* Hinge circles */}
+        <circle cx="185" cy="76" r="4" fill="#FFB800" opacity="0.7" />
+        <circle cx="195" cy="76" r="4" fill="#FFB800" opacity="0.7" />
+
+        {/* Label tag string */}
+        <line x1="190" y1="65" x2="190" y2="60" stroke="#FFB800" strokeWidth="1" />
+        {/* Label tag rect */}
+        <rect
+          x={tagX}
+          y={tagY - 10}
+          width="60"
+          height="16"
+          rx="3"
+          fill="#1a1400"
+          stroke="#FFB800"
+          strokeWidth="1"
+        />
+        <text
+          x={tagX + 30}
+          y={tagY + 3}
+          textAnchor="middle"
+          fill="#FFB800"
+          fontFamily="Courier New"
+          fontSize="10"
+          fontWeight="bold"
+        >
+          age
+        </text>
+
+        {/* Question mark — state 0 */}
+        {boxState === 0 && (
+          <text
+            x="190"
+            y="125"
+            textAnchor="middle"
+            fill="#4A5070"
+            fontFamily="Courier New"
+            fontSize="22"
+          >
+            ?
+          </text>
+        )}
+
+        {/* Value 16 — state 1 */}
+        {boxState === 1 && (
+          <text
+            key={`v16-${floatKey}`}
+            x="190"
+            y="125"
+            textAnchor="middle"
+            fill="#00D9C0"
+            fontFamily="Courier New"
+            fontSize="26"
+            fontWeight="bold"
+            className="pop-in"
+          >
+            16
+          </text>
+        )}
+
+        {/* Value 17 — state 2 */}
+        {boxState === 2 && (
+          <text
+            key={`v17-${floatKey}`}
+            x="190"
+            y="125"
+            textAnchor="middle"
+            fill="#A78BFA"
+            fontFamily="Courier New"
+            fontSize="26"
+            fontWeight="bold"
+            className="pop-in"
+          >
+            17
+          </text>
+        )}
+
+        {/* Float-up particle when value enters */}
+        {boxState >= 1 && (
+          <text
+            key={`float-${floatKey}`}
+            x="230"
+            y="95"
+            textAnchor="middle"
+            fill="#00D9C0"
+            fontFamily="Courier New"
+            fontSize="11"
+            className="float-up"
+            style={{ pointerEvents: "none" }}
+          >
+            {boxState === 1 ? "+16" : "+17"}
+          </text>
+        )}
+      </svg>
+
+      {/* Step buttons */}
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        {(
+          [
+            { label: "int age;", state: 0 as BoxState },
+            { label: "age = 16", state: 1 as BoxState },
+            { label: "age = 17", state: 2 as BoxState },
+          ] as { label: string; state: BoxState }[]
+        ).map(({ label, state }) => (
+          <button
+            key={state}
+            onClick={() => advance(state)}
+            style={{
+              padding: "8px 18px",
+              borderRadius: 8,
+              border: `2px solid ${boxState === state ? "#00D9C0" : "rgba(255,255,255,0.12)"}`,
+              background: boxState === state ? "rgba(0,217,192,.15)" : "rgba(24,29,46,0.9)",
+              color: boxState === state ? "#00D9C0" : "#7B85A8",
+              fontFamily: "Courier New, monospace",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Code panel */}
+      <CodeSnip lines={codeLines} highlight={boxState} />
+
+      <ConceptLock>
+        A variable is a <strong>named memory box</strong>.{" "}
+        <code style={{ color: "#00D9C0" }}>int</code> = whole-number type.{" "}
+        <em>Declare</em> = create the box. <em>Initialize</em> = put a value in.
+        Reassigning replaces the old value — only one value fits at a time.
+      </ConceptLock>
+
+      <Gotcha>
+        An uninitialized variable holds <strong>random garbage</strong> from
+        memory — never assume it&apos;s 0. Always initialize when you declare:{" "}
+        <code style={{ color: "#FFB800" }}>int age = 16;</code>
+      </Gotcha>
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button
+          onClick={onNext}
+          style={{
+            padding: "10px 24px",
+            borderRadius: 8,
+            border: "none",
+            background: "#00D9C0",
+            color: "#0D1117",
+            fontWeight: 700,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Sub-step 1: The Naming Game ─────────────────────────────────────────── */
+type NameVerdict = "valid" | "rule-break" | "bad-style";
+
+interface NameCard {
+  name: string;
+  correct: NameVerdict;
+  ruleBreakMsg: string;
+}
+
+const NAME_CARDS: NameCard[] = [
   {
     name: "1stPlace",
-    expectedCategory: "violation",
-    explanation: "Toy Box Rule Violation: Variable names cannot start with a number. They must start with a letter, otherwise the computer gets confused and thinks it is a real number!",
-    options: [
-      { label: "Valid Name", value: "valid" },
-      { label: "Violates Rules", value: "violation" },
-      { label: "Bad Style (poor convention)", value: "bad_convention" }
-    ]
-  },
-  {
-    name: "student Age",
-    expectedCategory: "violation",
-    explanation: "Toy Box Rule Violation: Variable names cannot contain spaces. The computer doesn't know where the name ends! Use 'studentAge' or 'student_age' instead.",
-    options: [
-      { label: "Valid Name", value: "valid" },
-      { label: "Violates Rules", value: "violation" },
-      { label: "Bad Style (poor convention)", value: "bad_convention" }
-    ]
-  },
-  {
-    name: "return",
-    expectedCategory: "violation",
-    explanation: "Toy Box Rule Violation: 'return' is a reserved keyword (a command the computer already uses). You cannot use it as your custom toy box name.",
-    options: [
-      { label: "Valid Name", value: "valid" },
-      { label: "Violates Rules", value: "violation" },
-      { label: "Bad Style (poor convention)", value: "bad_convention" }
-    ]
+    correct: "rule-break",
+    ruleBreakMsg: "Can't start with a number — the compiler thinks it's a numeric value.",
   },
   {
     name: "studentAge",
-    expectedCategory: "valid",
-    explanation: "Valid Name! Uses 'camelCase' (capitalizing words after the first to look like a camel's hump), making it clean and easy to read.",
-    options: [
-      { label: "Valid Name", value: "valid" },
-      { label: "Violates Rules", value: "violation" },
-      { label: "Bad Style (poor convention)", value: "bad_convention" }
-    ]
+    correct: "valid",
+    ruleBreakMsg: "",
+  },
+  {
+    name: "return",
+    correct: "rule-break",
+    ruleBreakMsg: "'return' is a reserved keyword — the compiler already uses it.",
+  },
+  {
+    name: "my score",
+    correct: "rule-break",
+    ruleBreakMsg: "Spaces aren't allowed — the compiler sees two separate words.",
   },
   {
     name: "x",
-    expectedCategory: "bad_convention",
-    explanation: "Valid computer code, but Bad Convention: Single letters like 'x' do not tell us what toy is inside. Use descriptive names like 'score' instead!",
-    options: [
-      { label: "Valid Name", value: "valid" },
-      { label: "Violates Rules", value: "violation" },
-      { label: "Bad Style (poor convention)", value: "bad_convention" }
-    ]
-  }
+    correct: "bad-style",
+    ruleBreakMsg: "Works, but single letters don't say what the box holds. Use a descriptive name.",
+  },
 ];
 
-export default function SectionVariables({ onComplete }: SectionVariablesProps) {
-  // Sub-step inside Variables: 0 = Toy Box, 1 = Naming Game, 2 = Magic Formulas, 3 = Filing Game
-  const [subStep, setSubStep] = useState<number>(0);
+const VERDICT_LABELS: Record<NameVerdict, string> = {
+  valid: "✓ VALID",
+  "rule-break": "✗ RULE BREAK",
+  "bad-style": "~ BAD STYLE",
+};
 
-  // Sub-step 1: Toy Box States ('declare' | 'init' | 'assign')
-  const [lockerState, setLockerState] = useState<"declare" | "init" | "assign">("declare");
-  const [garbageValue, setGarbageValue] = useState<number>(-9821);
+type CardStatus = "idle" | "correct" | "wrong";
 
-  // Generate random garbage value on declaration tab select
-  useEffect(() => {
-    if (lockerState === "declare") {
-      const interval = setInterval(() => {
-        setGarbageValue(Math.floor(Math.random() * 65535) - 32768);
-      }, 800);
-      return () => clearInterval(interval);
-    }
-  }, [lockerState]);
+interface CardState {
+  status: CardStatus;
+  shaking: boolean;
+  wrongMsg: string;
+}
 
-  // Sub-step 2: Naming Game states
-  const [challengeIdx, setChallengeIdx] = useState<number>(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
-  const [namingScore, setNamingScore] = useState<number>(0);
+function StepNamingGame({ onNext }: { onNext: () => void }) {
+  const [cards, setCards] = useState<CardState[]>(
+    NAME_CARDS.map(() => ({ status: "idle", shaking: false, wrongMsg: "" }))
+  );
 
-  // Sub-step 3: Expressions states
-  const [exprInput, setExprInput] = useState<string>("5");
-  const [filingCompleted, setFilingCompleted] = useState<boolean>(false);
-  const [hasCompletedSection, setHasCompletedSection] = useState<boolean>(false);
+  const correctCount = cards.filter((c) => c.status === "correct").length;
+  const allDone = correctCount === NAME_CARDS.length;
 
-  // Naming challenge submit
-  const handleNamingSubmit = (ans: "valid" | "violation" | "bad_convention") => {
-    if (answerSubmitted) return;
-    setSelectedAnswer(ans);
-    setAnswerSubmitted(true);
-    if (ans === NAMING_CHALLENGES[challengeIdx].expectedCategory) {
-      setNamingScore((prev) => prev + 1);
-    }
-  };
+  const pick = (cardIdx: number, verdict: NameVerdict) => {
+    const card = NAME_CARDS[cardIdx];
+    const cur = cards[cardIdx];
+    if (cur.status === "correct") return;
 
-  const handleNextChallenge = () => {
-    setSelectedAnswer(null);
-    setAnswerSubmitted(false);
-    if (challengeIdx < NAMING_CHALLENGES.length - 1) {
-      setChallengeIdx(challengeIdx + 1);
+    if (verdict === card.correct) {
+      setCards((prev) =>
+        prev.map((c, i) =>
+          i === cardIdx ? { ...c, status: "correct", wrongMsg: "" } : c
+        )
+      );
     } else {
-      setSubStep(2); // Go to Step 3
+      // shake then remove
+      setCards((prev) =>
+        prev.map((c, i) =>
+          i === cardIdx
+            ? { ...c, shaking: true, wrongMsg: card.ruleBreakMsg }
+            : c
+        )
+      );
+      setTimeout(() => {
+        setCards((prev) =>
+          prev.map((c, i) =>
+            i === cardIdx ? { ...c, shaking: false } : c
+          )
+        );
+      }, 320);
     }
-  };
-
-  const handleFinalSubmit = () => {
-    if (hasCompletedSection) return;
-    setHasCompletedSection(true);
-    onComplete(10); // Award 10 XP
   };
 
   return (
-    <div className="space-y-6">
-      
-      {/* Step navigation headers */}
-      <div className="flex flex-wrap gap-2 justify-between items-center bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
-        <button
-          onClick={() => setSubStep(0)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer ${
-            subStep === 0 ? "bg-primary text-on-primary font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          1. Toy Box Concept 🧸
-        </button>
-        <button
-          disabled={subStep < 1 && lockerState === "declare"}
-          onClick={() => setSubStep(1)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
-            subStep === 1 ? "bg-secondary text-on-secondary font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          2. Naming Rules Game 🎯
-        </button>
-        <button
-          disabled={subStep < 2 && namingScore < 3}
-          onClick={() => setSubStep(2)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
-            subStep === 2 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          3. Magic Formulas ✨
-        </button>
-        <button
-          disabled={subStep < 3 && namingScore < 3}
-          onClick={() => setSubStep(3)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
-            subStep === 3 ? "bg-primary-container text-on-primary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          4. Memory Filing Game 📦
-        </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 14,
+        }}
+      >
+        {NAME_CARDS.map((nc, ci) => {
+          const cs = cards[ci];
+          const borderColor =
+            cs.status === "correct"
+              ? "#00D9C0"
+              : cs.status === "wrong"
+              ? "#FF5F6E"
+              : "rgba(255,255,255,0.12)";
+
+          return (
+            <div
+              key={nc.name}
+              className={cs.shaking ? "shake" : ""}
+              style={{
+                background: "rgba(24,29,46,0.9)",
+                border: `2px solid ${borderColor}`,
+                borderRadius: 10,
+                padding: "14px 14px 12px",
+                position: "relative",
+                transition: "border-color 0.25s",
+              }}
+            >
+              {/* Done badge */}
+              {cs.status === "correct" && (
+                <span
+                  className="pop-in"
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    right: 10,
+                    color: "#00D9C0",
+                    fontSize: 18,
+                    fontWeight: 900,
+                  }}
+                >
+                  ✓
+                </span>
+              )}
+
+              <div
+                style={{
+                  fontFamily: "Courier New, monospace",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "#E9EDF8",
+                  marginBottom: 10,
+                }}
+              >
+                {nc.name}
+              </div>
+
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {(["valid", "rule-break", "bad-style"] as NameVerdict[]).map(
+                  (v) => (
+                    <button
+                      key={v}
+                      onClick={() => pick(ci, v)}
+                      disabled={cs.status === "correct"}
+                      style={{
+                        padding: "4px 9px",
+                        borderRadius: 6,
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        background:
+                          v === "valid"
+                            ? "rgba(0,217,192,.10)"
+                            : v === "rule-break"
+                            ? "rgba(255,95,110,.10)"
+                            : "rgba(167,139,250,.10)",
+                        color:
+                          v === "valid"
+                            ? "#00D9C0"
+                            : v === "rule-break"
+                            ? "#FF5F6E"
+                            : "#A78BFA",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        fontFamily: "Courier New, monospace",
+                        cursor: cs.status === "correct" ? "default" : "pointer",
+                        opacity: cs.status === "correct" ? 0.4 : 1,
+                      }}
+                    >
+                      {VERDICT_LABELS[v]}
+                    </button>
+                  )
+                )}
+              </div>
+
+              {cs.wrongMsg && cs.status !== "correct" && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 11,
+                    color: "#FF5F6E",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {cs.wrongMsg}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* SUB-STEP 1: THE TOY BOX CONCEPT */}
-      {subStep === 0 && (
-        <div className="space-y-6 animate-fadeIn">
+      <div style={{ fontSize: 13, color: "#7B85A8", textAlign: "center" }}>
+        {correctCount} / {NAME_CARDS.length} correct
+      </div>
 
-          {/* Analogy */}
-          <div className="rounded-xl p-4 text-left text-sm leading-relaxed font-sans"
-            style={{ background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.22)" }}>
-            <div className="text-[10px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "#FFB800" }}>💡 Analogy</div>
-            A labeled jar on a kitchen shelf. You can <strong>look inside</strong> to see what&apos;s there,
-            <strong> swap the contents</strong> anytime, but it only holds <strong>one thing at a time</strong>.
-            The label is the variable name. The contents are the value.
+      {allDone && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={onNext}
+            className="pop-in"
+            style={{
+              padding: "10px 24px",
+              borderRadius: 8,
+              border: "none",
+              background: "#00D9C0",
+              color: "#0D1117",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Sub-step 2: Type Selector ───────────────────────────────────────────── */
+interface TypeDef {
+  id: string;
+  label: string;
+  stroke: string;
+  exampleValue: string;
+  quizValues: string[];
+}
+
+const TYPES: TypeDef[] = [
+  { id: "int", label: "int", stroke: "#E9EDF8", exampleValue: "42", quizValues: ["100"] },
+  { id: "float", label: "float", stroke: "#FFB800", exampleValue: "3.14", quizValues: ["3.99"] },
+  { id: "char", label: "char", stroke: "#A78BFA", exampleValue: "'A'", quizValues: ["'Z'"] },
+  { id: "char[]", label: "char[]", stroke: "#FF5F6E", exampleValue: '"hi"', quizValues: [] },
+];
+
+const QUIZ_ITEMS: { value: string; correctType: string }[] = [
+  { value: "100", correctType: "int" },
+  { value: "3.99", correctType: "float" },
+  { value: "'Z'", correctType: "char" },
+];
+
+interface FloatUp {
+  id: number;
+  text: string;
+  x: number;
+}
+
+function StepTypeSelector({ onComplete }: { onComplete: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [floats, setFloats] = useState<FloatUp[]>([]);
+  const [floatCounter, setFloatCounter] = useState(0);
+
+  // quiz state
+  const [quizAnswers, setQuizAnswers] = useState<(string | null)[]>([null, null, null]);
+  const [submitted, setSubmitted] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const SVG_X: Record<string, number> = {
+    int: 55,
+    float: 145,
+    char: 230,
+    "char[]": 315,
+  };
+
+  const handleTypeClick = (tid: string, x: number) => {
+    setSelected(tid);
+    const t = TYPES.find((t) => t.id === tid)!;
+    const nf: FloatUp = { id: floatCounter, text: t.exampleValue, x };
+    setFloatCounter((c) => c + 1);
+    setFloats((prev) => [...prev, nf]);
+    setTimeout(() => {
+      setFloats((prev) => prev.filter((f) => f.id !== nf.id));
+    }, 1050);
+  };
+
+  const pickAnswer = (qi: number, tid: string) => {
+    if (submitted) return;
+    setQuizAnswers((prev) => prev.map((a, i) => (i === qi ? tid : a)));
+  };
+
+  const checkAnswers = () => {
+    setSubmitted(true);
+    const correct = quizAnswers.filter(
+      (a, i) => a === QUIZ_ITEMS[i].correctType
+    ).length;
+    if (correct === 3) {
+      setDone(true);
+    }
+  };
+
+  const retry = () => {
+    setQuizAnswers([null, null, null]);
+    setSubmitted(false);
+  };
+
+  const correctCount = submitted
+    ? quizAnswers.filter((a, i) => a === QUIZ_ITEMS[i].correctType).length
+    : 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* SVG type shapes */}
+      <div style={{ position: "relative" }}>
+        <svg
+          width="100%"
+          viewBox="0 0 380 140"
+          style={{ display: "block", maxHeight: 140 }}
+        >
+          {/* int — brick rect */}
+          <rect
+            x="20"
+            y="50"
+            width="70"
+            height="55"
+            fill="#0D1117"
+            stroke={selected === "int" ? "#00D9C0" : "#E9EDF8"}
+            strokeWidth={selected === "int" ? 3 : 1.5}
+            rx="2"
+            style={{ cursor: "pointer", transition: "stroke 0.2s, stroke-width 0.2s" }}
+            onClick={() => handleTypeClick("int", SVG_X["int"])}
+          />
+          <text x="55" y="82" textAnchor="middle" fill="#E9EDF8" fontFamily="Courier New" fontSize="11">
+            int
+          </text>
+          <text x="55" y="128" textAnchor="middle" fill="#7B85A8" fontFamily="sans-serif" fontSize="10">
+            whole numbers
+          </text>
+
+          {/* float — circle with pointed top (diamond-ish) */}
+          <circle
+            cx="145"
+            cy="77"
+            r="28"
+            fill="#0D1117"
+            stroke={selected === "float" ? "#00D9C0" : "#FFB800"}
+            strokeWidth={selected === "float" ? 3 : 1.5}
+            style={{ cursor: "pointer", transition: "stroke 0.2s, stroke-width 0.2s" }}
+            onClick={() => handleTypeClick("float", SVG_X["float"])}
+          />
+          <circle cx="145" cy="49" r="7" fill="#0D1117" stroke={selected === "float" ? "#00D9C0" : "#FFB800"} strokeWidth={selected === "float" ? 3 : 1.5}
+            style={{ cursor: "pointer" }} onClick={() => handleTypeClick("float", SVG_X["float"])} />
+          <text x="145" y="82" textAnchor="middle" fill="#FFB800" fontFamily="Courier New" fontSize="11">
+            float
+          </text>
+          <text x="145" y="128" textAnchor="middle" fill="#7B85A8" fontFamily="sans-serif" fontSize="10">
+            decimals
+          </text>
+
+          {/* char — round bead */}
+          <circle
+            cx="230"
+            cy="77"
+            r="28"
+            fill="#0D1117"
+            stroke={selected === "char" ? "#00D9C0" : "#A78BFA"}
+            strokeWidth={selected === "char" ? 3 : 1.5}
+            style={{ cursor: "pointer", transition: "stroke 0.2s, stroke-width 0.2s" }}
+            onClick={() => handleTypeClick("char", SVG_X["char"])}
+          />
+          <text x="230" y="82" textAnchor="middle" fill="#A78BFA" fontFamily="Courier New" fontSize="11">
+            char
+          </text>
+          <text x="230" y="128" textAnchor="middle" fill="#7B85A8" fontFamily="sans-serif" fontSize="10">
+            one letter
+          </text>
+
+          {/* char[] — 4 beads on a line */}
+          <line x1="275" y1="77" x2="360" y2="77" stroke={selected === "char[]" ? "#00D9C0" : "#FF5F6E"} strokeWidth="1.5" />
+          {[0, 1, 2, 3].map((bi) => (
+            <circle
+              key={bi}
+              cx={282 + bi * 26}
+              cy={77}
+              r={10}
+              fill="#0D1117"
+              stroke={selected === "char[]" ? "#00D9C0" : "#FF5F6E"}
+              strokeWidth={selected === "char[]" ? 3 : 1.5}
+              style={{ cursor: "pointer", transition: "stroke 0.2s, stroke-width 0.2s" }}
+              onClick={() => handleTypeClick("char[]", SVG_X["char[]"])}
+            />
+          ))}
+          <text x="317" y="128" textAnchor="middle" fill="#7B85A8" fontFamily="sans-serif" fontSize="10">
+            text (string)
+          </text>
+          <text x="317" y="82" textAnchor="middle" fill="#FF5F6E" fontFamily="Courier New" fontSize="9">
+            char[]
+          </text>
+        </svg>
+
+        {/* Float-up overlays */}
+        {floats.map((f) => (
+          <div
+            key={f.id}
+            className="float-up"
+            style={{
+              position: "absolute",
+              top: 30,
+              left: `${(f.x / 380) * 100}%`,
+              transform: "translateX(-50%)",
+              fontFamily: "Courier New, monospace",
+              fontSize: 15,
+              fontWeight: 700,
+              color: "#00D9C0",
+              pointerEvents: "none",
+            }}
+          >
+            {f.text}
           </div>
+        ))}
+      </div>
 
-          {/* Concept definition */}
-          <section className="glass-panel p-4 rounded-xl space-y-2 text-left">
-            <h3 className="text-sm font-bold text-primary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-              What is a Variable?
-            </h3>
-            <p className="text-body-md text-on-surface-variant leading-relaxed font-sans">
-              Think of a <span className="text-primary font-bold">variable</span> as a labeled <strong>jar</strong> inside your computer&apos;s memory.
-              It is a special place where your program can keep, read, and change values.
-              Each jar has a <strong>label</strong> on the front so you can find it easily, and a <strong>type</strong> that says what kinds of things fit inside!
-            </p>
-          </section>
+      {/* Code panel */}
+      <div
+        style={{
+          background: "#0D1117",
+          borderRadius: 10,
+          padding: "14px 16px",
+          fontFamily: "Courier New, monospace",
+          fontSize: 12,
+          textAlign: "left",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <div style={{ color: "#7B85A8", marginBottom: 6, fontSize: 10 }}>// C data types</div>
+        <div><span style={{ color: "#E9EDF8" }}>int</span>    <span style={{ color: "#00D9C0" }}>score</span> = <span style={{ color: "#FFB800" }}>42</span>;</div>
+        <div><span style={{ color: "#FFB800" }}>float</span>  <span style={{ color: "#00D9C0" }}>price</span> = <span style={{ color: "#FFB800" }}>3.14</span>;</div>
+        <div><span style={{ color: "#A78BFA" }}>char</span>   <span style={{ color: "#00D9C0" }}>grade</span> = <span style={{ color: "#FFB800" }}>&apos;A&apos;</span>;</div>
+        <div><span style={{ color: "#FF5F6E" }}>char</span>   <span style={{ color: "#00D9C0" }}>name</span>[] = <span style={{ color: "#FFB800" }}>&quot;hi&quot;</span>;</div>
+      </div>
 
-          {/* Interactive display container */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-            
-            {/* Visual locker grid */}
-            <div className="md:col-span-5 glass-panel p-4 rounded-xl flex flex-col items-center justify-center min-h-[300px] relative overflow-hidden">
-              
-              {/* Locker structure */}
-              <div className="w-28 h-48 bg-surface-container-high border-4 border-white/10 rounded-xl relative flex flex-col items-center justify-start p-2 shadow-2xl overflow-hidden">
-                
-                {/* Labeled name tag */}
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 text-black px-2 py-0.5 rounded shadow text-[9px] font-mono font-bold border-b border-yellow-300 z-20">
-                  age
-                </div>
+      {/* Quiz */}
+      <div
+        style={{
+          background: "rgba(24,29,46,0.9)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 12,
+          padding: 16,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            fontFamily: "Courier New, monospace",
+            color: "#7B85A8",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 14,
+          }}
+        >
+          Try It! — pick the right type for each value
+        </div>
 
-                {/* Locker ventilation slats */}
-                <div className="w-8 h-1 bg-black/40 rounded-full mt-7 mb-1 z-10"></div>
-                <div className="w-8 h-1 bg-black/40 rounded-full mb-6 z-10"></div>
-                <div className="absolute top-1/2 right-2.5 w-1.5 h-6 bg-white/20 border border-white/15 rounded z-10"></div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {QUIZ_ITEMS.map((qi, idx) => {
+            const ans = quizAnswers[idx];
+            const isCorrect = ans === qi.correctType;
 
-                {/* Cabinet interior */}
-                <div className="absolute inset-1.5 bg-surface-container-lowest border border-black/40 rounded-lg overflow-hidden shadow-inner">
-                  
-                  {/* Declaration only: Garbage Value warning */}
-                  {lockerState === "declare" && (
-                    <div className="absolute inset-x-2 bottom-6 top-6 bg-error/10 border-2 border-error/40 border-dashed rounded-lg flex flex-col items-center justify-center p-1 text-center animate-pulse">
-                      <span className="text-[7px] font-mono text-error font-bold uppercase tracking-wider">
-                        Cobwebs 🕸️
-                      </span>
-                      <span className="text-error font-bold font-code-md text-xs truncate w-full">
-                        {garbageValue}
-                      </span>
-                      <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Initialized state: Green box (drops in, falls out on assign) */}
-                  <div
-                    className={`absolute w-16 h-16 bg-primary/20 border-2 border-primary/50 rounded-lg flex flex-col items-center justify-center shadow-lg transition-all duration-700 ease-in-out ${
-                      lockerState === "init"
-                        ? "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-100 scale-100 animate-bounce"
-                        : lockerState === "assign"
-                        ? "top-[200px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-75 rotate-12 pointer-events-none"
-                        : "top-[-80px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-75"
-                    }`}
-                  >
-                    <span className="text-[7px] font-mono text-primary/60 font-bold uppercase">
-                      Teddy Bear
-                    </span>
-                    <span className="text-primary-fixed-dim font-bold font-code-md text-sm mt-1">
-                      25
-                    </span>
-                  </div>
-
-                  {/* Reassigned state: Purple box (drops in on assign) */}
-                  <div
-                    className={`absolute w-16 h-16 bg-secondary/20 border-2 border-secondary/50 rounded-lg flex flex-col items-center justify-center shadow-lg transition-all duration-700 ease-in-out ${
-                      lockerState === "assign"
-                        ? "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-100 scale-100"
-                        : "top-[-80px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-75"
-                    }`}
-                  >
-                    <span className="text-[7px] font-mono text-secondary-fixed-dim font-bold uppercase">
-                      Toy Car
-                    </span>
-                    <span className="text-secondary font-bold font-code-md text-sm mt-1">
-                      30
-                    </span>
-                  </div>
-
-                </div>
-              </div>
-
-              <span className="text-[9px] font-mono text-on-surface-variant mt-3 text-center leading-relaxed block px-2">
-                Toy Box Location: 0x7FFE <br />
-                <span className="text-[8px] opacity-75">(The actual playroom spot, which we label &quot;age&quot; so we don&apos;t have to search for it!)</span>
-              </span>
-            </div>
-
-            {/* Locker states selector card */}
-            <div className="md:col-span-7 flex flex-col justify-between space-y-4">
-              <div className="space-y-4">
-                
-                {/* Simulated C code console */}
-                <div className="bg-surface-container-lowest p-4 rounded-xl border border-white/5 font-mono text-xs text-left space-y-2 relative overflow-hidden shadow-inner">
-                  <div className="flex justify-between items-center text-[10px] text-outline-variant uppercase border-b border-white/5 pb-1">
-                    <span>toy_script.c debugger</span>
-                    <span className="text-primary-fixed-dim font-bold">Execution Trace</span>
-                  </div>
-                  
-                  <div className={`p-2 rounded transition-all duration-300 flex items-center justify-between cursor-pointer ${
-                    lockerState === "declare" ? "bg-error/15 text-error font-bold" : "text-on-surface-variant/80 hover:text-on-surface"
-                  }`} onClick={() => setLockerState("declare")}>
-                    <span>1. int age; // Build new empty box</span>
-                    <span className="text-[9px] font-sans font-bold uppercase tracking-wider">{lockerState === "declare" ? "◀ EMPTY BOX" : ""}</span>
-                  </div>
-
-                  <div className={`p-2 rounded transition-all duration-300 flex items-center justify-between cursor-pointer ${
-                    lockerState === "init" ? "bg-primary/15 text-primary-fixed-dim font-bold" : "text-on-surface-variant/80 hover:text-on-surface"
-                  }`} onClick={() => setLockerState("init")}>
-                    <span>2. age = 25; // Put teddy bear in</span>
-                    <span className="text-[9px] font-sans font-bold uppercase tracking-wider">{lockerState === "init" ? "◀ TOY INSIDE" : ""}</span>
-                  </div>
-
-                  <div className={`p-2 rounded transition-all duration-300 flex items-center justify-between cursor-pointer ${
-                    lockerState === "assign" ? "bg-secondary/15 text-secondary font-bold" : "text-on-surface-variant/80 hover:text-on-surface"
-                  }`} onClick={() => setLockerState("assign")}>
-                    <span>3. age = 30; // Swap for toy car</span>
-                    <span className="text-[9px] font-sans font-bold uppercase tracking-wider">{lockerState === "assign" ? "◀ SWAP TOY" : ""}</span>
-                  </div>
-                </div>
-
-                {/* State explanations */}
-                <div className="bg-surface-container-low p-4 rounded-xl border border-white/5 space-y-3 text-left">
-                  
-                  {lockerState === "declare" && (
-                    <div className="animate-fadeIn space-y-2">
-                      <div className="font-bold text-error flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">warning</span>
-                        Making a Box: <code className="text-on-surface font-normal bg-white/5 px-1 py-0.5 rounded">int age;</code>
-                      </div>
-                      <p className="text-xs text-on-surface-variant/95 leading-relaxed font-sans">
-                        This creates the storage toy box in memory, but puts **no toy** inside yet.
-                        <br />
-                        <span className="text-error font-bold block mt-1.5">⚠️ THE COBWEB GOTCHA:</span>
-                        In C, if you don&apos;t put a value in, the box gets filled with random leftovers (dust & cobwebs) from other games. Playing with it will print random, crazy numbers!
-                      </p>
-                    </div>
-                  )}
-
-                  {lockerState === "init" && (
-                    <div className="animate-fadeIn space-y-2">
-                      <div className="font-bold text-primary flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                        Putting the First Toy: <code className="text-on-surface font-normal bg-white/5 px-1 py-0.5 rounded">int age = 25;</code>
-                      </div>
-                      <p className="text-xs text-on-surface-variant/95 leading-relaxed font-sans">
-                        This creates the toy box **AND** fills it with a starting value (`25`) right away. This is the safest way to declare variables and keeps it clean of cobwebs.
-                      </p>
-                    </div>
-                  )}
-
-                  {lockerState === "assign" && (
-                    <div className="animate-fadeIn space-y-2">
-                      <div className="font-bold text-secondary flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">update</span>
-                        Swapping Toys: <code className="text-on-surface font-normal bg-white/5 px-1 py-0.5 rounded">age = 30;</code>
-                      </div>
-                      <p className="text-xs text-on-surface-variant/95 leading-relaxed font-sans">
-                        This swaps the toy inside. The old toy (`25`) is taken out and thrown away, and the new toy (`30`) takes its place. Notice there is no <code className="text-secondary font-bold">int</code> here because the box is already built!
-                      </p>
-                    </div>
-                  )}
-
-                </div>
-
-              </div>
-
-              {/* Stepper buttons and Next step prompt */}
-              <div className="flex justify-between items-center pt-2">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      if (lockerState === "declare") setLockerState("init");
-                      else if (lockerState === "init") setLockerState("assign");
-                      else setLockerState("declare");
-                    }}
-                    className="px-4 py-2 bg-surface-container-high border border-white/5 hover:border-primary rounded-lg text-xs font-mono font-bold text-primary-fixed-dim transition-all active:scale-95 cursor-pointer flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">play_arrow</span>
-                    STEP PLAY
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setSubStep(1)}
-                  className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
+            return (
+              <div key={qi.value} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span
+                  style={{
+                    fontFamily: "Courier New, monospace",
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: "#E9EDF8",
+                    minWidth: 54,
+                  }}
                 >
-                  NEXT: NAMING RULES GAME
-                </button>
-              </div>
+                  {qi.value}
+                </span>
+                <span style={{ color: "#7B85A8", fontSize: 13 }}>→</span>
+                {TYPES.filter((t) => t.id !== "char[]").concat(TYPES.filter((t) => t.id === "char[]")).map((t) => {
+                  const picked = ans === t.id;
+                  const correct = submitted && t.id === qi.correctType;
+                  const wrong = submitted && picked && !isCorrect;
 
-            </div>
-          </div>
-
-          {/* Concept Lock */}
-          <div className="rounded-xl p-4 text-left space-y-1.5"
-            style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,218,243,.07))", border: "1px solid rgba(167,139,250,.30)" }}>
-            <div className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: "#A78BFA" }}>
-              🔒 Non-Replaceable Concept
-            </div>
-            <div className="text-sm text-on-surface leading-relaxed font-sans">
-              A variable is a <strong>named container</strong> that holds exactly one value at a time.
-              You can read what&apos;s inside. You can replace it. The name stays the same; the value can change.
-              Declaring without initializing leaves <strong style={{ color: "#FF5F6E" }}>garbage (cobweb values)</strong> inside — always initialize.
-            </div>
-          </div>
-
-          {/* Code reveal */}
-          <div className="rounded-xl overflow-hidden text-left" style={{ border: "1px solid rgba(0,218,243,.18)" }}>
-            <div className="px-4 py-2 text-[10px] font-mono font-bold uppercase tracking-widest" style={{ background: "rgba(0,218,243,.08)", color: "#00daf3" }}>
-              Code Reveal — three stages
-            </div>
-            <pre className="p-4 text-xs leading-relaxed bg-surface-container-lowest font-mono overflow-x-auto">{`int age;       // jar created, but has cobweb garbage inside ⚠️
-int age = 25;  // jar created AND filled — always do this
-age = 30;      // old value (25) thrown out, 30 takes its place`}</pre>
-          </div>
-
-        </div>
-      )}
-
-      {/* SUB-STEP 2: NAMING RULES GAME */}
-      {subStep === 1 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          
-          <section className="glass-panel p-4 rounded-xl space-y-2">
-            <h3 className="text-sm font-bold text-secondary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">rule</span>
-              Toy Box Naming Rules
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono text-on-surface-variant pt-1">
-              <div className="space-y-1">
-                <span className="text-error font-bold block">❌ STRICT COMPILER RULES:</span>
-                • Cannot start with numbers (e.g. `1st`)
-                <br />• Cannot contain spaces inside
-                <br />• Cannot use reserved commands (e.g. `int`)
-                <br />• <span className="text-on-surface underline">Case-sensitive:</span> Capitalization matters! `age` and `Age` are two different boxes.
-              </div>
-              <div className="space-y-1">
-                <span className="text-primary-fixed-dim font-bold block">💡 BEST PRACTICES (Conventions):</span>
-                • <span className="text-on-surface underline">camelCase:</span> Capitalize words after the first (e.g. `studentAge`) to resemble camel humps.
-                <br />• Use meaningful names instead of single letters so we know what is inside (e.g. `score` instead of `x`).
-              </div>
-            </div>
-          </section>
-
-          {/* Game challenge card */}
-          <section className="glass-panel p-5 rounded-xl space-y-4 border-secondary/20">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-secondary font-bold">Challenge {challengeIdx + 1} of {NAMING_CHALLENGES.length}</span>
-              <span className="text-primary-fixed-dim">Score: {namingScore} / {challengeIdx}</span>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[10px] font-mono text-on-surface-variant uppercase">CLASSIFY THE IDENTIFIER</span>
-              <h4 className="text-lg font-bold font-code-md text-secondary-fixed bg-white/5 px-3 py-1.5 rounded inline-block">
-                {NAMING_CHALLENGES[challengeIdx].name}
-              </h4>
-            </div>
-
-            <div className="space-y-2.5 pt-2">
-              {NAMING_CHALLENGES[challengeIdx].options.map((opt, idx) => {
-                const isSelected = selectedAnswer === opt.value;
-                const isCorrect = opt.value === NAMING_CHALLENGES[challengeIdx].expectedCategory;
-                
-                let btnStyle = "border-white/10 bg-white/5 hover:border-secondary/35";
-                if (answerSubmitted) {
-                  if (isCorrect) {
-                    btnStyle = "border-primary bg-primary/10 text-primary-fixed-dim";
-                  } else if (isSelected) {
-                    btnStyle = "border-error bg-error/10 text-error";
-                  } else {
-                    btnStyle = "border-white/5 opacity-40";
-                  }
-                } else if (isSelected) {
-                  btnStyle = "border-secondary bg-secondary/15 text-secondary";
-                }
-
-                return (
-                  <button
-                    key={idx}
-                    disabled={answerSubmitted}
-                    onClick={() => handleNamingSubmit(opt.value)}
-                    className={`w-full text-left p-3 rounded-lg border font-mono text-xs transition-all active:scale-[0.99] flex justify-between items-center cursor-pointer ${btnStyle}`}
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => pickAnswer(idx, t.id)}
+                      disabled={submitted}
+                      style={{
+                        padding: "5px 12px",
+                        borderRadius: 6,
+                        border: `2px solid ${
+                          correct ? "#00D9C0" : wrong ? "#FF5F6E" : picked ? t.stroke : "rgba(255,255,255,0.12)"
+                        }`,
+                        background: picked
+                          ? `${t.stroke}22`
+                          : "rgba(13,17,23,0.7)",
+                        color: correct ? "#00D9C0" : wrong ? "#FF5F6E" : t.stroke,
+                        fontFamily: "Courier New, monospace",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: submitted ? "default" : "pointer",
+                        transition: "all 0.18s",
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+                {submitted && (
+                  <span
+                    className={isCorrect ? "pop-in" : "shake"}
+                    style={{ fontSize: 16 }}
                   >
-                    <span>{opt.label}</span>
-                    {answerSubmitted && isCorrect && (
-                      <span className="material-symbols-outlined text-primary text-[16px]">check_circle</span>
-                    )}
-                    {answerSubmitted && isSelected && !isCorrect && (
-                      <span className="material-symbols-outlined text-error text-[16px]">cancel</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Explanation box */}
-            {answerSubmitted && (
-              <div className="p-3 bg-surface-container-low border border-white/5 rounded-lg text-xs leading-relaxed space-y-1">
-                <span className="font-bold text-on-surface block">Feedback:</span>
-                <p className="text-on-surface-variant">{NAMING_CHALLENGES[challengeIdx].explanation}</p>
-              </div>
-            )}
-
-            {/* Next challenge button */}
-            {answerSubmitted && (
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={handleNextChallenge}
-                  className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs active:scale-95 transition-all cursor-pointer"
-                >
-                  {challengeIdx < NAMING_CHALLENGES.length - 1 ? "NEXT CHALLENGE" : "GO TO MAGIC FORMULAS"}
-                </button>
-              </div>
-            )}
-          </section>
-
-        </div>
-      )}
-
-      {/* SUB-STEP 3: READING & FORMULAS */}
-      {subStep === 2 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          
-          {/* Concept definition */}
-          <section className="glass-panel p-4 rounded-xl space-y-2">
-            <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">calculate</span>
-              Reading &amp; Magic Formulas ✨
-            </h3>
-            <p className="text-body-md text-on-surface-variant leading-relaxed">
-              Once you put a toy in a box, you can do cool tricks with it in two ways:
-            </p>
-            <ul className="list-disc list-inside text-xs text-on-surface-variant space-y-1.5 pl-2 font-sans">
-              <li>
-                <span className="font-bold text-on-surface">Shouting:</span> Displays the value on the screen using placeholder codes (like <code className="text-primary-fixed-dim bg-white/5 px-1 py-0.5 rounded">%d</code>).
-              </li>
-              <li>
-                <span className="font-bold text-on-surface">Magic Math:</span> Using the box&apos;s name in formulas (e.g. <code className="text-primary-fixed-dim bg-white/5 px-1 py-0.5 rounded">age + 5</code>) to calculate new numbers!
-              </li>
-            </ul>
-          </section>
-
-          {/* Interactive Calculator Playground */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-            
-            {/* Input code block */}
-            <div className="glass-panel rounded-xl overflow-hidden flex flex-col justify-between border-tertiary/20">
-              <div className="bg-surface-container-high px-3 py-1.5 border-b border-white/5 text-[10px] font-mono text-on-surface-variant flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px]">code</span>
-                <span>magic_sandbox.c</span>
-              </div>
-              
-              <div className="p-4 bg-surface-container-low font-code-md text-xs space-y-2 flex-1 flex flex-col justify-center">
-                <div>
-                  <span className="text-secondary font-bold">int</span> age = <span className="text-primary-fixed-dim">30</span>;
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-secondary font-bold">int</span> nextAge = age + 
-                  <input
-                    type="number"
-                    value={exprInput}
-                    onChange={(e) => setExprInput(e.target.value.replace(/\D/g, ""))}
-                    placeholder="5"
-                    className="w-14 bg-surface-container-lowest border border-white/10 rounded px-1.5 py-0.5 text-center text-primary font-mono text-xs focus:outline-none focus:border-tertiary"
-                  />
-                  <span>;</span>
-                </div>
-                <div className="text-on-surface-variant/40 pt-1">
-                  printf(&quot;Next age: %d\n&quot;, nextAge);
-                </div>
-              </div>
-            </div>
-
-            {/* Output terminal block */}
-            <div className="glass-panel rounded-xl overflow-hidden flex flex-col justify-between border border-white/5">
-              <div className="bg-surface-container-high px-3 py-1.5 border-b border-white/5 text-[10px] font-mono text-on-surface-variant flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px]">terminal</span>
-                <span>SIMULATED SCREEN</span>
-              </div>
-              
-              <div className="p-4 bg-surface-container-lowest font-code-md text-xs text-primary-fixed-dim flex-1 flex flex-col justify-center gap-1.5">
-                <div>&gt; gcc magic_sandbox.c -o play</div>
-                <div>&gt; ./play</div>
-                <div className="text-on-surface font-bold">
-                  Next age: {30 + (parseInt(exprInput, 10) || 0)}
-                </div>
-                <div className="text-on-surface-variant/30 select-none">
-                  Process exited with status 0
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Bridging lesson transition & completion */}
-          <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-xl text-xs leading-relaxed flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-secondary text-[20px]">swap_horiz</span>
-            <p className="text-on-surface-variant/95">
-              <strong className="text-secondary">Bridge to Section 4:</strong> Now that we know how formulas work, let&apos;s practice filing different types of data in the right locations!
-            </p>
-          </div>
-
-          {/* Section Next Action */}
-          <div className="flex justify-end pt-2">
-            <button
-              onClick={() => setSubStep(3)}
-              className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
-            >
-              NEXT: MEMORY FILING GAME 📦
-            </button>
-          </div>
-
-        </div>
-      )}
-
-      {/* SUB-STEP 4: MEMORY FILING GAME */}
-      {subStep === 3 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          
-          <FilingGame onComplete={() => setFilingCompleted(true)} />
-
-          {/* Section Submit Action */}
-          {filingCompleted && (
-            <div className="flex justify-end pt-2">
-              <button
-                disabled={hasCompletedSection}
-                onClick={handleFinalSubmit}
-                className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                  hasCompletedSection
-                    ? "bg-primary/10 text-primary-fixed-dim border border-primary/30"
-                    : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                }`}
-              >
-                {hasCompletedSection ? (
-                  <>
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
-                    SECTION COMPLETED
-                  </>
-                ) : (
-                  "COMPLETE & EARN 10 XP"
+                    {isCorrect ? "✓" : "✗"}
+                  </span>
                 )}
-              </button>
-            </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ marginTop: 16, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          {!submitted ? (
+            <button
+              onClick={checkAnswers}
+              disabled={quizAnswers.some((a) => a === null)}
+              style={{
+                padding: "9px 22px",
+                borderRadius: 8,
+                border: "none",
+                background: quizAnswers.some((a) => a === null) ? "#1a2030" : "#FFB800",
+                color: quizAnswers.some((a) => a === null) ? "#7B85A8" : "#0D1117",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: quizAnswers.some((a) => a === null) ? "not-allowed" : "pointer",
+              }}
+            >
+              Check Answers
+            </button>
+          ) : (
+            <>
+              <span style={{ fontSize: 13, color: correctCount === 3 ? "#00D9C0" : "#FF5F6E", fontWeight: 700 }}>
+                {correctCount} / 3 correct
+              </span>
+              {correctCount < 3 && (
+                <button
+                  onClick={retry}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,95,110,.4)",
+                    background: "transparent",
+                    color: "#FF5F6E",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  Try Again
+                </button>
+              )}
+            </>
           )}
 
+          {done && (
+            <button
+              onClick={onComplete}
+              className="pop-in"
+              style={{
+                padding: "9px 22px",
+                borderRadius: 8,
+                border: "none",
+                background: "#00D9C0",
+                color: "#0D1117",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              Complete &amp; Earn 50 XP 🎉
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Tab bar ─────────────────────────────────────────────────────────────── */
+const TAB_LABELS = ["1. Magic Box", "2. Naming Game", "3. Types"];
+
+/* ─── Main export ─────────────────────────────────────────────────────────── */
+export default function SectionVariables({ onComplete }: SectionVariablesProps) {
+  const [subStep, setSubStep] = useState<0 | 1 | 2>(0);
+  const [unlockedStep, setUnlockedStep] = useState<number>(0);
+
+  const goTo = (s: 0 | 1 | 2) => {
+    if (s <= unlockedStep) setSubStep(s);
+  };
+
+  const advanceTo = (s: 0 | 1 | 2) => {
+    setSubStep(s);
+    if (s > unlockedStep) setUnlockedStep(s);
+  };
+
+  return (
+    <div
+      style={{
+        fontFamily: "sans-serif",
+        color: "#E9EDF8",
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+      }}
+    >
+      {/* Inline keyframes */}
+      <style>{`
+        @keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pop { 0%{transform:scale(0.5)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+        @keyframes floatUp { 0%{opacity:0;transform:translateY(0)} 60%{opacity:1;transform:translateY(-24px)} 100%{opacity:0;transform:translateY(-40px)} }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+        .pop-in { animation: pop 0.35s ease forwards; }
+        .slide-in { animation: slideIn 0.3s ease forwards; }
+        .float-up { animation: floatUp 1s ease forwards; }
+        .shake { animation: shake 0.3s ease; }
+      `}</style>
+
+      {/* Tab bar */}
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          background: "rgba(24,29,46,0.9)",
+          borderRadius: 10,
+          padding: 6,
+          border: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        {TAB_LABELS.map((label, i) => {
+          const active = subStep === i;
+          const locked = i > unlockedStep;
+          return (
+            <button
+              key={i}
+              onClick={() => goTo(i as 0 | 1 | 2)}
+              disabled={locked}
+              style={{
+                flex: 1,
+                padding: "8px 4px",
+                borderRadius: 7,
+                border: "none",
+                background: active ? "#00D9C0" : "transparent",
+                color: active ? "#0D1117" : locked ? "#3A4060" : "#7B85A8",
+                fontWeight: active ? 700 : 500,
+                fontSize: 12,
+                fontFamily: "Courier New, monospace",
+                cursor: locked ? "not-allowed" : "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Sub-step panels */}
+      {subStep === 0 && (
+        <div className="slide-in">
+          <StepMagicBox onNext={() => advanceTo(1)} />
         </div>
       )}
-
+      {subStep === 1 && (
+        <div className="slide-in">
+          <StepNamingGame onNext={() => advanceTo(2)} />
+        </div>
+      )}
+      {subStep === 2 && (
+        <div className="slide-in">
+          <StepTypeSelector onComplete={() => onComplete(50)} />
+        </div>
+      )}
     </div>
   );
 }

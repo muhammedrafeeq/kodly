@@ -2,597 +2,808 @@
 
 import React, { useState } from "react";
 
-interface SectionIfStatementProps {
-  onComplete: (xpAward: number) => void;
-}
+// ── Inline styles ──────────────────────────────────────────────────────────
+const styleTag = `
+@keyframes slideLeft { from{transform:translateX(60px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes slideRight { from{transform:translateX(-60px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes popIn { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+@keyframes walkLeft { from{transform:translateX(0)} to{transform:translateX(-80px)} }
+@keyframes walkRight { from{transform:translateX(0)} to{transform:translateX(80px)} }
+@keyframes dropDown { from{transform:translateY(-40px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 30%{transform:translateX(-6px)} 70%{transform:translateX(6px)} }
+.pop-in { animation: popIn 0.35s ease forwards; }
+.drop-in { animation: dropDown 0.4s ease forwards; }
+.shake { animation: shake 0.3s ease; }
+`;
 
+// ── Palette ────────────────────────────────────────────────────────────────
+const C = {
+  teal:   "#00D9C0",
+  amber:  "#FFB800",
+  coral:  "#FF5F6E",
+  lav:    "#A78BFA",
+  text:   "#E9EDF8",
+  muted:  "#7B85A8",
+  codeBg: "#0D1117",
+};
+
+// ── Helper UI components ───────────────────────────────────────────────────
 function ConceptLock({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl p-4 text-left space-y-1.5"
-      style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,218,243,.07))", border: "1px solid rgba(167,139,250,.30)" }}>
-      <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: "#A78BFA" }}>
-        🔒 Non-Replaceable Concept
+    <div style={{
+      background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,217,192,.07))",
+      border: "1px solid rgba(167,139,250,.30)",
+      borderRadius: 12, padding: "14px 16px",
+    }}>
+      <div style={{ color: C.lav, fontSize: 10, fontFamily: "monospace", fontWeight: 700,
+        textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>
+        🔒 Concept Lock
       </div>
-      <div className="text-sm text-on-surface leading-relaxed font-sans">{children}</div>
+      <div style={{ color: C.text, fontSize: 13, lineHeight: 1.6 }}>{children}</div>
     </div>
   );
 }
 
-function Analogy({ children }: { children: React.ReactNode }) {
+function CodeBox({ label, code }: { label: string; code: string }) {
   return (
-    <div className="rounded-xl p-4 text-left space-y-1 text-sm leading-relaxed font-sans"
-      style={{ background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.22)" }}>
-      <div className="text-[10px] font-mono font-bold uppercase tracking-widest mb-1" style={{ color: "#FFB800" }}>💡 Analogy</div>
-      {children}
-    </div>
-  );
-}
-
-function CodeBlock({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl overflow-hidden text-left" style={{ border: "1px solid rgba(0,218,243,.18)" }}>
-      <div className="px-4 py-2 text-[10px] font-mono font-bold uppercase tracking-widest" style={{ background: "rgba(0,218,243,.08)", color: "#00daf3" }}>
+    <div style={{ border: `1px solid rgba(0,217,192,.20)`, borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ background: "rgba(0,217,192,.08)", padding: "6px 14px",
+        color: C.teal, fontSize: 10, fontFamily: "monospace", fontWeight: 700,
+        textTransform: "uppercase", letterSpacing: "0.1em" }}>
         {label}
       </div>
-      <pre className="p-4 text-xs leading-relaxed overflow-x-auto bg-surface-container-lowest font-mono">{children}</pre>
+      <pre style={{ background: C.codeBg, margin: 0, padding: "14px 16px",
+        fontSize: 12, lineHeight: 1.7, color: C.text, overflowX: "auto", fontFamily: "monospace" }}>
+        {code}
+      </pre>
     </div>
   );
 }
 
-function Gotcha({ children }: { children: React.ReactNode }) {
+function NavBar({ step, setStep }: { step: number; setStep: (n: number) => void }) {
+  const labels = ["Bouncer","Fork Road","Mail Slots","Treasure","Capstone"];
   return (
-    <div className="rounded-xl p-3.5 text-left flex gap-2 text-sm leading-relaxed font-sans"
-      style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)" }}>
-      <span className="text-base">⚠️</span>
-      <div style={{ color: "#E9EDF8" }}>{children}</div>
-    </div>
-  );
-}
-
-// ── Bouncer gate component ──
-function BouncerGate({ onList }: { onList: boolean }) {
-  return (
-    <div className="flex flex-col items-center gap-3 py-4">
-      <div className="relative w-32 h-40 flex items-end justify-center">
-        {/* Door frame */}
-        <div className="absolute inset-0 rounded-t-2xl border-4 border-white/20 bg-surface-container-high overflow-hidden">
-          {/* Door panel */}
-          <div
-            className="absolute inset-0 bg-surface-container-low transition-transform duration-700 origin-left"
-            style={{ transform: onList ? "rotateY(-80deg)" : "rotateY(0deg)" }}
-          />
-          {/* Inside — glow when open */}
-          {onList && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <span className="text-2xl">🎉</span>
-              <span className="text-[10px] font-mono font-bold" style={{ color: "#00D9C0" }}>WELCOME!</span>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="text-xs font-mono font-bold" style={{ color: onList ? "#00D9C0" : "#FF5F6E" }}>
-        {onList ? "Door opens — condition true" : "Door stays shut — condition false"}
-      </div>
-    </div>
-  );
-}
-
-// ── Two-door component ──
-function TwoDoors({ raining }: { raining: boolean }) {
-  return (
-    <div className="flex gap-6 justify-center py-4">
-      {[
-        { label: "☂️ Umbrella", active: raining, desc: "if (raining)" },
-        { label: "😎 Sunglasses", active: !raining, desc: "else" },
-      ].map((door) => (
-        <div key={door.label} className="flex flex-col items-center gap-2">
-          <div
-            className="w-24 h-32 rounded-t-xl border-4 transition-all duration-500 flex items-center justify-center text-2xl"
-            style={{
-              borderColor: door.active ? "rgba(0,218,243,.6)" : "rgba(255,255,255,.15)",
-              background: door.active ? "rgba(0,218,243,.12)" : "rgba(255,255,255,.03)",
-              transform: door.active ? "scale(1.05)" : "scale(1)",
-            }}
-          >
-            {door.active ? door.label.split(" ")[0] : "🚪"}
-          </div>
-          <div className="text-[10px] font-mono text-center" style={{ color: door.active ? "#00D9C0" : "#7B85A8" }}>
-            {door.label}
-            <div className="opacity-60">{door.desc}</div>
-          </div>
-        </div>
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      {labels.map((l, i) => (
+        <button key={i} onClick={() => setStep(i)}
+          style={{
+            padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontSize: 11,
+            fontFamily: "monospace", fontWeight: step === i ? 700 : 400,
+            background: step === i ? C.teal : "rgba(255,255,255,.06)",
+            color: step === i ? "#000" : C.muted,
+            border: step === i ? "none" : "1px solid rgba(255,255,255,.08)",
+            transition: "all 0.2s",
+          }}>
+          {i + 1}. {l}
+        </button>
       ))}
     </div>
   );
 }
 
-// ── Mail slot component ──
-const MAIL_ITEMS = [
-  { id: "a", label: "Letter: score=92", value: 92, correctSlot: 0 },
-  { id: "b", label: "Letter: score=78", value: 78, correctSlot: 1 },
-  { id: "c", label: "Letter: score=61", value: 61, correctSlot: 2 },
-  { id: "d", label: "Letter: score=45", value: 45, correctSlot: 3 },
-];
+function NextBtn({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+      <button onClick={onClick} style={{
+        padding: "9px 22px", borderRadius: 9, cursor: "pointer", fontSize: 12,
+        fontFamily: "monospace", fontWeight: 700,
+        background: C.teal, color: "#000", border: "none", transition: "opacity 0.15s",
+      }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+        onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
+        {label} →
+      </button>
+    </div>
+  );
+}
 
-const INITIAL_SLOTS = [
-  { label: "score >= 90 → A", range: [90, 100] as [number, number] },
-  { label: "score >= 75 → B", range: [75, 89] as [number, number] },
-  { label: "score >= 60 → C", range: [60, 74] as [number, number] },
-  { label: "else → Try again", range: [0, 59] as [number, number] },
-];
+// ── Sub-step 0: The Bouncer ────────────────────────────────────────────────
+function StepBouncer({ onNext }: { onNext: () => void }) {
+  const [age, setAge] = useState(20);
+  const [result, setResult] = useState<"allowed" | "denied" | null>(null);
+  const [key, setKey] = useState(0); // force re-animation
 
-export default function SectionIfStatement({ onComplete }: SectionIfStatementProps) {
-  const [subStep, setSubStep] = useState(0);
-  const [hasCompletedSection, setHasCompletedSection] = useState(false);
-
-  // Step 1 — Bouncer
-  const [onList, setOnList] = useState(false);
-
-  // Step 2 — Two Doors
-  const [raining, setRaining] = useState(false);
-
-  // Step 3 — Mail Slots (order puzzle)
-  const [slotOrder, setSlotOrder] = useState([0, 1, 2, 3]);
-  const [mailChecked, setMailChecked] = useState(false);
-  const moveSlot = (from: number, to: number) => {
-    const next = [...slotOrder];
-    const [m] = next.splice(from, 1);
-    next.splice(to, 0, m);
-    setSlotOrder(next);
-    setMailChecked(false);
-  };
-  const slotCorrect = slotOrder.every((v, i) => v === i);
-
-  // Step 4 — Nested if quiz
-  const [nestedAns, setNestedAns] = useState<string | null>(null);
-  const [nestedSubmitted, setNestedSubmitted] = useState(false);
-
-  // Capstone — Umbrella helper
-  const [umbrellaRain, setUmbrellaRain] = useState(false);
-  const [umbrellaCold, setUmbrellaCold] = useState(false);
-  const [umbrellaResult, setUmbrellaResult] = useState<string | null>(null);
-
-  const getUmbrellaAdvice = () => {
-    if (umbrellaRain && umbrellaCold) return "Take an umbrella AND wear a coat!";
-    if (umbrellaRain) return "Take an umbrella.";
-    if (umbrellaCold) return "Wear a coat, no umbrella needed.";
-    return "Enjoy the nice weather! 🌞";
+  const check = () => {
+    setResult(age >= 18 ? "allowed" : "denied");
+    setKey(k => k + 1);
   };
 
-  const handleFinalSubmit = () => {
-    if (hasCompletedSection) return;
-    setHasCompletedSection(true);
-    onComplete(10);
+  const liveCode = `if (age >= 18) {
+    printf("Come in!\\n");   // ← runs when true
+} else {
+    printf("Too young!\\n"); // ← runs when false
+}`;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* SVG scene */}
+      <svg viewBox="0 0 380 200" style={{ width: "100%", borderRadius: 12,
+        background: "linear-gradient(180deg,#0a0f1a,#111827)" }}>
+
+        {/* Velvet rope line */}
+        <line x1="40" y1="145" x2="310" y2="145" stroke="#8B4513" strokeWidth="4" />
+        {/* Rope posts */}
+        <circle cx="100" cy="140" r="7" fill="#5a3300" stroke="#c8860a" strokeWidth="2" />
+        <circle cx="200" cy="140" r="7" fill="#5a3300" stroke="#c8860a" strokeWidth="2" />
+
+        {/* Club door */}
+        <rect x="295" y="55" width="60" height="120" rx="4" fill="#1a1a2e" stroke="#333" strokeWidth="2" />
+        {/* Door knob */}
+        <circle cx="303" cy="115" r="4" fill="#888" />
+        {/* Club sign */}
+        <rect x="300" y="65" width="50" height="26" rx="4" fill="#1a0a00" stroke={C.amber} strokeWidth="1.5" />
+        <text x="325" y="74" textAnchor="middle" fill={C.amber} fontSize="7" fontWeight="bold">CLUB</text>
+        <text x="325" y="84" textAnchor="middle" fill={C.amber} fontSize="7" fontWeight="bold">18+</text>
+
+        {/* Door glow when allowed */}
+        {result === "allowed" && (
+          <rect x="295" y="55" width="60" height="120" rx="4"
+            fill="rgba(0,217,192,.15)" stroke={C.teal} strokeWidth="2.5" key={`glow-${key}`} />
+        )}
+
+        {/* Bouncer group */}
+        <g key={`bouncer-${key}`}
+          style={result === "allowed"
+            ? { animation: "walkLeft 0.6s ease forwards", transformOrigin: "280px 120px" }
+            : {}}>
+          {/* Bouncer body */}
+          <rect x="260" y="95" width="36" height="50" rx="5" fill="#2d2d3d" />
+          {/* Bouncer head */}
+          <circle cx="278" cy="85" r="15" fill="#3a3a4d" />
+          {/* Bouncer sunglasses */}
+          <rect x="268" y="82" width="8" height="5" rx="2" fill="#111" />
+          <rect x="279" y="82" width="8" height="5" rx="2" fill="#111" />
+          <line x1="276" y1="84" x2="279" y2="84" stroke="#555" strokeWidth="1" />
+          {/* Bouncer arms */}
+          <rect x="245" y="100" width="15" height="7" rx="3" fill="#2d2d3d" />
+          <rect x="296" y="100" width="15" height="7" rx="3" fill="#2d2d3d" />
+          {/* Label */}
+          <text x="278" y="160" textAnchor="middle" fill={C.muted} fontSize="8">BOUNCER</text>
+        </g>
+
+        {/* Person approaching from left */}
+        <g key={`person-${key}`}
+          style={result === "denied"
+            ? { animation: "walkLeft 0.6s 0.1s ease forwards", transformOrigin: "70px 120px" }
+            : { animation: "slideRight 0.5s ease forwards" }}>
+          {/* Age badge above head */}
+          <rect x="52" y="48" width="36" height="18" rx="4"
+            fill="rgba(255,184,0,.15)" stroke={C.amber} strokeWidth="1.5" />
+          <text x="70" y="61" textAnchor="middle" fill={C.amber} fontSize="9" fontWeight="bold">
+            age={age}
+          </text>
+          {/* Head */}
+          <circle cx="70" cy="82" r="10" fill="#c8a882" />
+          {/* Body */}
+          <line x1="70" y1="92" x2="70" y2="130" stroke={C.text} strokeWidth="3" />
+          {/* Arms */}
+          <line x1="70" y1="100" x2="55" y2="112" stroke={C.text} strokeWidth="2.5" />
+          <line x1="70" y1="100" x2="85" y2="112" stroke={C.text} strokeWidth="2.5" />
+          {/* Legs */}
+          <line x1="70" y1="130" x2="58" y2="150" stroke={C.text} strokeWidth="2.5" />
+          <line x1="70" y1="130" x2="82" y2="150" stroke={C.text} strokeWidth="2.5" />
+        </g>
+
+        {/* Result overlays */}
+        {result === "allowed" && (
+          <g key={`ok-${key}`} className="pop-in" style={{ transformOrigin: "325px 115px" }}>
+            <circle cx="325" cy="115" r="18" fill="rgba(0,217,192,.25)" stroke={C.teal} strokeWidth="2" />
+            <text x="325" y="121" textAnchor="middle" fill={C.teal} fontSize="14" fontWeight="bold">✓</text>
+          </g>
+        )}
+        {result === "denied" && (
+          <g key={`no-${key}`} className="pop-in" style={{ transformOrigin: "325px 115px" }}>
+            <circle cx="325" cy="115" r="18" fill="rgba(255,95,110,.25)" stroke={C.coral} strokeWidth="2" />
+            <text x="325" y="121" textAnchor="middle" fill={C.coral} fontSize="14" fontWeight="bold">✗</text>
+          </g>
+        )}
+
+        {result && (
+          <text x="190" y="185" textAnchor="middle" fill={result === "allowed" ? C.teal : C.coral}
+            fontSize="11" fontWeight="bold">
+            {result === "allowed" ? "ALLOWED ✓  — condition true" : "DENIED ✗  — condition false"}
+          </text>
+        )}
+      </svg>
+
+      {/* Controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <label style={{ color: C.text, fontSize: 13 }}>
+          Person&apos;s age:
+          <input type="number" min={1} max={100} value={age}
+            onChange={e => { setAge(Number(e.target.value)); setResult(null); }}
+            style={{ marginLeft: 8, width: 64, padding: "4px 8px", borderRadius: 6,
+              background: C.codeBg, border: `1px solid rgba(255,255,255,.15)`,
+              color: C.text, fontSize: 13, fontFamily: "monospace" }} />
+        </label>
+        <button onClick={check} style={{
+          padding: "7px 18px", borderRadius: 8, cursor: "pointer", fontSize: 12,
+          fontWeight: 700, fontFamily: "monospace",
+          background: C.amber, color: "#000", border: "none",
+        }}>Check!</button>
+      </div>
+
+      {/* Live code */}
+      <div style={{ background: C.codeBg, borderRadius: 10, padding: "14px 16px",
+        fontFamily: "monospace", fontSize: 12, lineHeight: 1.8,
+        border: "1px solid rgba(255,255,255,.08)" }}>
+        <span style={{ color: "#569cd6" }}>if</span>
+        {" (age >= 18) {\n"}
+        <span style={{ color: result === "allowed" ? C.teal : C.muted, marginLeft: 16 }}>
+          {"    printf(\"Come in!\\n\");   "}
+        </span>
+        <span style={{ color: C.muted }}>{"// ← runs when true\n"}</span>
+        {"} "}
+        <span style={{ color: "#569cd6" }}>else</span>
+        {" {\n"}
+        <span style={{ color: result === "denied" ? C.coral : C.muted }}>
+          {"    printf(\"Too young!\\n\"); "}
+        </span>
+        <span style={{ color: C.muted }}>{"// ← runs when false\n"}</span>
+        {"}"}
+      </div>
+
+      <ConceptLock>
+        <code style={{ fontFamily: "monospace", background: "rgba(255,255,255,.08)", padding: "1px 5px", borderRadius: 4 }}>if</code>
+        {" only runs its block when the condition is "}
+        <strong>true</strong>
+        {". "}
+        <code style={{ fontFamily: "monospace", background: "rgba(255,255,255,.08)", padding: "1px 5px", borderRadius: 4 }}>else</code>
+        {" runs when false. Never both — always exactly one."}
+      </ConceptLock>
+
+      <NextBtn label="NEXT: FORK ROAD" onClick={onNext} />
+    </div>
+  );
+}
+
+// ── Sub-step 1: The Fork Road ──────────────────────────────────────────────
+function StepForkRoad({ onNext }: { onNext: () => void }) {
+  const [score, setScore] = useState(60);
+  const [rolled, setRolled] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+
+  const pass = score >= 50;
+
+  const roll = () => {
+    setRolled(true);
+    setAnimKey(k => k + 1);
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <svg viewBox="0 0 380 180" style={{ width: "100%", borderRadius: 12,
+        background: "linear-gradient(180deg,#0a0f1a,#111827)" }}>
 
-      {/* Sub-step nav */}
-      <div className="flex flex-wrap gap-2 bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
-        {[
-          { label: "1. The Bouncer 🚪", step: 0 },
-          { label: "2. Two Doors 🚪🚪", step: 1 },
-          { label: "3. Mail Slots 📬", step: 2 },
-          { label: "4. Rules in Rules 🏪", step: 3 },
-          { label: "5. Capstone ☂️", step: 4 },
-        ].map(({ label, step }) => (
-          <button key={step} onClick={() => setSubStep(step)}
-            className={`px-3 py-1.5 rounded transition-all cursor-pointer ${subStep === step ? "bg-primary text-on-primary font-bold" : "text-on-surface-variant hover:text-on-surface"}`}>
-            {label}
-          </button>
-        ))}
+        {/* Stem road */}
+        <rect x="170" y="90" width="40" height="60" fill="#2a2a3a" />
+
+        {/* Left branch (PASS) */}
+        <polygon points="170,90 210,90 120,20 80,20" fill="#2a2a3a" />
+        {/* Right branch (FAIL) */}
+        <polygon points="170,90 210,90 300,20 260,20" fill="#2a2a3a" />
+
+        {/* Road lines */}
+        <line x1="190" y1="150" x2="190" y2="95" stroke="#fff" strokeWidth="2" strokeDasharray="6 4" />
+        <line x1="190" y1="92" x2="100" y2="22" stroke="#fff" strokeWidth="2" strokeDasharray="6 4" />
+        <line x1="190" y1="92" x2="280" y2="22" stroke="#fff" strokeWidth="2" strokeDasharray="6 4" />
+
+        {/* PASS box */}
+        <rect x="60" y="8" width="70" height="28" rx="5"
+          fill={rolled && pass ? "rgba(0,217,192,.25)" : "rgba(0,0,0,.4)"}
+          stroke={rolled && pass ? C.teal : C.muted} strokeWidth={rolled && pass ? 2 : 1} />
+        <text x="95" y="27" textAnchor="middle" fill={rolled && pass ? C.teal : C.muted}
+          fontSize="12" fontWeight="bold">PASS 🏆</text>
+
+        {/* FAIL box */}
+        <rect x="250" y="8" width="70" height="28" rx="5"
+          fill={rolled && !pass ? "rgba(255,95,110,.25)" : "rgba(0,0,0,.4)"}
+          stroke={rolled && !pass ? C.coral : C.muted} strokeWidth={rolled && !pass ? 2 : 1} />
+        <text x="285" y="27" textAnchor="middle" fill={rolled && !pass ? C.coral : C.muted}
+          fontSize="12" fontWeight="bold">FAIL 💔</text>
+
+        {/* Ball */}
+        <circle key={`ball-${animKey}`} cx="190" cy="155" r="12" fill={C.lav} stroke="rgba(167,139,250,.5)" strokeWidth="2"
+          style={rolled
+            ? { animation: `${pass ? "walkLeft" : "walkRight"} 0.7s 0.1s ease forwards`,
+                transformOrigin: "190px 155px" }
+            : {}} />
+
+        {/* Score label */}
+        <text x="190" y="178" textAnchor="middle" fill={C.muted} fontSize="10">
+          score = {score}
+        </text>
+      </svg>
+
+      {/* Slider */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <label style={{ color: C.text, fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+          Score:
+          <input type="range" min={0} max={100} value={score}
+            onChange={e => { setScore(Number(e.target.value)); setRolled(false); }}
+            style={{ width: 140 }} />
+          <span style={{ fontFamily: "monospace", color: C.amber, fontWeight: 700 }}>{score}</span>
+        </label>
+        <button onClick={roll} style={{
+          padding: "7px 18px", borderRadius: 8, cursor: "pointer", fontSize: 12,
+          fontWeight: 700, fontFamily: "monospace",
+          background: C.lav, color: "#000", border: "none",
+        }}>Roll!</button>
       </div>
 
-      {/* ── STEP 1: THE BOUNCER ── */}
-      {subStep === 0 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <Analogy>
-            A bouncer at a club has one rule: if your name is on the guest list, the door opens.
-            If not — the door stays shut and nothing happens. The program doesn&apos;t crash. It just
-            moves on, as if that section never existed.
-          </Analogy>
+      <CodeBox label="C Code" code={`if (score >= 50) {
+    printf("PASS\\n");
+} else {
+    printf("FAIL\\n");
+}`} />
 
-          <section className="glass-panel p-5 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">security</span>
-              The Bouncer Gate
-            </h3>
-            <div className="flex flex-col items-center gap-4">
-              <BouncerGate onList={onList} />
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer select-none text-sm font-mono">
-                  <div
-                    onClick={() => setOnList(!onList)}
-                    className="w-12 h-6 rounded-full border-2 transition-all cursor-pointer relative"
-                    style={{
-                      background: onList ? "rgba(0,218,243,.3)" : "rgba(255,255,255,.1)",
-                      borderColor: onList ? "#00D9C0" : "rgba(255,255,255,.2)",
-                    }}
-                  >
-                    <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all bg-white"
-                      style={{ transform: onList ? "translateX(24px)" : "translateX(0)" }} />
-                  </div>
-                  <span style={{ color: onList ? "#00D9C0" : "#7B85A8" }}>
-                    {onList ? "on_list = 1 (true)" : "on_list = 0 (false)"}
-                  </span>
-                </label>
-              </div>
-            </div>
+      <ConceptLock>
+        Exactly <strong>one branch</strong> always runs — never both, never neither. The ball always rolls somewhere. Your program always has a path forward.
+      </ConceptLock>
 
-            <div className="bg-surface-container-lowest rounded-xl p-4 font-mono text-xs border border-white/5 space-y-1">
-              <div><span className="text-blue-400">if</span> <span className="text-white">(</span><span className="text-teal-300">on_list</span><span className="text-white"> == </span><span className="text-amber-300">1</span><span className="text-white">) {"{"}</span></div>
-              <div className={`pl-4 transition-all ${onList ? "text-teal-300" : "text-white/20"}`}>  printf(<span className="text-orange-300">&quot;Welcome in!\n&quot;</span>);</div>
-              <div><span className="text-white">{"}"}</span></div>
-              <div className={`text-[10px] mt-2 font-sans ${onList ? "text-teal-400" : "text-white/30"}`}>
-                {onList ? "→ condition is true → runs the block" : "→ condition is false → skips the block entirely"}
-              </div>
-            </div>
-          </section>
-
-          <Gotcha>
-            <strong>= vs == one more time:</strong>{" "}
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">if (x = 5)</code>{" "}
-            always runs — it assigns 5 to x (which is truthy). What you want is{" "}
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">if (x == 5)</code>{" "}
-            which checks whether x equals 5. One equals sign assigns; two equals signs compare.
-          </Gotcha>
-
-          <ConceptLock>
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">if (condition)</code>{" "}
-            runs its block <strong>only when the condition is true</strong>. When false, the block is skipped
-            entirely — the program jumps past it. Nothing breaks. It just doesn&apos;t run that part.
-          </ConceptLock>
-
-          <CodeBlock label="Code Reveal">
-            {`if (on_list == 1) {
-    printf("Welcome in!\\n");
+      <NextBtn label="NEXT: MAIL SLOTS" onClick={onNext} />
+    </div>
+  );
 }
-// If on_list is 0 (false), nothing prints — program moves on silently`}
-          </CodeBlock>
 
-          <div className="flex justify-end">
-            <button onClick={() => setSubStep(1)} className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs code-glow transition-all active:scale-95 cursor-pointer">
-              NEXT: TWO DOORS →
-            </button>
-          </div>
-        </div>
-      )}
+// ── Sub-step 2: Mail Slots ─────────────────────────────────────────────────
+const GRADE_SLOTS = [
+  { grade: "A", min: 90, max: 100, label: "90 – 100" },
+  { grade: "B", min: 80, max: 89,  label: "80 – 89" },
+  { grade: "C", min: 70, max: 79,  label: "70 – 79" },
+  { grade: "D", min: 60, max: 69,  label: "60 – 69" },
+  { grade: "F", min: 0,  max: 59,  label: "< 60" },
+];
 
-      {/* ── STEP 2: TWO DOORS ── */}
-      {subStep === 1 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <Analogy>
-            Now there are two doors. One opens when the condition is true. The other opens when
-            it&apos;s false. <strong>You always go through a door</strong> — you can&apos;t stay
-            in the hallway forever. The program always takes one branch or the other.
-          </Analogy>
+function getGrade(score: number): number {
+  if (score >= 90) return 0;
+  if (score >= 80) return 1;
+  if (score >= 70) return 2;
+  if (score >= 60) return 3;
+  return 4;
+}
 
-          <section className="glass-panel p-5 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">door_front</span>
-              Flip the Condition
-            </h3>
-            <TwoDoors raining={raining} />
-            <div className="flex justify-center">
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <div onClick={() => setRaining(!raining)}
-                  className="w-14 h-7 rounded-full border-2 transition-all cursor-pointer relative"
-                  style={{ background: raining ? "rgba(0,218,243,.3)" : "rgba(255,255,255,.1)", borderColor: raining ? "#00D9C0" : "rgba(255,255,255,.2)" }}>
-                  <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-all bg-white"
-                    style={{ transform: raining ? "translateX(28px)" : "translateX(0)" }} />
-                </div>
-                <span className="text-sm font-mono" style={{ color: raining ? "#00D9C0" : "#7B85A8" }}>
-                  {raining ? "🌧️ raining = true" : "☀️ raining = false"}
-                </span>
-              </label>
-            </div>
+function StepMailSlots({ onNext }: { onNext: () => void }) {
+  const [score, setScore] = useState(75);
+  const [sent, setSent] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
 
-            <div className="bg-surface-container-lowest rounded-xl p-4 font-mono text-xs border border-white/5 space-y-1">
-              <div><span className="text-blue-400">if</span> <span className="text-white">(</span><span className="text-teal-300">raining</span><span className="text-white">) {"{"}</span></div>
-              <div className={`pl-4 transition-all ${raining ? "text-teal-300" : "text-white/20"}`}>  printf(<span className="text-orange-300">&quot;Take an umbrella\n&quot;</span>);</div>
-              <div><span className="text-white">{"}"} </span><span className="text-blue-400">else</span><span className="text-white"> {"{"}</span></div>
-              <div className={`pl-4 transition-all ${!raining ? "text-teal-300" : "text-white/20"}`}>  printf(<span className="text-orange-300">&quot;Wear sunglasses\n&quot;</span>);</div>
-              <div><span className="text-white">{"}"}</span></div>
-            </div>
-          </section>
+  const gradeIdx = getGrade(score);
 
-          <ConceptLock>
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">else</code>{" "}
-            is the catch-all: runs whenever the{" "}
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">if</code>{" "}
-            condition is false. Exactly <strong>one of the two blocks always runs</strong> — never both, never neither. The program always has a path forward.
-          </ConceptLock>
+  const send = () => {
+    setSent(true);
+    setAnimKey(k => k + 1);
+  };
 
-          <div className="flex justify-end">
-            <button onClick={() => setSubStep(2)} className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs code-glow transition-all active:scale-95 cursor-pointer">
-              NEXT: MAIL SLOTS →
-            </button>
-          </div>
-        </div>
-      )}
+  // Slot top-y positions (stacked, 5 slots of 28px each with 4px gap)
+  const slotY = (i: number) => 10 + i * 35;
 
-      {/* ── STEP 3: MAIL SLOTS ── */}
-      {subStep === 2 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <Analogy>
-            A mail sorter has slots stacked top to bottom. Each slot has a rule. A letter drops
-            into the <strong>first slot whose rule it matches</strong> — it doesn&apos;t check
-            the rest. <strong>Order matters</strong>: a wide rule placed above a narrow one
-            catches things that should&apos;ve gone lower.
-          </Analogy>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <svg viewBox="0 0 380 200" style={{ width: "100%", borderRadius: 12,
+        background: "linear-gradient(180deg,#0a0f1a,#111827)" }}>
 
-          <section className="glass-panel p-5 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">inbox</span>
-              Reorder the Mail Slots — Click ↑ / ↓
-            </h3>
-            <p className="text-xs text-on-surface-variant font-sans">
-              The slots below are scrambled. Reorder them so each score lands in the right grade slot.
-            </p>
-            <div className="space-y-2">
-              {slotOrder.map((slotIdx, pos) => {
-                const slot = INITIAL_SLOTS[slotIdx];
-                const isCorrect = mailChecked && slotIdx === pos;
-                const isWrong = mailChecked && slotIdx !== pos;
-                return (
-                  <div key={slotIdx}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-xs font-mono ${
-                      isCorrect ? "border-primary bg-primary/10" : isWrong ? "border-error bg-error/10" : "border-white/10 bg-surface-container-low"
-                    }`}>
-                    <div className="flex flex-col gap-0.5">
-                      <button disabled={pos === 0} onClick={() => moveSlot(pos, pos - 1)}
-                        className="text-[11px] disabled:opacity-20 cursor-pointer hover:text-primary leading-none">▲</button>
-                      <button disabled={pos === slotOrder.length - 1} onClick={() => moveSlot(pos, pos + 1)}
-                        className="text-[11px] disabled:opacity-20 cursor-pointer hover:text-primary leading-none">▼</button>
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-blue-400">else if</span>{" "}
-                      <span className="text-white">({slot.label.split("→")[0].trim()})</span>
-                      {" → "}<span style={{ color: "#FFB800" }}>{slot.label.split("→")[1]}</span>
-                    </div>
-                    <div className="text-[10px] text-on-surface-variant">
-                      scores {slot.range[0]}–{slot.range[1]}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Post-office wall */}
+        <rect x="160" y="5" width="190" height="185" rx="6" fill="#161b2e" stroke="rgba(255,255,255,.06)" strokeWidth="1" />
 
-            <div className="flex gap-3 items-center">
-              <button onClick={() => setMailChecked(true)}
-                className="px-5 py-2 bg-secondary text-on-secondary rounded-lg text-xs font-bold cursor-pointer active:scale-95 transition-all">
-                CHECK ORDER
-              </button>
-              {mailChecked && slotCorrect && (
-                <span className="text-sm font-bold" style={{ color: "#00D9C0" }}>✓ First-match wins!</span>
-              )}
-              {mailChecked && !slotCorrect && (
-                <span className="text-sm font-bold" style={{ color: "#FF5F6E" }}>Not quite — try again</span>
-              )}
-            </div>
+        {/* Mail slots */}
+        {GRADE_SLOTS.map((s, i) => {
+          const y = slotY(i);
+          const active = sent && i === gradeIdx;
+          return (
+            <g key={s.grade}>
+              <rect x="165" y={y + 5} width="180" height="26" rx="3"
+                fill={active ? "rgba(0,217,192,.15)" : "rgba(255,255,255,.04)"}
+                stroke={active ? C.teal : "rgba(255,255,255,.12)"} strokeWidth={active ? 1.5 : 1} />
+              {/* Flap at bottom of slot */}
+              <rect x="165" y={y + 27} width="180" height="4" rx="1"
+                fill={active ? C.teal : "#333"}
+                style={active ? { transformOrigin: `165px ${y + 27}px`,
+                  animation: "dropDown 0.35s ease forwards" } : {}} />
+              <text x="245" y={y + 22} textAnchor="middle"
+                fill={active ? C.teal : C.muted} fontSize="11" fontWeight={active ? "bold" : "normal"}>
+                Grade {s.grade}  ({s.label})
+              </text>
+            </g>
+          );
+        })}
 
-            {/* Show live result */}
-            <div className="space-y-2 border-t border-white/5 pt-3">
-              <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Live: Which slot does each score land in?</div>
-              {MAIL_ITEMS.map((mail) => {
-                const slot = INITIAL_SLOTS[slotOrder.findIndex((_, i) =>
-                  mail.value >= INITIAL_SLOTS[slotOrder[i]].range[0] &&
-                  mail.value <= INITIAL_SLOTS[slotOrder[i]].range[1]
-                )];
-                const correctSlot = INITIAL_SLOTS[mail.correctSlot];
-                const landed = slot?.label ?? "else → Try again";
-                const isRight = slot === correctSlot;
-                return (
-                  <div key={mail.id} className="flex justify-between items-center text-xs font-mono">
-                    <span className="text-on-surface-variant">{mail.label}</span>
-                    <span style={{ color: isRight ? "#00D9C0" : "#FF5F6E" }}>→ {landed}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+        {/* Envelope */}
+        <g key={`env-${animKey}`}
+          style={sent
+            ? { animation: `dropDown 0.5s ease forwards`,
+                transformOrigin: `254px ${slotY(gradeIdx) + 16}px` }
+            : {}}>
+          <rect
+            x="220" y={sent ? slotY(gradeIdx) + 8 : 2}
+            width="68" height="20" rx="3"
+            fill={C.amber} opacity={0.9} />
+          <text x="254" y={sent ? slotY(gradeIdx) + 16 : 14}
+            textAnchor="middle" fill="#000" fontSize="9" fontWeight="bold">
+            score={score}
+          </text>
+        </g>
 
-          <ConceptLock>
-            Conditions are checked <strong>top to bottom</strong>. The first one that&apos;s true runs — the rest are skipped.
-            Order is not decorative. Putting a broad condition above a narrow one will swallow the narrow case
-            and it will never run.
-          </ConceptLock>
+        {/* Left side label */}
+        <text x="80" y="100" textAnchor="middle" fill={C.muted} fontSize="11">
+          POST OFFICE
+        </text>
+        <text x="80" y="115" textAnchor="middle" fill={C.muted} fontSize="9">
+          GRADES
+        </text>
+      </svg>
 
-          <CodeBlock label="Code Reveal — if-else if-else chain">
-            {`if (score >= 90)      { printf("A\\n"); }
-else if (score >= 75) { printf("B\\n"); }
-else if (score >= 60) { printf("C\\n"); }
-else                  { printf("Try again\\n"); }
-// First match wins — only ONE block ever runs`}
-          </CodeBlock>
+      {/* Controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <label style={{ color: C.text, fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+          Score:
+          <input type="number" min={0} max={100} value={score}
+            onChange={e => { setScore(Number(e.target.value)); setSent(false); }}
+            style={{ width: 64, padding: "4px 8px", borderRadius: 6,
+              background: C.codeBg, border: "1px solid rgba(255,255,255,.15)",
+              color: C.text, fontSize: 13, fontFamily: "monospace" }} />
+        </label>
+        <button onClick={send} style={{
+          padding: "7px 18px", borderRadius: 8, cursor: "pointer", fontSize: 12,
+          fontWeight: 700, fontFamily: "monospace",
+          background: C.amber, color: "#000", border: "none",
+        }}>Send!</button>
+        {sent && (
+          <span style={{ color: C.teal, fontFamily: "monospace", fontSize: 12, fontWeight: 700 }}>
+            → Grade {GRADE_SLOTS[gradeIdx].grade} slot opened
+          </span>
+        )}
+      </div>
 
-          <div className="flex justify-end">
-            <button onClick={() => setSubStep(3)} className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs code-glow transition-all active:scale-95 cursor-pointer">
-              NEXT: RULES IN RULES →
-            </button>
-          </div>
-        </div>
-      )}
+      <CodeBox label="C Code — else if chain" code={`if (score >= 90)      printf("A\\n");
+else if (score >= 80) printf("B\\n");
+else if (score >= 70) printf("C\\n");
+else if (score >= 60) printf("D\\n");
+else                  printf("F\\n");`} />
 
-      {/* ── STEP 4: NESTED IF ── */}
-      {subStep === 3 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <Analogy>
-            A second check only makes sense after the first one passes. "If the shop is open,{" "}
-            <em>then</em> check if they have your size." Checking the size when the shop is
-            closed is pointless — and impossible. Nested ifs encode this natural
-            &quot;only if the outer condition passed&quot; logic.
-          </Analogy>
+      <ConceptLock>
+        <code style={{ fontFamily: "monospace", background: "rgba(255,255,255,.08)", padding: "1px 5px", borderRadius: 4 }}>else if</code>
+        {" chains are checked top to bottom. Only the "}
+        <strong>first true branch</strong>
+        {" runs. The rest are skipped — even if they would also match."}
+      </ConceptLock>
 
-          {/* Visual demo */}
-          <section className="glass-panel p-5 rounded-xl space-y-4">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">storefront</span>
-              Is the Shop Open? Do They Have Your Size?
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Shop is open", state: true },
-                { label: "Has your size", state: true },
-              ].map((item, i) => {
-                const [checked, setChecked] = useState(false);
-                return (
-                  <label key={i} className="flex items-center gap-2 cursor-pointer select-none p-3 rounded-lg border border-white/10 bg-surface-container-low text-sm font-mono"
-                    onClick={() => setChecked(!checked)}>
-                    <div className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all"
-                      style={{ borderColor: checked ? "#00D9C0" : "rgba(255,255,255,.2)", background: checked ? "rgba(0,218,243,.2)" : "transparent" }}>
-                      {checked && <span className="text-[10px]">✓</span>}
-                    </div>
-                    <span style={{ color: checked ? "#00D9C0" : "#7B85A8" }}>{item.label}</span>
-                  </label>
-                );
-              })}
-            </div>
+      <NextBtn label="NEXT: TREASURE CHESTS" onClick={onNext} />
+    </div>
+  );
+}
 
-            {/* Quiz */}
-            <div className="space-y-3 border-t border-white/5 pt-4">
-              <p className="text-xs font-bold text-on-surface">
-                You could replace the nested if with a single condition. Which one?
-              </p>
-              {[
-                { label: "if (shop_open || has_size)", val: "or", wrong: true },
-                { label: "if (shop_open && has_size)", val: "and", wrong: false },
-                { label: "if (!shop_open && has_size)", val: "not", wrong: true },
-              ].map((opt) => {
-                let style = "border-white/10 bg-white/5";
-                if (nestedSubmitted) {
-                  if (!opt.wrong) style = "border-primary bg-primary/10 text-primary-fixed-dim font-bold";
-                  else if (nestedAns === opt.val) style = "border-error bg-error/10 text-error font-bold";
-                  else style = "border-white/5 opacity-30";
-                } else if (nestedAns === opt.val) style = "border-secondary bg-secondary/15 text-secondary";
-                return (
-                  <button key={opt.val} disabled={nestedSubmitted} onClick={() => setNestedAns(opt.val)}
-                    className={`w-full text-left p-3 rounded-lg border text-xs font-mono transition-all cursor-pointer active:scale-[0.99] ${style}`}>
-                    {opt.label}
-                  </button>
-                );
-              })}
-              {!nestedSubmitted && nestedAns && (
-                <button onClick={() => setNestedSubmitted(true)}
-                  className="px-5 py-2 bg-secondary text-on-secondary rounded-lg text-xs font-bold cursor-pointer active:scale-95 transition-all">
-                  CHECK
-                </button>
-              )}
-              {nestedSubmitted && (
-                <div className="p-3 bg-surface-container-low border border-white/5 rounded-lg text-xs font-sans text-on-surface-variant">
-                  <strong className="text-on-surface block mb-1">Correct!</strong>
-                  The shop needs to be open <strong>AND</strong> have your size — both must be true.
-                  <code className="font-mono block mt-1 text-teal-300">if (shop_open &amp;&amp; has_size)</code>
-                  is exactly what nested if expresses, in one line.
-                  But nested if is better when the inner check needs information only available inside the outer block.
-                </div>
-              )}
-            </div>
-          </section>
+// ── Sub-step 3: Nested Treasure Chests ────────────────────────────────────
+function StepTreasure({ onNext }: { onNext: () => void }) {
+  const [hasKey, setHasKey] = useState(false);
+  const [knowsPassword, setKnowsPassword] = useState(false);
 
-          <ConceptLock>
-            A nested if only runs when the <strong>outer if has already passed</strong>.
-            This creates layered gating. The same logic can often be expressed as a single{" "}
-            <code className="font-mono text-xs bg-white/10 px-1 rounded">&amp;&amp;</code> —
-            but nested ifs are clearer when the inner check depends on a value only available inside the outer block.
-          </ConceptLock>
+  const outerOpen = hasKey;
+  const innerOpen = hasKey && knowsPassword;
 
-          <CodeBlock label="Code Reveal — nested vs &&">
-            {`// Nested if
-if (shop_open) {
-    if (has_size) {
-        printf("Buy it!\\n");
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <svg viewBox="0 0 380 180" style={{ width: "100%", borderRadius: 12,
+        background: "linear-gradient(180deg,#0a0f1a,#111827)" }}>
+
+        {/* Outer chest body */}
+        <rect x="100" y="90" width="180" height="75" rx="6"
+          fill="#1e1a0e" stroke={hasKey ? C.amber : "#444"} strokeWidth={hasKey ? 2.5 : 1.5} />
+        {/* Outer chest lid */}
+        <rect x="100" y="70" width="180" height="24" rx="6"
+          fill="#2a220e" stroke={hasKey ? C.amber : "#444"} strokeWidth={hasKey ? 2.5 : 1.5}
+          style={outerOpen ? { transform: "scaleY(0)", transformOrigin: "190px 70px",
+            transition: "transform 0.4s ease" } : { transition: "transform 0.4s ease" }} />
+        {/* Outer lock */}
+        {!hasKey && (
+          <g>
+            <rect x="178" y="80" width="24" height="18" rx="3" fill="#555" />
+            <path d="M183 80 Q183 72 197 72 Q211 72 211 80" fill="none" stroke="#555" strokeWidth="4" />
+          </g>
+        )}
+        <text x="190" y="140" textAnchor="middle" fill={hasKey ? C.amber : C.muted} fontSize="10">
+          OUTER CHEST
+        </text>
+
+        {/* Inner chest — only visible when outer open */}
+        <rect x="130" y="97" width="120" height="55" rx="5"
+          fill="#120d05" stroke={innerOpen ? C.teal : "#333"} strokeWidth={innerOpen ? 2 : 1}
+          opacity={outerOpen ? 1 : 0.2}
+          style={{ transition: "opacity 0.4s" }} />
+        {/* Inner chest lid */}
+        <rect x="130" y="82" width="120" height="18" rx="5"
+          fill="#1a1205" stroke={innerOpen ? C.teal : "#333"} strokeWidth={innerOpen ? 2 : 1}
+          opacity={outerOpen ? 1 : 0.2}
+          style={innerOpen
+            ? { transform: "scaleY(0)", transformOrigin: "190px 82px", opacity: 1,
+                transition: "transform 0.4s 0.3s ease, opacity 0.4s" }
+            : { transition: "transform 0.4s ease, opacity 0.4s" }} />
+        {/* Inner lock */}
+        {outerOpen && !knowsPassword && (
+          <g opacity={outerOpen ? 1 : 0}>
+            <rect x="180" y="90" width="18" height="14" rx="2" fill="#444" />
+            <path d="M183 90 Q183 85 189 85 Q195 85 195 90" fill="none" stroke="#444" strokeWidth="3" />
+          </g>
+        )}
+        <text x="190" y="128" textAnchor="middle"
+          fill={innerOpen ? C.teal : C.muted} fontSize="9"
+          opacity={outerOpen ? 1 : 0.3}>
+          INNER CHEST
+        </text>
+
+        {/* Treasure sparkles */}
+        {innerOpen && (
+          <>
+            <text x="155" y="68" className="pop-in" fill={C.amber} fontSize="14">✦</text>
+            <text x="210" y="60" className="pop-in" fill={C.teal} fontSize="10">✦</text>
+            <text x="230" y="72" className="pop-in" fill={C.amber} fontSize="12">✦</text>
+            <text x="175" y="55" className="pop-in" fill={C.lav} fontSize="8">✦</text>
+            <text x="190" y="168" textAnchor="middle" fill={C.teal} fontSize="11" fontWeight="bold">
+              🎉 TREASURE!
+            </text>
+          </>
+        )}
+
+        {!outerOpen && (
+          <text x="190" y="168" textAnchor="middle" fill={C.muted} fontSize="10">
+            Need the key to open the outer chest first
+          </text>
+        )}
+        {outerOpen && !innerOpen && (
+          <text x="190" y="168" textAnchor="middle" fill={C.muted} fontSize="10">
+            Outer open — but inner needs the password
+          </text>
+        )}
+      </svg>
+
+      {/* Toggle buttons */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button onClick={() => setHasKey(v => !v)} style={{
+          padding: "9px 18px", borderRadius: 9, cursor: "pointer", fontSize: 12,
+          fontWeight: 700, fontFamily: "monospace",
+          background: hasKey ? C.amber : "rgba(255,255,255,.08)",
+          color: hasKey ? "#000" : C.muted,
+          border: hasKey ? "none" : "1px solid rgba(255,255,255,.1)",
+          transition: "all 0.2s",
+        }}>
+          Has Key? {hasKey ? "YES ✓" : "NO ✗"}
+        </button>
+        <button onClick={() => setKnowsPassword(v => !v)} style={{
+          padding: "9px 18px", borderRadius: 9, cursor: "pointer", fontSize: 12,
+          fontWeight: 700, fontFamily: "monospace",
+          background: knowsPassword ? C.teal : "rgba(255,255,255,.08)",
+          color: knowsPassword ? "#000" : C.muted,
+          border: knowsPassword ? "none" : "1px solid rgba(255,255,255,.1)",
+          transition: "all 0.2s",
+        }}>
+          Knows Password? {knowsPassword ? "YES ✓" : "NO ✗"}
+        </button>
+      </div>
+
+      <CodeBox label="C Code — nested if" code={`if (hasKey) {
+    if (knowsPassword) {
+        printf("Treasure!\\n");  // both needed
     }
+}`} />
+
+      <ConceptLock>
+        Nested <code style={{ fontFamily: "monospace", background: "rgba(255,255,255,.08)", padding: "1px 5px", borderRadius: 4 }}>if</code>
+        {" — the outer condition gates access to the inner one entirely. If "}
+        <code style={{ fontFamily: "monospace", background: "rgba(255,255,255,.08)", padding: "1px 5px", borderRadius: 4 }}>hasKey</code>
+        {" is false, the inner check is never even evaluated."}
+      </ConceptLock>
+
+      <NextBtn label="CAPSTONE" onClick={onNext} />
+    </div>
+  );
 }
 
-// Equivalent with &&
-if (shop_open && has_size) {
-    printf("Buy it!\\n");
-}`}
-          </CodeBlock>
+// ── Sub-step 4: Capstone Flowchart ─────────────────────────────────────────
+const QUESTIONS: Array<{ q: string; answer: boolean }> = [
+  { q: "If it IS raining, the flowchart says to take an umbrella.", answer: true },
+  { q: "If it is NOT raining but IS cold, we do nothing.", answer: false },
+  { q: "Both the cold AND raining branches eventually lead to an action.", answer: true },
+];
 
-          <div className="flex justify-end">
-            <button onClick={() => setSubStep(4)} className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs code-glow transition-all active:scale-95 cursor-pointer">
-              CAPSTONE: UMBRELLA HELPER →
-            </button>
-          </div>
+function StepCapstone({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [answers, setAnswers] = useState<Array<boolean | null>>(Array(3).fill(null));
+  const [submitted, setSubmitted] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const allCorrect = answers.every((a, i) => a === QUESTIONS[i].answer);
+
+  const submit = () => {
+    setSubmitted(true);
+    if (allCorrect) {
+      setDone(true);
+    }
+  };
+
+  const claim = () => {
+    onComplete(55);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Flowchart SVG */}
+      <svg viewBox="0 0 380 280" style={{ width: "100%", borderRadius: 12,
+        background: "linear-gradient(180deg,#0a0f1a,#111827)" }}>
+
+        {/* Diamond 1: Is it raining? */}
+        <polygon points="190,18 270,60 190,102 110,60"
+          fill="#1a1a2e" stroke={C.lav} strokeWidth="2" />
+        <text x="190" y="56" textAnchor="middle" fill={C.text} fontSize="10" fontWeight="bold">Is it</text>
+        <text x="190" y="70" textAnchor="middle" fill={C.text} fontSize="10" fontWeight="bold">raining?</text>
+
+        {/* Arrow down (NO) from diamond 1 */}
+        <line x1="190" y1="102" x2="190" y2="140" stroke={C.muted} strokeWidth="1.5" markerEnd="url(#arr)" />
+        <text x="197" y="124" fill={C.muted} fontSize="9">NO</text>
+
+        {/* Arrow left (YES) from diamond 1 */}
+        <line x1="110" y1="60" x2="55" y2="60" stroke={C.muted} strokeWidth="1.5" markerEnd="url(#arr)" />
+        <text x="72" y="55" fill={C.muted} fontSize="9">YES</text>
+        {/* Down from YES arrow */}
+        <line x1="55" y1="60" x2="55" y2="108" stroke={C.muted} strokeWidth="1.5" markerEnd="url(#arr)" />
+
+        {/* Action: Take umbrella */}
+        <rect x="10" y="108" width="90" height="32" rx="5"
+          fill="rgba(0,217,192,.12)" stroke={C.teal} strokeWidth="1.5" />
+        <text x="55" y="124" textAnchor="middle" fill={C.teal} fontSize="10" fontWeight="bold">Take</text>
+        <text x="55" y="134" textAnchor="middle" fill={C.teal} fontSize="10" fontWeight="bold">umbrella ☂</text>
+
+        {/* Diamond 2: Is it cold? */}
+        <polygon points="190,140 270,182 190,224 110,182"
+          fill="#1a1a2e" stroke={C.amber} strokeWidth="2" />
+        <text x="190" y="178" textAnchor="middle" fill={C.text} fontSize="10" fontWeight="bold">Is it</text>
+        <text x="190" y="192" textAnchor="middle" fill={C.text} fontSize="10" fontWeight="bold">cold?</text>
+
+        {/* Arrow right (YES) from diamond 2 */}
+        <line x1="270" y1="182" x2="325" y2="182" stroke={C.muted} strokeWidth="1.5" markerEnd="url(#arr)" />
+        <text x="280" y="177" fill={C.muted} fontSize="9">YES</text>
+
+        {/* Action: Wear jacket */}
+        <rect x="325" y="166" width="46" height="32" rx="5"
+          fill="rgba(255,184,0,.12)" stroke={C.amber} strokeWidth="1.5" />
+        <text x="348" y="182" textAnchor="middle" fill={C.amber} fontSize="9" fontWeight="bold">Wear</text>
+        <text x="348" y="192" textAnchor="middle" fill={C.amber} fontSize="9" fontWeight="bold">jacket 🧥</text>
+
+        {/* Arrow down (NO) from diamond 2 */}
+        <line x1="190" y1="224" x2="190" y2="252" stroke={C.muted} strokeWidth="1.5" markerEnd="url(#arr)" />
+        <text x="197" y="242" fill={C.muted} fontSize="9">NO</text>
+
+        {/* Action: T-shirt */}
+        <rect x="130" y="252" width="120" height="22" rx="5"
+          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.2)" strokeWidth="1.5" />
+        <text x="190" y="267" textAnchor="middle" fill={C.text} fontSize="10">Just a t-shirt 👕</text>
+
+        {/* Arrow marker */}
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill={C.muted} />
+          </marker>
+        </defs>
+      </svg>
+
+      <CodeBox label="Equivalent C Code" code={`if (raining) {
+    printf("Take umbrella.\\n");
+} else if (cold) {
+    printf("Wear jacket.\\n");
+} else {
+    printf("Just a t-shirt.\\n");
+}`} />
+
+      {/* Quiz */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ color: C.text, fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>
+          Quick Quiz — True or False?
         </div>
-      )}
-
-      {/* ── STEP 5: CAPSTONE ── */}
-      {subStep === 4 && (
-        <div className="space-y-5 animate-fadeIn text-left">
-          <div className="rounded-xl p-4 text-left border"
-            style={{ background: "rgba(255,184,0,.07)", borderColor: "rgba(255,184,0,.25)" }}>
-            <div className="text-xs font-mono font-bold uppercase tracking-widest mb-1" style={{ color: "#FFB800" }}>
-              🏆 Lesson Capstone
-            </div>
-            <div className="font-bold text-on-surface text-sm">Should I Carry an Umbrella?</div>
-            <p className="text-xs text-on-surface-variant mt-1 font-sans leading-relaxed">
-              Two yes/no questions. Your if / else if / else chain gives a recommendation.
-              Zero math — pure decision logic.
-            </p>
-          </div>
-
-          <section className="glass-panel p-5 rounded-xl space-y-5">
-            {/* Inputs */}
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "🌧️ Is it raining?", val: umbrellaRain, set: setUmbrellaRain },
-                { label: "🥶 Is it cold?", val: umbrellaCold, set: setUmbrellaCold },
-              ].map((item) => (
-                <label key={item.label} className="flex items-center gap-2 cursor-pointer select-none p-3 rounded-lg border text-sm font-mono border-white/10 bg-surface-container-low"
-                  onClick={() => { item.set(!item.val); setUmbrellaResult(null); }}>
-                  <div className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all"
-                    style={{ borderColor: item.val ? "#00D9C0" : "rgba(255,255,255,.2)", background: item.val ? "rgba(0,218,243,.2)" : "transparent" }}>
-                    {item.val && <span className="text-[10px]">✓</span>}
-                  </div>
-                  <span style={{ color: item.val ? "#00D9C0" : "#7B85A8" }}>{item.label}</span>
-                </label>
-              ))}
-            </div>
-
-            <button onClick={() => setUmbrellaResult(getUmbrellaAdvice())}
-              className="w-full py-3 bg-primary text-on-primary font-bold rounded-xl text-sm code-glow cursor-pointer active:scale-[0.99] transition-all">
-              ▶ Run My Decision Program
-            </button>
-
-            {umbrellaResult && (
-              <div className="animate-fadeIn">
-                <div className="bg-surface-container-lowest rounded-xl p-4 border border-white/10 font-mono text-xs space-y-1.5">
-                  <div className="text-on-surface-variant">&gt; ./umbrella_helper</div>
-                  <div className="text-lg font-bold" style={{ color: "#00D9C0" }}>
-                    {umbrellaResult}
-                  </div>
-                  <div className="text-on-surface-variant/40">Process exited with status 0</div>
-                </div>
-
-                <div className="mt-4 bg-surface-container-low rounded-xl p-4 border border-white/5 space-y-2">
-                  <div className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: "#00daf3" }}>
-                    The Code You Just Built
-                  </div>
-                  <pre className="text-xs font-mono text-on-surface leading-relaxed overflow-x-auto">{`if (raining && cold)   { printf("Umbrella AND coat!\\n"); }
-else if (raining)      { printf("Take an umbrella.\\n"); }
-else if (cold)         { printf("Wear a coat.\\n"); }
-else                   { printf("Enjoy the weather!\\n"); }`}</pre>
-                </div>
+        {QUESTIONS.map((q, i) => {
+          const ans = answers[i];
+          const correct = QUESTIONS[i].answer;
+          return (
+            <div key={i} style={{ background: "rgba(255,255,255,.04)", borderRadius: 10,
+              padding: "12px 14px", border: submitted
+                ? ans === correct
+                  ? `1px solid ${C.teal}`
+                  : `1px solid ${C.coral}`
+                : "1px solid rgba(255,255,255,.08)" }}>
+              <div style={{ color: C.text, fontSize: 12, marginBottom: 10 }}>{q.q}</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {[true, false].map(opt => (
+                  <button key={String(opt)} disabled={submitted}
+                    onClick={() => {
+                      const next = [...answers];
+                      next[i] = opt;
+                      setAnswers(next);
+                    }}
+                    style={{
+                      padding: "5px 16px", borderRadius: 7, cursor: submitted ? "default" : "pointer",
+                      fontSize: 11, fontWeight: 700, fontFamily: "monospace",
+                      border: "none",
+                      background: ans === opt
+                        ? submitted
+                          ? opt === correct ? C.teal : C.coral
+                          : C.lav
+                        : "rgba(255,255,255,.1)",
+                      color: ans === opt ? "#000" : C.muted,
+                      transition: "all 0.2s",
+                    }}>
+                    {opt ? "TRUE" : "FALSE"}
+                  </button>
+                ))}
+                {submitted && (
+                  <span style={{ fontSize: 11, fontFamily: "monospace", alignSelf: "center",
+                    color: ans === correct ? C.teal : C.coral }}>
+                    {ans === correct ? "✓ Correct" : `✗ Answer: ${correct ? "TRUE" : "FALSE"}`}
+                  </span>
+                )}
               </div>
-            )}
-          </section>
+            </div>
+          );
+        })}
+      </div>
 
-          <div className="flex justify-end">
-            <button disabled={hasCompletedSection} onClick={handleFinalSubmit}
-              className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                hasCompletedSection ? "bg-primary/10 text-primary-fixed-dim border border-primary/30" : "bg-primary text-on-primary code-glow"
-              }`}>
-              {hasCompletedSection
-                ? <><span className="material-symbols-outlined text-[16px]">verified</span> COMPLETED</>
-                : "COMPLETE & EARN 10 XP"}
-            </button>
-          </div>
+      {/* Submit / Claim */}
+      {!submitted && (
+        <button
+          disabled={answers.some(a => a === null)}
+          onClick={submit}
+          style={{
+            padding: "10px 24px", borderRadius: 10, cursor: answers.some(a => a === null) ? "not-allowed" : "pointer",
+            fontSize: 13, fontWeight: 700, fontFamily: "monospace",
+            background: answers.some(a => a === null) ? "rgba(255,255,255,.1)" : C.teal,
+            color: answers.some(a => a === null) ? C.muted : "#000", border: "none",
+            alignSelf: "flex-end",
+          }}>
+          Check Answers
+        </button>
+      )}
+
+      {submitted && !allCorrect && (
+        <div style={{ color: C.coral, fontFamily: "monospace", fontSize: 12, textAlign: "right" }}>
+          Some answers are wrong — review the flowchart and try again.
         </div>
       )}
+
+      {submitted && allCorrect && !done && (
+        <div style={{ textAlign: "right" }}>
+          <button onClick={claim} style={{
+            padding: "12px 28px", borderRadius: 10, cursor: "pointer",
+            fontSize: 13, fontWeight: 700, fontFamily: "monospace",
+            background: `linear-gradient(135deg, ${C.teal}, ${C.lav})`,
+            color: "#000", border: "none",
+          }}>
+            🏆 Complete! Claim 55 XP
+          </button>
+        </div>
+      )}
+
+      {done && (
+        <div className="pop-in" style={{ textAlign: "center", padding: "16px",
+          background: "rgba(0,217,192,.1)", border: `1px solid ${C.teal}`,
+          borderRadius: 12, color: C.teal, fontWeight: 700, fontSize: 14 }}>
+          ✓ Section Complete! +55 XP earned
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Default export ─────────────────────────────────────────────────────────
+export default function SectionIfStatement({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [subStep, setSubStep] = useState(0);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20, color: C.text }}>
+      <style>{styleTag}</style>
+
+      <NavBar step={subStep} setStep={setSubStep} />
+
+      {subStep === 0 && <StepBouncer onNext={() => setSubStep(1)} />}
+      {subStep === 1 && <StepForkRoad onNext={() => setSubStep(2)} />}
+      {subStep === 2 && <StepMailSlots onNext={() => setSubStep(3)} />}
+      {subStep === 3 && <StepTreasure onNext={() => setSubStep(4)} />}
+      {subStep === 4 && <StepCapstone onComplete={onComplete} />}
     </div>
   );
 }

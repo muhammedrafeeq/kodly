@@ -1,21 +1,22 @@
 "use client";
+
 import React, { useState } from "react";
 
-// ─── Helper components ───────────────────────────────────────────────────────
-
-function Analogy({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.22)", borderRadius: 10, padding: 14, display: "flex", gap: 10, marginBottom: 12 }}>
-      <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
-      <div style={{ fontSize: 13.5, lineHeight: 1.65, color: "#E9EDF8" }}>{children}</div>
-    </div>
-  );
-}
+const KEYFRAMES = `
+@keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+@keyframes popIn { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+@keyframes traySlide { from{transform:translateX(60px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes steam { 0%{opacity:0;transform:translateY(0)} 50%{opacity:.7;transform:translateY(-12px)} 100%{opacity:0;transform:translateY(-22px)} }
+.fn-slide-in { animation: slideIn 0.4s ease forwards; }
+.fn-pop-in { animation: popIn 0.35s ease forwards; }
+.fn-tray-in { animation: traySlide 0.5s ease forwards; }
+.fn-steaming { animation: steam 1.2s ease infinite; }
+`;
 
 function ConceptLock({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.12),rgba(0,217,192,.08))", border: "1px solid rgba(167,139,250,.35)", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
-      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase" as const, color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>🔒 Non-Replaceable Concept</div>
+      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase" as const, color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>🔒 Concept</div>
       <div style={{ fontSize: 13.5, fontWeight: 600, color: "#E9EDF8", lineHeight: 1.6 }}>{children}</div>
     </div>
   );
@@ -39,554 +40,402 @@ function CodeBlock({ label, code }: { label: string; code: string }) {
   );
 }
 
-// ─── Sub-step 0: Defining Functions — "The Recipe Card" ──────────────────────
+// ─── Sub-step 0: Recipe Card ─────────────────────────────────────────────────
 
 function RecipeStep() {
+  const [phase, setPhase] = useState<"idle" | "running" | "done">("idle");
+  const [activeStep, setActiveStep] = useState<number>(-1);
   const [runCount, setRunCount] = useState(0);
-  const [activeStep, setActiveStep] = useState<number | null>(null);
+  const [arrowLen, setArrowLen] = useState(0);
+  const [pizzaVisible, setPizzaVisible] = useState(false);
 
-  const recipeSteps = [
-    "Roll the dough",
-    "Add sauce",
-    "Bake 20 mins",
-  ];
+  const stepColors = ["#FFB800", "#00D9C0", "#A78BFA"];
+  const stepLabels = ["mix()", "addSauce()", "bake()"];
 
-  function makePizza() {
-    setRunCount((c) => c + 1);
-    setActiveStep(0);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    timers.push(setTimeout(() => setActiveStep(1), 600));
-    timers.push(setTimeout(() => setActiveStep(2), 1200));
-    timers.push(setTimeout(() => setActiveStep(null), 2000));
-    return () => timers.forEach(clearTimeout);
+  function handleCall() {
+    if (phase === "running") return;
+    setPhase("running");
+    setActiveStep(-1);
+    setPizzaVisible(false);
+    setArrowLen(0);
+
+    let len = 0;
+    const iv = setInterval(() => {
+      len += 6;
+      setArrowLen(len);
+      if (len >= 72) clearInterval(iv);
+    }, 20);
+
+    setTimeout(() => setActiveStep(0), 300);
+    setTimeout(() => setActiveStep(1), 700);
+    setTimeout(() => setActiveStep(2), 1100);
+    setTimeout(() => {
+      setPizzaVisible(true);
+      setRunCount(c => c + 1);
+    }, 1500);
+    setTimeout(() => {
+      setPhase("done");
+    }, 2200);
   }
 
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#E9EDF8", marginBottom: 4, marginTop: 0 }}>
-        Sub-step 1 of 4 — Defining Functions: <span style={{ color: "#FFB800" }}>"The Recipe Card"</span>
-      </h3>
-      <p style={{ fontSize: 13, color: "#7B85A8", marginBottom: 12, marginTop: 0 }}>
-        World: a kitchen recipe card
-      </p>
+      <svg viewBox="0 0 380 160" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Left panel */}
+        <rect x="8" y="8" width="160" height="144" rx="6" fill="rgba(24,29,46,0.9)" stroke="#FFB800" strokeWidth="1.5" />
+        <text x="88" y="24" textAnchor="middle" fill="#FFB800" fontSize="8" fontFamily="'Courier New',monospace" letterSpacing="2" fontWeight="700">DEFINE ZONE</text>
+        {/* Recipe card */}
+        <rect x="24" y="32" width="128" height="108" rx="4" fill="rgba(20,25,40,0.8)" stroke="#FFB800" strokeWidth="1" />
+        <polygon points="128,32 152,32 152,56" fill="#FFB800" opacity="0.5" />
+        {stepLabels.map((label, i) => (
+          <g key={i}>
+            <rect x="34" y={46 + i * 28} width="100" height="18" rx="3"
+              fill={activeStep === i ? stepColors[i] + "33" : "rgba(10,15,30,0.8)"}
+              stroke={activeStep === i ? stepColors[i] : "rgba(255,255,255,0.1)"}
+              strokeWidth="1" />
+            <text x="84" y={46 + i * 28 + 12} textAnchor="middle" fill={activeStep === i ? stepColors[i] : "#7B85A8"} fontSize="10" fontFamily="'Courier New',monospace">{label}</text>
+          </g>
+        ))}
+        {/* Arrow */}
+        {arrowLen > 0 && (
+          <>
+            <line x1="168" y1="80" x2={168 + arrowLen} y2="80" stroke="#00D9C0" strokeWidth="2" />
+            {arrowLen > 10 && (
+              <polygon points={`${168 + arrowLen},80 ${168 + arrowLen - 8},75 ${168 + arrowLen - 8},85`} fill="#00D9C0" />
+            )}
+          </>
+        )}
+        {/* Right panel */}
+        <rect x="212" y="8" width="160" height="144" rx="6" fill="rgba(24,29,46,0.9)" stroke="#00D9C0" strokeWidth="1.5" />
+        <text x="292" y="24" textAnchor="middle" fill="#00D9C0" fontSize="8" fontFamily="'Courier New',monospace" letterSpacing="2" fontWeight="700">KITCHEN ZONE</text>
+        {/* Stove */}
+        <rect x="230" y="50" width="124" height="88" rx="6" fill="rgba(15,20,35,0.8)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+        <circle cx="270" cy="86" r="14" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+        <circle cx="314" cy="86" r="14" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+        {/* Pizza */}
+        {pizzaVisible && (
+          <text x="292" y="120" textAnchor="middle" fontSize="24" className="fn-pop-in">🍕</text>
+        )}
+        {/* Steam */}
+        {pizzaVisible && [0, 1, 2].map(j => (
+          <circle key={j} cx={278 + j * 14} cy="98" r="4" fill="#FFB800" opacity="0.4" className="fn-steaming"
+            style={{ animationDelay: `${j * 0.3}s` }} />
+        ))}
+        {/* Run count badge */}
+        {runCount > 0 && (
+          <text x="292" y="44" textAnchor="middle" fill="#00D9C0" fontSize="9" fontFamily="'Courier New',monospace">called {runCount}×</text>
+        )}
+      </svg>
 
-      <Analogy>
-        You write the pizza recipe <strong>once</strong>. Every Friday you follow the same card — you don&apos;t rewrite it. A function is a named recipe: write it once in C, call it any time just by saying its name.
-      </Analogy>
-
-      {/* Recipe card UI */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
-        {/* Definition card */}
-        <div style={{ flex: "1 1 200px", background: "rgba(255,184,0,.06)", border: "1px solid rgba(255,184,0,.25)", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#FFB800", fontWeight: 700, marginBottom: 10 }}>
-            📋 Recipe Definition
-          </div>
-          <div style={{ fontWeight: 700, color: "#E9EDF8", fontSize: 13, marginBottom: 8 }}>🍕 makePizza()</div>
-          {recipeSteps.map((step, i) => (
-            <div
-              key={i}
-              style={{
-                padding: "6px 10px",
-                borderRadius: 6,
-                marginBottom: 6,
-                fontSize: 12.5,
-                color: activeStep === i ? "#003838" : "#E9EDF8",
-                background: activeStep === i ? "#00D9C0" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${activeStep === i ? "#00D9C0" : "rgba(255,255,255,0.07)"}`,
-                transition: "all 0.3s",
-                fontFamily: "'Courier New',monospace",
-              }}
-            >
-              {i + 1}. {step}
-            </div>
-          ))}
-        </div>
-
-        {/* Call card */}
-        <div style={{ flex: "1 1 200px", background: "rgba(0,217,192,.06)", border: "1px solid rgba(0,217,192,.22)", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#00D9C0", fontWeight: 700, marginBottom: 10 }}>
-            🍳 Use the Recipe
-          </div>
-          <p style={{ fontSize: 12.5, color: "#7B85A8", margin: "0 0 12px 0" }}>
-            Click the button to <em>call</em> the function. Watch the steps execute!
-          </p>
-          <button
-            onClick={makePizza}
-            style={{ padding: "9px 18px", background: "#FFB800", color: "#1a1000", borderRadius: 8, border: "none", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12, cursor: "pointer", width: "100%", marginBottom: 10 }}
-          >
-            🍕 Make Pizza
-          </button>
-          {runCount > 0 && (
-            <div style={{ fontSize: 12, color: "#7B85A8", fontFamily: "'Courier New',monospace" }}>
-              Recipe used <span style={{ color: "#00D9C0", fontWeight: 700 }}>{runCount}</span> time{runCount !== 1 ? "s" : ""} — same card every time!
-            </div>
-          )}
-          {runCount >= 3 && (
-            <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,217,192,.1)", border: "1px solid rgba(0,217,192,.25)", borderRadius: 7, fontSize: 12, color: "#00D9C0" }}>
-              ✅ You felt it — one recipe, used again and again!
-            </div>
-          )}
-        </div>
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <button
+          onClick={handleCall}
+          disabled={phase === "running"}
+          style={{ background: phase === "running" ? "#333" : "linear-gradient(135deg,#FFB800,#FF5F6E)", border: "none", borderRadius: 8, padding: "10px 24px", color: "#fff", fontWeight: 700, fontSize: 14, cursor: phase === "running" ? "not-allowed" : "pointer" }}
+        >
+          ▶ Call makePizza()
+        </button>
       </div>
 
-      <CodeBlock
-        label="C Code — Define once, call many times"
-        code={`// DEFINE: write the recipe once
-void makePizza() {
-    printf("Roll the dough\\n");
-    printf("Add sauce\\n");
-    printf("Bake 20 mins\\n");
+      <CodeBlock label="C Example" code={`void makePizza() {    // ← DEFINE once
+    mix(); addSauce(); bake();
 }
-
-// CALL: use it any time
-makePizza();  // runs all 3 steps
-makePizza();  // runs again — same recipe`}
-      />
-
-      <ConceptLock>
-        Defining a function writes the recipe. Calling it follows the recipe. You must CALL a function to make it run — just defining it does nothing.
-      </ConceptLock>
-
-      <Gotcha>
-        Writing a function and never calling it — the code exists but never runs. Like writing a pizza recipe and leaving it in a drawer forever.
-      </Gotcha>
+makePizza();          // ← CALL to run it
+makePizza();          // ← call again — same recipe!`} />
+      <ConceptLock>Define = write the recipe. Call = follow it. The function runs ONLY when called.</ConceptLock>
+      <Gotcha>Writing a function but never calling it — the code exists but never runs.</Gotcha>
     </div>
   );
 }
 
-// ─── Sub-step 1: Parameters — "Ingredients You Hand the Recipe" ──────────────
+// ─── Sub-step 1: Parameters ───────────────────────────────────────────────────
 
 function ParamsStep() {
   const [servings, setServings] = useState(4);
   const [topping, setTopping] = useState("cheese");
   const [output, setOutput] = useState<string | null>(null);
+  const [slot1Anim, setSlot1Anim] = useState(false);
+  const [slot2Anim, setSlot2Anim] = useState(false);
+  const [steamVisible, setSteamVisible] = useState(false);
 
-  function cookIt() {
-    const t = topping.trim() || "cheese";
-    setOutput(`Making pizza for ${servings} people with ${t}!`);
+  function handleCook() {
+    setSlot1Anim(false);
+    setSlot2Anim(false);
+    setSteamVisible(false);
+    setOutput(null);
+    setTimeout(() => setSlot1Anim(true), 50);
+    setTimeout(() => setSlot2Anim(true), 200);
+    setTimeout(() => {
+      setSteamVisible(true);
+      setOutput(`> Making pizza for ${servings} people with ${topping}!`);
+    }, 500);
   }
 
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#E9EDF8", marginBottom: 4, marginTop: 0 }}>
-        Sub-step 2 of 4 — Parameters: <span style={{ color: "#FFB800" }}>"Ingredients You Hand the Recipe"</span>
-      </h3>
-      <p style={{ fontSize: 13, color: "#7B85A8", marginBottom: 12, marginTop: 0 }}>
-        World: a recipe card with blank slots
-      </p>
-
-      <Analogy>
-        The recipe has blanks: <em>&quot;serves ___ people&quot;</em>, <em>&quot;___ cups of flour&quot;</em>. When you start cooking, you fill them in. Parameters are those blanks — each call fills them with different values.
-      </Analogy>
-
-      {/* Recipe card with inputs */}
-      <div style={{ background: "rgba(255,184,0,.06)", border: "1px solid rgba(255,184,0,.25)", borderRadius: 10, padding: 16, marginBottom: 12 }}>
-        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#FFB800", fontWeight: 700, marginBottom: 12 }}>
-          📋 Recipe Card — Fill in the blanks
-        </div>
-
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
-          <div style={{ flex: "1 1 140px" }}>
-            <label style={{ display: "block", fontSize: 11, color: "#7B85A8", fontFamily: "'Courier New',monospace", marginBottom: 5 }}>
-              Servings (1–12):
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={12}
-              value={servings}
-              onChange={(e) => setServings(Math.max(1, Math.min(12, Number(e.target.value))))}
-              style={{ width: "100%", padding: "7px 10px", background: "#0D1117", border: "1px solid rgba(0,217,192,.3)", borderRadius: 7, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 13, boxSizing: "border-box" as const }}
-            />
-          </div>
-          <div style={{ flex: "1 1 140px" }}>
-            <label style={{ display: "block", fontSize: 11, color: "#7B85A8", fontFamily: "'Courier New',monospace", marginBottom: 5 }}>
-              Topping:
-            </label>
-            <input
-              type="text"
-              value={topping}
-              onChange={(e) => setTopping(e.target.value)}
-              placeholder="e.g. peppers"
-              style={{ width: "100%", padding: "7px 10px", background: "#0D1117", border: "1px solid rgba(0,217,192,.3)", borderRadius: 7, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 13, boxSizing: "border-box" as const }}
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={cookIt}
-          style={{ padding: "9px 20px", background: "#FFB800", color: "#1a1000", borderRadius: 8, border: "none", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
-        >
-          🍕 Cook it!
-        </button>
-
-        {output && (
-          <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(0,217,192,.08)", border: "1px solid rgba(0,217,192,.25)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 13, color: "#00D9C0" }}>
-            &gt; {output}
-          </div>
+      <svg viewBox="0 0 380 160" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Recipe card */}
+        <rect x="40" y="10" width="200" height="140" rx="6" fill="rgba(24,29,46,0.9)" stroke="#FFB800" strokeWidth="1.5" />
+        <polygon points="216,10 240,10 240,34" fill="#FFB800" />
+        <text x="140" y="32" textAnchor="middle" fill="#FFB800" fontSize="9" fontFamily="'Courier New',monospace" letterSpacing="2" fontWeight="700">RECIPE PARAMS</text>
+        {/* Slot 1 */}
+        <rect x="56" y="38" width="168" height="28" rx="4" fill="rgba(10,15,30,0.8)" stroke="#FFB800" strokeWidth="1" strokeDasharray="4 3" />
+        <text x="68" y="55" fill="#7B85A8" fontSize="10" fontFamily="'Courier New',monospace">servings:</text>
+        {slot1Anim ? (
+          <text x="160" y="55" fill="#FFB800" fontSize="12" fontFamily="'Courier New',monospace" fontWeight="700" className="fn-pop-in">{servings}</text>
+        ) : (
+          <text x="160" y="55" fill="#7B85A8" fontSize="10" fontFamily="'Courier New',monospace">[___]</text>
         )}
+        {/* Slot 2 */}
+        <rect x="56" y="76" width="168" height="28" rx="4" fill="rgba(10,15,30,0.8)" stroke="#A78BFA" strokeWidth="1" strokeDasharray="4 3" />
+        <text x="68" y="93" fill="#7B85A8" fontSize="10" fontFamily="'Courier New',monospace">topping:</text>
+        {slot2Anim ? (
+          <text x="155" y="93" fill="#A78BFA" fontSize="12" fontFamily="'Courier New',monospace" fontWeight="700" className="fn-pop-in">{topping}</text>
+        ) : (
+          <text x="155" y="93" fill="#7B85A8" fontSize="10" fontFamily="'Courier New',monospace">[___]</text>
+        )}
+        {/* Stove right side */}
+        <rect x="264" y="20" width="100" height="120" rx="6" fill="rgba(15,20,35,0.8)" stroke="#00D9C0" strokeWidth="1.5" />
+        <text x="314" y="38" textAnchor="middle" fill="#00D9C0" fontSize="8" fontFamily="'Courier New',monospace" letterSpacing="2">OVEN</text>
+        <circle cx="314" cy="90" r="28" fill="rgba(255,184,0,0.05)" stroke="rgba(255,184,0,0.3)" strokeWidth="2" />
+        {steamVisible && [0, 1, 2].map(j => (
+          <circle key={j} cx={300 + j * 14} cy="58" r="4" fill="#FFB800" opacity="0.4" className="fn-steaming"
+            style={{ animationDelay: `${j * 0.35}s` }} />
+        ))}
+        {steamVisible && <text x="314" y="96" textAnchor="middle" fontSize="20">🍕</text>}
+      </svg>
+
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" as const }}>
+        <label style={{ color: "#E9EDF8", fontSize: 13 }}>
+          Servings:&nbsp;
+          <input type="number" min={1} max={20} value={servings} onChange={e => setServings(Number(e.target.value))}
+            style={{ width: 60, background: "#0D1117", border: "1px solid #FFB800", borderRadius: 6, color: "#FFB800", padding: "4px 8px", fontSize: 13 }} />
+        </label>
+        <label style={{ color: "#E9EDF8", fontSize: 13 }}>
+          Topping:&nbsp;
+          <input type="text" value={topping} onChange={e => setTopping(e.target.value)}
+            style={{ width: 100, background: "#0D1117", border: "1px solid #A78BFA", borderRadius: 6, color: "#A78BFA", padding: "4px 8px", fontSize: 13 }} />
+        </label>
+        <button onClick={handleCook}
+          style={{ background: "linear-gradient(135deg,#FFB800,#FF5F6E)", border: "none", borderRadius: 8, padding: "8px 18px", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          Cook it!
+        </button>
       </div>
 
       {output && (
-        <div style={{ marginBottom: 12, padding: 14, background: "#0D1117", border: "1px solid rgba(0,218,243,.18)", borderRadius: 10 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#00D9C0", fontWeight: 700, marginBottom: 8 }}>
-            C equivalent — your values highlighted
-          </div>
-          <pre style={{ fontFamily: "'Courier New',monospace", fontSize: 12.5, lineHeight: 1.7, margin: 0, color: "#E9EDF8" }}>
-{`makePizza(`}<span style={{ color: "#FFB800" }}>{servings}</span>{`, "`}<span style={{ color: "#A78BFA" }}>{topping.trim() || "cheese"}</span>{`");`}
-          </pre>
+        <div className="fn-slide-in" style={{ background: "#0D1117", border: "1px solid #00D9C0", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontFamily: "'Courier New',monospace", fontSize: 13, color: "#00D9C0" }}>
+          {output}
         </div>
       )}
 
-      <CodeBlock
-        label="C Code — Parameters as labeled blank slots"
-        code={`// DEFINE with parameters (the blanks)
-void makePizza(int servings, char topping[]) {
-    printf("Making pizza for %d people\\n", servings);
-    printf("Topping: %s\\n", topping);
+      <CodeBlock label="C Example" code={`void makePizza(int servings, char topping[]) {
+    printf("For %d: %s\\n", servings, topping);
 }
-
-// CALL with different values each time
-makePizza(4, "cheese");   // fills the blanks with 4 and "cheese"
-makePizza(10, "peppers"); // same recipe, different ingredients`}
-      />
-
-      <ConceptLock>
-        Parameters are the labeled inputs a function needs. They work like named blank slots that get filled when you call the function. Each call can pass different values.
-      </ConceptLock>
-
-      <Gotcha>
-        C passes <strong>COPIES</strong> of values (pass by value). Changing a parameter inside a function does NOT change the original variable outside.
-      </Gotcha>
+makePizza(${servings}, "${topping}");  // fills the blanks`} />
+      <Gotcha>C copies the value — changing a parameter inside the function doesn't change the original!</Gotcha>
     </div>
   );
 }
 
-// ─── Sub-step 2: Return Values — "The Takeaway Counter" ──────────────────────
+// ─── Sub-step 2: Return Values ────────────────────────────────────────────────
 
 function ReturnStep() {
   const [numA, setNumA] = useState(3);
   const [numB, setNumB] = useState(7);
+  const [trayVisible, setTrayVisible] = useState(false);
   const [result, setResult] = useState<number | null>(null);
-  const [stored, setStored] = useState(false);
-  const [usedDirectly, setUsedDirectly] = useState(false);
 
-  function addThem() {
-    setResult(numA + numB);
-    setStored(false);
-    setUsedDirectly(false);
+  function handleOrder() {
+    setTrayVisible(false);
+    setResult(null);
+    setTimeout(() => {
+      setResult(numA + numB);
+      setTrayVisible(true);
+    }, 200);
   }
 
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#E9EDF8", marginBottom: 4, marginTop: 0 }}>
-        Sub-step 3 of 4 — Return Values: <span style={{ color: "#FFB800" }}>"The Takeaway Counter"</span>
-      </h3>
-      <p style={{ fontSize: 13, color: "#7B85A8", marginBottom: 12, marginTop: 0 }}>
-        World: a takeaway food counter
-      </p>
+      <svg viewBox="0 0 380 160" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Counter window */}
+        <rect x="60" y="88" width="260" height="16" rx="3" fill="rgba(180,120,60,0.25)" stroke="rgba(180,120,60,0.5)" strokeWidth="1.5" />
+        <text x="190" y="100" textAnchor="middle" fill="rgba(180,120,60,0.7)" fontSize="8" fontFamily="'Courier New',monospace" letterSpacing="2">COUNTER</text>
+        {/* Customer (caller) */}
+        <circle cx="38" cy="50" r="10" fill="none" stroke="#A78BFA" strokeWidth="2" />
+        <line x1="38" y1="60" x2="38" y2="85" stroke="#A78BFA" strokeWidth="2" />
+        <line x1="38" y1="70" x2="26" y2="78" stroke="#A78BFA" strokeWidth="2" />
+        <line x1="38" y1="70" x2="50" y2="78" stroke="#A78BFA" strokeWidth="2" />
+        <line x1="38" y1="85" x2="28" y2="105" stroke="#A78BFA" strokeWidth="2" />
+        <line x1="38" y1="85" x2="48" y2="105" stroke="#A78BFA" strokeWidth="2" />
+        <text x="38" y="120" textAnchor="middle" fill="#A78BFA" fontSize="8" fontFamily="'Courier New',monospace">caller</text>
+        {/* Chef */}
+        <rect x="334" y="30" width="20" height="8" rx="2" fill="#E9EDF8" />
+        <rect x="337" y="38" width="14" height="4" fill="#E9EDF8" />
+        <circle cx="344" cy="50" r="8" fill="none" stroke="#FFB800" strokeWidth="2" />
+        <line x1="344" y1="58" x2="344" y2="82" stroke="#FFB800" strokeWidth="2" />
+        <line x1="344" y1="68" x2="332" y2="76" stroke="#FFB800" strokeWidth="2" />
+        <line x1="344" y1="68" x2="356" y2="76" stroke="#FFB800" strokeWidth="2" />
+        <line x1="344" y1="82" x2="334" y2="102" stroke="#FFB800" strokeWidth="2" />
+        <line x1="344" y1="82" x2="354" y2="102" stroke="#FFB800" strokeWidth="2" />
+        <text x="344" y="118" textAnchor="middle" fill="#FFB800" fontSize="8" fontFamily="'Courier New',monospace">function</text>
+        {/* Tray */}
+        {trayVisible && result !== null && (
+          <g className="fn-tray-in">
+            <rect x="120" y="80" width="140" height="14" rx="3" fill="rgba(255,184,0,0.15)" stroke="#FFB800" strokeWidth="1.5" />
+            <text x="190" y="91" textAnchor="middle" fill="#FFB800" fontSize="11" fontFamily="'Courier New',monospace" fontWeight="700">result = {result}</text>
+          </g>
+        )}
+      </svg>
 
-      <Analogy>
-        You order (call the function). The kitchen prepares it. It hands your order back to you — that&apos;s the return value. You can eat it immediately, save it, or share it. <code style={{ color: "#A78BFA" }}>void</code> functions deliver a message but don&apos;t hand anything back.
-      </Analogy>
-
-      {/* Two side-by-side demo panels */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
-        {/* void demo */}
-        <div style={{ flex: "1 1 180px", background: "rgba(255,95,110,.06)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#FF5F6E", fontWeight: 700, marginBottom: 8 }}>
-            void greet() — no tray back
-          </div>
-          <div style={{ padding: "10px 12px", background: "#0D1117", borderRadius: 7, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#E9EDF8", marginBottom: 8 }}>
-            &gt; Hello! 👋
-          </div>
-          <div style={{ fontSize: 12, color: "#7B85A8" }}>
-            The message prints, but nothing slides back to store or use.
-          </div>
-        </div>
-
-        {/* int demo */}
-        <div style={{ flex: "1 1 180px", background: "rgba(0,217,192,.06)", border: "1px solid rgba(0,217,192,.22)", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#00D9C0", fontWeight: 700, marginBottom: 8 }}>
-            int addNumbers() — tray slides back
-          </div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
-            <input
-              type="number"
-              value={numA}
-              onChange={(e) => { setNumA(Number(e.target.value)); setResult(null); }}
-              style={{ width: 54, padding: "5px 8px", background: "#0D1117", border: "1px solid rgba(0,217,192,.3)", borderRadius: 6, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 13 }}
-            />
-            <span style={{ color: "#7B85A8", fontWeight: 700 }}>+</span>
-            <input
-              type="number"
-              value={numB}
-              onChange={(e) => { setNumB(Number(e.target.value)); setResult(null); }}
-              style={{ width: 54, padding: "5px 8px", background: "#0D1117", border: "1px solid rgba(0,217,192,.3)", borderRadius: 6, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 13 }}
-            />
-            <button
-              onClick={addThem}
-              style={{ padding: "5px 12px", background: "#00D9C0", color: "#003838", borderRadius: 7, border: "none", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: "pointer" }}
-            >
-              Add
-            </button>
-          </div>
-
-          {result !== null && (
-            <div>
-              <div style={{ padding: "8px 12px", background: "rgba(255,184,0,.12)", border: "1px solid rgba(255,184,0,.35)", borderRadius: 7, fontFamily: "'Courier New',monospace", fontSize: 14, color: "#FFB800", fontWeight: 700, marginBottom: 8, textAlign: "center" as const }}>
-                🎁 Tray returns: {result}
-              </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button
-                  onClick={() => setStored(true)}
-                  style={{ flex: 1, padding: "5px 0", background: stored ? "rgba(167,139,250,.2)" : "rgba(167,139,250,.08)", border: "1px solid rgba(167,139,250,.35)", borderRadius: 6, color: "#A78BFA", fontFamily: "'Courier New',monospace", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
-                >
-                  Store it
-                </button>
-                <button
-                  onClick={() => setUsedDirectly(true)}
-                  style={{ flex: 1, padding: "5px 0", background: usedDirectly ? "rgba(0,217,192,.2)" : "rgba(0,217,192,.08)", border: "1px solid rgba(0,217,192,.3)", borderRadius: 6, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
-                >
-                  Use directly
-                </button>
-              </div>
-              {stored && (
-                <div style={{ marginTop: 8, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#A78BFA", padding: "6px 10px", background: "rgba(167,139,250,.08)", borderRadius: 6 }}>
-                  int result = {result};
-                </div>
-              )}
-              {usedDirectly && (
-                <div style={{ marginTop: 6, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#00D9C0", padding: "6px 10px", background: "rgba(0,217,192,.06)", borderRadius: 6 }}>
-                  printf(&quot;Total: %d&quot;, {result});
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" as const }}>
+        <label style={{ color: "#E9EDF8", fontSize: 13 }}>
+          A:&nbsp;
+          <input type="number" value={numA} onChange={e => setNumA(Number(e.target.value))}
+            style={{ width: 60, background: "#0D1117", border: "1px solid #00D9C0", borderRadius: 6, color: "#00D9C0", padding: "4px 8px", fontSize: 13 }} />
+        </label>
+        <label style={{ color: "#E9EDF8", fontSize: 13 }}>
+          B:&nbsp;
+          <input type="number" value={numB} onChange={e => setNumB(Number(e.target.value))}
+            style={{ width: 60, background: "#0D1117", border: "1px solid #00D9C0", borderRadius: 6, color: "#00D9C0", padding: "4px 8px", fontSize: 13 }} />
+        </label>
+        <button onClick={handleOrder}
+          style={{ background: "linear-gradient(135deg,#00D9C0,#A78BFA)", border: "none", borderRadius: 8, padding: "8px 18px", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          Order {numA} + {numB}!
+        </button>
       </div>
 
-      <CodeBlock
-        label="C Code — void vs int return"
-        code={`// void: delivers, hands nothing back
-void greet() {
-    printf("Hello!\\n");
-}  // nothing comes back
+      {trayVisible && result !== null && (
+        <div className="fn-slide-in" style={{ background: "#0D1117", border: "1px solid #FFB800", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontFamily: "'Courier New',monospace", fontSize: 13, color: "#FFB800" }}>
+          ← returns {result}
+        </div>
+      )}
 
-// int: hands back a value
-int addNumbers(int a, int b) {
-    return a + b;  // slides the result back
+      <CodeBlock label="C Example" code={`int addNumbers(int a, int b) {
+    return a + b;  // slides result back
 }
-
-int result = addNumbers(3, 7);  // result = 10
-printf("Total: %d\\n", result);`}
-      />
-
-      <ConceptLock>
-        <code style={{ color: "#00D9C0" }}>return</code> sends a value back to whoever called the function, then immediately stops the function. The returned value can be stored in a variable or used directly.
-      </ConceptLock>
-
-      <Gotcha>
-        A function declared as <code>int</code> MUST return an <code>int</code>. Reaching the end without <code>return</code> gives undefined behaviour — the &quot;kitchen&quot; walks away without handing back the order.
-      </Gotcha>
+int result = addNumbers(${numA}, ${numB}); // result = ${numA + numB}`} />
+      <ConceptLock>`return` sends a value back to the caller, then stops the function immediately.</ConceptLock>
     </div>
   );
 }
 
-// ─── Sub-step 3: Scope — "Variables Only Live in Their Kitchen" ───────────────
+// ─── Sub-step 3: Scope ────────────────────────────────────────────────────────
 
 function ScopeStep({ onComplete }: { onComplete: (xp: number) => void }) {
-  const [flourA, setFlourA] = useState(0);
-  const [flourB, setFlourB] = useState(0);
+  const [flourA, setFlourA] = useState(50);
+  const [flourB, setFlourB] = useState(30);
   const [globalFlour, setGlobalFlour] = useState(100);
 
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#E9EDF8", marginBottom: 4, marginTop: 0 }}>
-        Sub-step 4 of 4 — Scope: <span style={{ color: "#FFB800" }}>"Variables Only Live in Their Kitchen"</span>
-      </h3>
-      <p style={{ fontSize: 13, color: "#7B85A8", marginBottom: 12, marginTop: 0 }}>
-        World: two separate restaurant kitchens
-      </p>
-
-      <Analogy>
-        The flour in Kitchen A doesn&apos;t affect Kitchen B, even if both call it &quot;flour.&quot; Variables inside a function exist ONLY while that function runs, then they vanish. Two functions can have the same variable name — they&apos;re completely separate.
-      </Analogy>
-
-      {/* Global shelf */}
-      <div style={{ background: "rgba(167,139,250,.08)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 10, padding: 14, marginBottom: 12, textAlign: "center" as const }}>
-        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#A78BFA", fontWeight: 700, marginBottom: 8 }}>
-          🌐 Global Shelf — Both kitchens can see this
-        </div>
-        <div style={{ fontSize: 28, fontWeight: 700, color: "#A78BFA", fontFamily: "'Courier New',monospace", marginBottom: 10 }}>
-          globalFlour = {globalFlour}
-        </div>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-          <button
-            onClick={() => setGlobalFlour((g) => g + 10)}
-            style={{ padding: "6px 16px", background: "rgba(167,139,250,.15)", border: "1px solid rgba(167,139,250,.4)", borderRadius: 7, color: "#A78BFA", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: "pointer" }}
-          >
-            +10
-          </button>
-          <button
-            onClick={() => setGlobalFlour((g) => Math.max(0, g - 10))}
-            style={{ padding: "6px 16px", background: "rgba(167,139,250,.15)", border: "1px solid rgba(167,139,250,.4)", borderRadius: 7, color: "#A78BFA", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: "pointer" }}
-          >
-            −10
-          </button>
-        </div>
-      </div>
-
-      {/* Two kitchens */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+      <svg viewBox="0 0 380 180" width="100%" style={{ display: "block", marginBottom: 12 }}>
+        {/* Global shelf */}
+        <rect x="10" y="8" width="360" height="36" rx="5" fill="rgba(167,139,250,0.12)" stroke="rgba(167,139,250,0.4)" strokeWidth="1.5" />
+        <circle cx="48" cy="26" r="8" fill="rgba(167,139,250,0.3)" stroke="#A78BFA" strokeWidth="1.5" />
+        <rect x="44" y="17" width="8" height="5" rx="1" fill="#A78BFA" />
+        <text x="64" y="22" fill="#A78BFA" fontSize="8" fontFamily="'Courier New',monospace" letterSpacing="2" fontWeight="700">GLOBAL SHELF</text>
+        <text x="64" y="35" fill="#E9EDF8" fontSize="10" fontFamily="'Courier New',monospace">globalFlour = {globalFlour}</text>
         {/* Kitchen A */}
-        <div style={{ flex: "1 1 180px", background: "rgba(0,217,192,.06)", border: "1px solid rgba(0,217,192,.22)", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#00D9C0", fontWeight: 700, marginBottom: 10 }}>
-            🍳 Kitchen A — kitchenA()
-          </div>
-          <div style={{ padding: "10px 12px", background: "#0D1117", borderRadius: 7, marginBottom: 10 }}>
-            <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: "#7B85A8", marginBottom: 4 }}>local flour (A only):</div>
-            <div style={{ fontFamily: "'Courier New',monospace", fontSize: 22, fontWeight: 700, color: "#00D9C0" }}>{flourA}</div>
-          </div>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: "#7B85A8", marginBottom: 6 }}>
-            Sees globalFlour: <span style={{ color: "#A78BFA" }}>{globalFlour}</span>
-          </div>
+        <rect x="10" y="56" width="172" height="116" rx="6" fill="rgba(0,217,192,0.05)" stroke="#00D9C0" strokeWidth="1.5" />
+        <text x="96" y="74" textAnchor="middle" fill="#00D9C0" fontSize="9" fontFamily="'Courier New',monospace" letterSpacing="2" fontWeight="700">KITCHEN A</text>
+        <circle cx="58" cy="120" r="22" fill="rgba(0,217,192,0.15)" stroke="#00D9C0" strokeWidth="2" />
+        <rect x="51" y="97" width="14" height="6" rx="1" fill="#00D9C0" />
+        <text x="58" y="124" textAnchor="middle" fill="#00D9C0" fontSize="11" fontFamily="'Courier New',monospace" fontWeight="700">{flourA}</text>
+        <text x="96" y="152" textAnchor="middle" fill="#7B85A8" fontSize="8" fontFamily="'Courier New',monospace">flour = {flourA}</text>
+        {/* Kitchen B */}
+        <rect x="198" y="56" width="172" height="116" rx="6" fill="rgba(255,95,110,0.05)" stroke="#FF5F6E" strokeWidth="1.5" />
+        <text x="284" y="74" textAnchor="middle" fill="#FF5F6E" fontSize="9" fontFamily="'Courier New',monospace" letterSpacing="2" fontWeight="700">KITCHEN B</text>
+        <circle cx="246" cy="120" r="22" fill="rgba(255,95,110,0.15)" stroke="#FF5F6E" strokeWidth="2" />
+        <rect x="239" y="97" width="14" height="6" rx="1" fill="#FF5F6E" />
+        <text x="246" y="124" textAnchor="middle" fill="#FF5F6E" fontSize="11" fontFamily="'Courier New',monospace" fontWeight="700">{flourB}</text>
+        <text x="284" y="152" textAnchor="middle" fill="#7B85A8" fontSize="8" fontFamily="'Courier New',monospace">flour = {flourB}</text>
+        {/* Bottom note */}
+        <text x="190" y="175" textAnchor="middle" fill="#7B85A8" fontSize="9" fontFamily="'Courier New',monospace">A's &apos;flour&apos; and B&apos;s &apos;flour&apos; never meet</text>
+      </svg>
+
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" as const }}>
+        {/* Kitchen A control */}
+        <div style={{ flex: 1, minWidth: 120, background: "rgba(0,217,192,0.08)", border: "1px solid rgba(0,217,192,0.3)", borderRadius: 8, padding: "10px 12px" }}>
+          <div style={{ color: "#00D9C0", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>Kitchen A flour: {flourA}</div>
           <div style={{ display: "flex", gap: 6 }}>
-            <button
-              onClick={() => setFlourA((f) => f + 5)}
-              style={{ flex: 1, padding: "6px 0", background: "rgba(0,217,192,.1)", border: "1px solid rgba(0,217,192,.3)", borderRadius: 6, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: "pointer" }}
-            >
-              +5 flour
-            </button>
-            <button
-              onClick={() => setFlourA(0)}
-              style={{ padding: "6px 10px", background: "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, color: "#7B85A8", fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-            >
-              reset
-            </button>
+            <button onClick={() => setFlourA(v => Math.max(0, v - 5))} style={{ background: "rgba(0,217,192,0.2)", border: "none", borderRadius: 6, color: "#00D9C0", padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}>−</button>
+            <button onClick={() => setFlourA(v => v + 5)} style={{ background: "rgba(0,217,192,0.2)", border: "none", borderRadius: 6, color: "#00D9C0", padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}>+</button>
           </div>
         </div>
-
-        {/* Kitchen B */}
-        <div style={{ flex: "1 1 180px", background: "rgba(255,95,110,.06)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase" as const, color: "#FF5F6E", fontWeight: 700, marginBottom: 10 }}>
-            🍳 Kitchen B — kitchenB()
-          </div>
-          <div style={{ padding: "10px 12px", background: "#0D1117", borderRadius: 7, marginBottom: 10 }}>
-            <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: "#7B85A8", marginBottom: 4 }}>local flour (B only):</div>
-            <div style={{ fontFamily: "'Courier New',monospace", fontSize: 22, fontWeight: 700, color: "#FF5F6E" }}>{flourB}</div>
-          </div>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: "#7B85A8", marginBottom: 6 }}>
-            Sees globalFlour: <span style={{ color: "#A78BFA" }}>{globalFlour}</span>
-          </div>
+        {/* Kitchen B control */}
+        <div style={{ flex: 1, minWidth: 120, background: "rgba(255,95,110,0.08)", border: "1px solid rgba(255,95,110,0.3)", borderRadius: 8, padding: "10px 12px" }}>
+          <div style={{ color: "#FF5F6E", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>Kitchen B flour: {flourB}</div>
           <div style={{ display: "flex", gap: 6 }}>
-            <button
-              onClick={() => setFlourB((f) => f + 5)}
-              style={{ flex: 1, padding: "6px 0", background: "rgba(255,95,110,.1)", border: "1px solid rgba(255,95,110,.3)", borderRadius: 6, color: "#FF5F6E", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: "pointer" }}
-            >
-              +5 flour
-            </button>
-            <button
-              onClick={() => setFlourB(0)}
-              style={{ padding: "6px 10px", background: "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, color: "#7B85A8", fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-            >
-              reset
-            </button>
+            <button onClick={() => setFlourB(v => Math.max(0, v - 5))} style={{ background: "rgba(255,95,110,0.2)", border: "none", borderRadius: 6, color: "#FF5F6E", padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}>−</button>
+            <button onClick={() => setFlourB(v => v + 5)} style={{ background: "rgba(255,95,110,0.2)", border: "none", borderRadius: 6, color: "#FF5F6E", padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}>+</button>
+          </div>
+        </div>
+        {/* Global control */}
+        <div style={{ flex: 1, minWidth: 120, background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 8, padding: "10px 12px" }}>
+          <div style={{ color: "#A78BFA", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>Global flour: {globalFlour}</div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => setGlobalFlour(v => Math.max(0, v - 10))} style={{ background: "rgba(167,139,250,0.2)", border: "none", borderRadius: 6, color: "#A78BFA", padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}>−</button>
+            <button onClick={() => setGlobalFlour(v => v + 10)} style={{ background: "rgba(167,139,250,0.2)", border: "none", borderRadius: 6, color: "#A78BFA", padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}>+</button>
           </div>
         </div>
       </div>
 
-      {flourA !== flourB && (flourA > 0 || flourB > 0) && (
-        <div style={{ padding: "8px 14px", background: "rgba(0,217,192,.08)", border: "1px solid rgba(0,217,192,.2)", borderRadius: 8, fontSize: 12.5, color: "#00D9C0", marginBottom: 12 }}>
-          ✅ Kitchen A has {flourA} local flour, Kitchen B has {flourB} — completely independent!
-        </div>
-      )}
-
-      <CodeBlock
-        label="C Code — Local vs global scope"
-        code={`int globalFlour = 100;  // shared — both kitchens see this
-
-void kitchenA() {
-    int flour = 50;         // local to kitchenA only
-    globalFlour -= 10;      // can read/change the global
-    printf("A's flour: %d\\n", flour);
-}
-
-void kitchenB() {
-    int flour = 30;         // completely separate from kitchenA's flour
-    printf("B's flour: %d\\n", flour);
-}
-// kitchenA's "flour" and kitchenB's "flour" never interfere`}
-      />
-
-      <ConceptLock>
-        Variables declared inside a function can&apos;t be seen or used outside it. They&apos;re created when the function starts and destroyed when it ends. This is called <strong>scope</strong>.
-      </ConceptLock>
-
-      <Gotcha>
-        A local variable and a global variable can have the same name. Inside the function, the local one &quot;shadows&quot; the global — the global is unchanged. This is a sneaky source of bugs.
-      </Gotcha>
+      <CodeBlock label="C Example" code={`int globalFlour = 100;
+void kitchenA() { int flour = ${flourA}; }  // A's flour
+void kitchenB() { int flour = ${flourB}; }  // B's flour
+// A's "flour" and B's "flour" never meet`} />
+      <ConceptLock>Variables declared inside a function exist ONLY inside that function. They are invisible to everything outside.</ConceptLock>
 
       <button
         onClick={() => onComplete(60)}
-        style={{ marginTop: 8, padding: "11px 28px", background: "linear-gradient(135deg,#00D9C0,#A78BFA)", color: "#fff", borderRadius: 9, border: "none", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 13, cursor: "pointer", letterSpacing: ".05em" }}
+        style={{ width: "100%", background: "linear-gradient(135deg,#00D9C0,#A78BFA)", border: "none", borderRadius: 10, padding: "14px 0", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", marginTop: 8 }}
       >
-        🎉 COMPLETE — Claim 60 XP
+        Complete — Claim 60 XP
       </button>
     </div>
   );
 }
 
-// ─── Main exported component ─────────────────────────────────────────────────
+// ─── Main Export ──────────────────────────────────────────────────────────────
 
-interface Props {
-  onComplete: (xp: number) => void;
-}
+interface Props { onComplete: (xp: number) => void; }
+
+const TABS = ["Recipe", "Params", "Return", "Scope"];
 
 export default function SectionFunctions({ onComplete }: Props) {
   const [subStep, setSubStep] = useState(0);
-  const steps = ["Recipe Card", "Ingredients", "Takeaway Counter", "The Kitchens"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Step tabs */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {steps.map((s, i) => (
-          <button
-            key={i}
-            onClick={() => setSubStep(i)}
-            style={{
-              padding: "5px 12px",
-              borderRadius: 8,
-              border: `1px solid ${subStep === i ? "#00D9C0" : "rgba(255,255,255,0.10)"}`,
-              background: subStep === i ? "rgba(0,217,192,.12)" : "transparent",
-              color: subStep === i ? "#00D9C0" : "#7B85A8",
-              fontFamily: "'Courier New',monospace",
-              fontSize: 10,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {i + 1}. {s}
+    <div style={{ fontFamily: "system-ui,sans-serif", color: "#E9EDF8" }}>
+      <style>{KEYFRAMES}</style>
+
+      {/* Tab bar */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" as const }}>
+        {TABS.map((t, i) => (
+          <button key={i} onClick={() => setSubStep(i)}
+            style={{ flex: 1, minWidth: 70, background: subStep === i ? "rgba(0,217,192,0.18)" : "rgba(24,29,46,0.9)", border: `1px solid ${subStep === i ? "#00D9C0" : "rgba(255,255,255,0.1)"}`, borderRadius: 8, padding: "8px 0", color: subStep === i ? "#00D9C0" : "#7B85A8", fontWeight: subStep === i ? 700 : 400, fontSize: 13, cursor: "pointer" }}>
+            {t}
           </button>
         ))}
       </div>
 
-      <div style={{ background: "rgba(24,29,46,0.85)", border: "1px solid rgba(255,255,255,0.065)", borderRadius: 14, padding: 20 }}>
+      {/* Card */}
+      <div style={{ background: "rgba(24,29,46,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20 }}>
         {subStep === 0 && <RecipeStep />}
         {subStep === 1 && <ParamsStep />}
         {subStep === 2 && <ReturnStep />}
         {subStep === 3 && <ScopeStep onComplete={onComplete} />}
+      </div>
 
-        {subStep < 3 && (
-          <button
-            onClick={() => setSubStep(subStep + 1)}
-            style={{ marginTop: 16, padding: "10px 24px", background: "#00D9C0", color: "#003838", borderRadius: 9, border: "none", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
-          >
+      {/* Next button */}
+      {subStep < 3 && (
+        <div style={{ textAlign: "right", marginTop: 12 }}>
+          <button onClick={() => setSubStep(s => s + 1)}
+            style={{ background: "rgba(0,217,192,0.15)", border: "1px solid #00D9C0", borderRadius: 8, padding: "10px 24px", color: "#00D9C0", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             NEXT →
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

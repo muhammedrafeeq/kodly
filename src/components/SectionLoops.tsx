@@ -1,179 +1,207 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface Props { onComplete: (xp: number) => void; }
 
-function Analogy({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.22)", borderRadius: 10, padding: 14, display: "flex", gap: 10, marginBottom: 12 }}>
-      <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
-      <div style={{ fontSize: 13.5, lineHeight: 1.65, color: "#E9EDF8" }}>{children}</div>
-    </div>
-  );
-}
-
-function ConceptLock({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.12),rgba(0,217,192,.08))", border: "1px solid rgba(167,139,250,.35)", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
-      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>🔒 Non-Replaceable Concept</div>
-      <div style={{ fontSize: 13.5, fontWeight: 600, color: "#E9EDF8", lineHeight: 1.6 }}>{children}</div>
-    </div>
-  );
-}
-
-function Gotcha({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: 12, display: "flex", gap: 8, marginBottom: 12 }}>
-      <span style={{ flexShrink: 0 }}>⚠️</span>
-      <div style={{ fontSize: 12.5, lineHeight: 1.55, color: "#E9EDF8" }}>{children}</div>
-    </div>
-  );
-}
-
-function CodeBlock({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ border: "1px solid rgba(0,218,243,.18)", borderRadius: 10, overflow: "hidden", marginBottom: 12 }}>
-      <div style={{ padding: "6px 14px", background: "rgba(0,218,243,.08)", color: "#00D9C0", fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase", fontWeight: 700 }}>{label}</div>
-      <pre style={{ padding: 16, background: "#0D1117", fontFamily: "'Courier New',monospace", fontSize: 12.5, lineHeight: 1.7, margin: 0, overflowX: "auto", color: "#E9EDF8" }}>{children}</pre>
-    </div>
-  );
-}
-
-// ─── Sub-step 0: for Loop ────────────────────────────────────────────────────
+// ─── Sub-step 0: for Loop — Envelope Conveyor Belt ───────────────────────────
 
 function ForLoopStep() {
   const [count, setCount] = useState(5);
-  const [stamped, setStamped] = useState(-1); // index of last stamped envelope (-1 = none)
+  const [stamped, setStamped] = useState<number[]>([]);
+  const [stamping, setStamping] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
+  const [done, setDone] = useState(false);
+  const [currentI, setCurrentI] = useState<number | null>(null);
 
   function runLoop() {
     if (running) return;
     setRunning(true);
-    setStamped(-1);
+    setStamped([]);
+    setDone(false);
+    setCurrentI(0);
+
     let i = 0;
     function step() {
-      if (i < count) {
-        setStamped(i);
-        i++;
-        setTimeout(step, 420);
-      } else {
+      if (i >= count) {
         setRunning(false);
+        setStamping(null);
+        setCurrentI(null);
+        setDone(true);
+        return;
       }
+      setCurrentI(i);
+      setStamping(i);
+      setTimeout(() => {
+        setStamped(prev => [...prev, i]);
+        setStamping(null);
+        i++;
+        setTimeout(step, 200);
+      }, 500);
     }
-    setTimeout(step, 200);
+    setTimeout(step, 300);
   }
 
   function reset() {
-    setStamped(-1);
+    setStamped([]);
+    setStamping(null);
     setRunning(false);
+    setDone(false);
+    setCurrentI(null);
   }
 
-  const currentI = stamped + 1; // next i to be stamped; during run shows current
+  const envelopeXPositions = Array.from({ length: 6 }, (_, i) => 30 + i * 60);
+  const displayCount = Math.min(count, 6);
 
   return (
     <div>
-      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#00D9C0", fontWeight: 700, marginBottom: 10 }}>for Loop — Stamping Envelopes</div>
+      {/* SVG Scene */}
+      <svg width="100%" viewBox="0 0 400 180" style={{ display: "block", marginBottom: 14, borderRadius: 10, background: "#0a0d16" }}>
+        {/* Conveyor belt rails */}
+        <rect x="10" y="128" width="380" height="6" rx="3" fill="#2a3050" />
+        <rect x="10" y="144" width="380" height="6" rx="3" fill="#2a3050" />
+        {/* Roller circles */}
+        {Array.from({ length: 10 }, (_, i) => (
+          <circle key={i} cx={20 + i * 40} cy="131" r="5" fill="#3a4060" stroke="#4a5080" strokeWidth="1" />
+        ))}
+        {/* Stamp arm for each envelope */}
+        {Array.from({ length: displayCount }, (_, i) => {
+          const x = envelopeXPositions[i];
+          const isStamping = stamping === i;
+          return (
+            <g key={`arm-${i}`}>
+              {/* Arm pivot point */}
+              <circle cx={x + 24} cy={50} r="4" fill="#4a5080" />
+              {/* Arm rect — rotates when stamping */}
+              <rect
+                x={x + 20}
+                y={50}
+                width="8"
+                height={isStamping ? 48 : 30}
+                rx="3"
+                fill={isStamping ? "#00D9C0" : "#3a4060"}
+                className={isStamping ? "stamping" : ""}
+                style={{ transition: "height 0.3s ease, fill 0.2s" }}
+              />
+              {/* Stamp head */}
+              <rect
+                x={x + 14}
+                y={isStamping ? 92 : 76}
+                width="20"
+                height="8"
+                rx="2"
+                fill={isStamping ? "#00D9C0" : "#2a3050"}
+                style={{ transition: "y 0.3s ease, fill 0.2s" }}
+              />
+            </g>
+          );
+        })}
+        {/* Envelopes on belt */}
+        {Array.from({ length: displayCount }, (_, i) => {
+          const x = envelopeXPositions[i];
+          const isStampedEnv = stamped.includes(i);
+          const isCurrentEnv = stamping === i;
+          return (
+            <g key={`env-${i}`}>
+              {/* Envelope body */}
+              <rect
+                x={x}
+                y={96}
+                width="48"
+                height="34"
+                rx="4"
+                fill={isStampedEnv ? "rgba(0,217,192,0.15)" : "rgba(255,255,255,0.04)"}
+                stroke={isCurrentEnv ? "#00D9C0" : isStampedEnv ? "rgba(0,217,192,0.5)" : "rgba(255,255,255,0.12)"}
+                strokeWidth={isCurrentEnv ? 2 : 1}
+                style={{ transition: "stroke 0.2s, fill 0.2s" }}
+              />
+              {/* Envelope flap V */}
+              <polyline
+                points={`${x},96 ${x + 24},114 ${x + 48},96`}
+                fill="none"
+                stroke={isStampedEnv ? "rgba(0,217,192,0.3)" : "rgba(255,255,255,0.08)"}
+                strokeWidth="1"
+              />
+              {/* i label */}
+              <text x={x + 24} y={125} textAnchor="middle" fill="#7B85A8" fontSize="8" fontFamily="monospace">i={i}</text>
+              {/* Check mark when stamped */}
+              {isStampedEnv && (
+                <text x={x + 24} y={112} textAnchor="middle" fill="#00D9C0" fontSize="14" fontWeight="bold">✓</text>
+              )}
+              {/* Glow when current */}
+              {isCurrentEnv && (
+                <rect x={x - 2} y={94} width="52" height="38" rx="5" fill="none" stroke="#00D9C0" strokeWidth="1.5" opacity="0.6">
+                  <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.5s" repeatCount="indefinite" />
+                </rect>
+              )}
+            </g>
+          );
+        })}
+        {/* Title label */}
+        <text x="200" y="22" textAnchor="middle" fill="#00D9C0" fontSize="11" fontFamily="monospace" fontWeight="bold">ENVELOPE CONVEYOR BELT</text>
+      </svg>
 
-      <Analogy>
-        You have exactly {count} envelopes to stamp. You don't guess — you <strong>know</strong> the number upfront.
-        A <code style={{ color: "#00D9C0" }}>for</code> loop has three parts built in: <strong>where to start</strong> (i = 0),
-        <strong> when to stop</strong> (i &lt; {count}), and <strong>how to step forward</strong> (i++).
-      </Analogy>
+      {/* Loop counter display */}
+      <div style={{ marginBottom: 12, padding: "8px 14px", background: "#0D1117", border: "1px solid rgba(0,217,192,0.15)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 13 }}>
+        {done
+          ? <span style={{ color: "#00D9C0", fontWeight: 700 }}>Done! Loop ended — i = {count}</span>
+          : currentI !== null
+          ? <span>Loop running… <span style={{ color: "#00D9C0", fontWeight: 700 }}>i = {currentI}</span> <span style={{ color: "#7B85A8" }}>(condition: i &lt; {count} → ✅)</span></span>
+          : <span style={{ color: "#7B85A8" }}>for (int i = 0; i &lt; {count}; i++) — press ▶ Run Loop</span>
+        }
+      </div>
 
       {/* Count picker */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-        <span style={{ fontSize: 12, color: "#7B85A8" }}>Envelope count:</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 12, color: "#7B85A8", fontFamily: "'Courier New',monospace" }}>Envelopes (1–6):</span>
         <input
-          type="number"
-          min={1}
-          max={8}
-          value={count}
-          onChange={e => { reset(); setCount(Math.max(1, Math.min(8, Number(e.target.value)))); }}
+          type="number" min={1} max={6} value={count}
+          onChange={e => { reset(); setCount(Math.max(1, Math.min(6, Number(e.target.value)))); }}
           style={{ width: 50, padding: "4px 8px", background: "rgba(24,29,46,0.9)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 6, color: "#E9EDF8", fontFamily: "'Courier New',monospace", fontSize: 13 }}
         />
       </div>
 
-      {/* Envelope row */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-        {Array.from({ length: count }, (_, i) => {
-          const isStamped = i <= stamped;
-          const isCurrent = i === stamped && running;
-          return (
-            <div key={i} style={{
-              width: 52, height: 40, borderRadius: 8,
-              background: isStamped ? "rgba(0,217,192,.18)" : "rgba(255,255,255,.05)",
-              border: `1.5px solid ${isCurrent ? "#00D9C0" : isStamped ? "rgba(0,217,192,.4)" : "rgba(255,255,255,.12)"}`,
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              transition: "all 0.3s ease",
-              transform: isCurrent ? "scale(1.12)" : "scale(1)",
-              position: "relative"
-            }}>
-              <span style={{ fontSize: 18 }}>✉️</span>
-              {isStamped && (
-                <span style={{ position: "absolute", top: -6, right: -6, background: "#00D9C0", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", color: "#003838", fontWeight: 700, fontSize: 10 }}>✓</span>
-              )}
-              <span style={{ fontSize: 8, color: "#7B85A8", fontFamily: "'Courier New',monospace" }}>i={i}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Live i display */}
-      <div style={{ marginBottom: 14, padding: "8px 14px", background: "rgba(0,217,192,.06)", border: "1px solid rgba(0,217,192,.15)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 12.5, color: "#E9EDF8" }}>
-        {running
-          ? <span>Loop running… <span style={{ color: "#00D9C0", fontWeight: 700 }}>i = {stamped}</span> (condition: <span style={{ color: "#00D9C0" }}>i &lt; {count}</span> → {stamped < count ? "✅ keep going" : "❌ stop"})</span>
-          : stamped === count - 1
-            ? <span style={{ color: "#00D9C0", fontWeight: 700 }}>✅ Loop finished! Stamped all {count} envelopes.</span>
-            : <span style={{ color: "#7B85A8" }}>Press "Run Loop" to start. The counter i begins at 0.</span>
-        }
-      </div>
-
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-        <button
-          onClick={runLoop}
-          disabled={running}
-          style={{ padding: "8px 18px", background: running ? "rgba(0,217,192,.15)" : "#00D9C0", color: running ? "#00D9C0" : "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: running ? "not-allowed" : "pointer", letterSpacing: ".06em", transition: "all .2s" }}
-        >
+        <button onClick={runLoop} disabled={running} style={{ padding: "8px 18px", background: running ? "rgba(0,217,192,.15)" : "#00D9C0", color: running ? "#00D9C0" : "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: running ? "not-allowed" : "pointer" }}>
           {running ? "Running…" : "▶ Run Loop"}
         </button>
-        <button
-          onClick={reset}
-          style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-        >
+        <button onClick={reset} style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}>
           ↺ Reset
         </button>
       </div>
 
-      <ConceptLock>
-        <code style={{ color: "#00D9C0" }}>for</code> loops are for when you know exactly how many times to repeat.
-        The counter lives inside the loop itself: <code style={{ color: "#FFB800" }}>for (start; condition; step)</code>
-      </ConceptLock>
+      {/* Concept Lock */}
+      <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,217,192,.06))", border: "1px solid rgba(167,139,250,.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>CONCEPT LOCK</div>
+        <code style={{ color: "#00D9C0", fontSize: 12 }}>for (int i = 0; i &lt; N; i++)</code>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}> — Use when you <strong>know exactly how many times</strong> to repeat.</span>
+      </div>
 
-      <Gotcha>
-        <code>for (i = 0; i &lt; 10; i++)</code> runs <strong>10 times</strong> (i goes 0 → 9).
-        If you write <code>i &lt;= 10</code> it runs <strong>11 times</strong>. Off-by-one is the most common loop bug!
-      </Gotcha>
-
-      <CodeBlock label="C Code — Stamp 5 Envelopes">
-{`// Stamp 5 envelopes
-for (int i = 0; i < 5; i++) {
+      {/* Code snippet */}
+      <pre style={{ background: "#0D1117", border: "1px solid rgba(0,217,192,.15)", borderRadius: 10, padding: 14, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#E9EDF8", overflowX: "auto", marginBottom: 12 }}>{`for (int i = 0; i < 5; i++) {
     printf("Stamped envelope %d\\n", i + 1);
-}
-// i starts at 0, keeps going while i < 5, adds 1 each time`}
-      </CodeBlock>
+}`}</pre>
+
+      {/* Gotcha */}
+      <div style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: "8px 14px", display: "inline-flex", gap: 8, alignItems: "center" }}>
+        <span style={{ color: "#FF5F6E", fontWeight: 700, fontSize: 11, fontFamily: "'Courier New',monospace" }}>⚠ GOTCHA</span>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}><code style={{ color: "#FF5F6E" }}>i &lt; 5</code> runs 5 times (0–4). <code style={{ color: "#FF5F6E" }}>i &lt;= 5</code> runs 6 times!</span>
+      </div>
     </div>
   );
 }
 
-// ─── Sub-step 1: while Loop ───────────────────────────────────────────────────
+// ─── Sub-step 1: while Loop — Stirring the Sauce Pot ─────────────────────────
 
 function WhileLoopStep() {
   const [thickness, setThickness] = useState(0);
   const [done, setDone] = useState(false);
+  const [spinning, setSpinning] = useState(false);
 
   function stir() {
     if (done) return;
-    const increase = Math.floor(Math.random() * 16) + 10; // 10–25
+    setSpinning(true);
+    setTimeout(() => setSpinning(false), 700);
+    const increase = Math.floor(Math.random() * 11) + 15;
     setThickness(prev => {
       const next = Math.min(100, prev + increase);
       if (next >= 100) setDone(true);
@@ -184,462 +212,490 @@ function WhileLoopStep() {
   function reset() {
     setThickness(0);
     setDone(false);
+    setSpinning(false);
   }
 
   const conditionTrue = thickness < 100;
+  // Liquid fill: pot interior starts at y=110 (bottom), fills upward as thickness increases
+  // Pot center (200,140), radius 70. Interior available height ~60px (y=110 to y=150 visible range inside ellipse)
+  const liquidHeight = Math.round((thickness / 100) * 55);
+  const liquidY = 150 - liquidHeight;
+  const thermFillHeight = Math.round((thickness / 100) * 80);
 
   return (
     <div>
-      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#00D9C0", fontWeight: 700, marginBottom: 10 }}>while Loop — Stirring the Sauce</div>
+      <svg width="100%" viewBox="0 0 400 200" style={{ display: "block", marginBottom: 14, borderRadius: 10, background: "#0a0d16" }}>
+        {/* Thermometer background */}
+        <rect x="340" y="60" width="16" height="90" rx="8" fill="#1a1f30" stroke="#2a3050" strokeWidth="1.5" />
+        {/* Thermometer fill */}
+        <rect
+          x="344"
+          y={150 - thermFillHeight}
+          width="8"
+          height={thermFillHeight}
+          rx="4"
+          fill={done ? "#FFB800" : "#00D9C0"}
+          style={{ transition: "height 0.4s ease, y 0.4s ease, fill 0.3s" }}
+        />
+        <circle cx="348" cy="155" r="9" fill={done ? "#FFB800" : "#00D9C0"} style={{ transition: "fill 0.3s" }} />
+        <text x="348" y="48" textAnchor="middle" fill="#7B85A8" fontSize="9" fontFamily="monospace">THICK</text>
+        <text x="348" y="170" textAnchor="middle" fill="#7B85A8" fontSize="9" fontFamily="monospace">0%</text>
+        <text x="348" y="62" textAnchor="middle" fill="#7B85A8" fontSize="8" fontFamily="monospace">{thickness}%</text>
 
-      <Analogy>
-        You don't know how many stirs it takes. You stir and check: <strong>"Is it thick yet?"</strong> If not, stir again.
-        The check happens at the <strong>START</strong> of every round — if it's already thick before you begin, you never stir at all.
-      </Analogy>
+        {/* Pot body */}
+        <ellipse cx="180" cy="150" rx="72" ry="18" fill="#1a1020" stroke="#5a3820" strokeWidth="2.5" />
+        <rect x="108" y="90" width="144" height="62" fill="#1a1020" />
+        <rect x="108" y="90" width="144" height="62" fill="url(#potMask)" />
+        {/* Pot sides */}
+        <line x1="108" y1="90" x2="108" y2="150" stroke="#5a3820" strokeWidth="2.5" />
+        <line x1="252" y1="90" x2="252" y2="150" stroke="#5a3820" strokeWidth="2.5" />
+        {/* Pot rim ellipse */}
+        <ellipse cx="180" cy="90" rx="72" ry="14" fill="#241510" stroke="#5a3820" strokeWidth="2.5" />
+        {/* Handles */}
+        <rect x="86" y="100" width="22" height="10" rx="5" fill="#3a2010" stroke="#5a3820" strokeWidth="1.5" />
+        <rect x="252" y="100" width="22" height="10" rx="5" fill="#3a2010" stroke="#5a3820" strokeWidth="1.5" />
 
-      {/* Pot visual */}
-      <div style={{ display: "flex", gap: 20, alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 52, marginBottom: 6, filter: done ? "drop-shadow(0 0 8px #FFB800)" : "none", transition: "filter .4s" }}>🍲</div>
-          <div style={{ fontSize: 11, color: "#7B85A8", fontFamily: "'Courier New',monospace" }}>thickness: {thickness}%</div>
+        {/* Liquid inside pot */}
+        <clipPath id="potClip">
+          <rect x="110" y="92" width="140" height="56" />
+        </clipPath>
+        <rect
+          x="110"
+          y={liquidY}
+          width="140"
+          height={liquidHeight + 10}
+          fill={done ? "rgba(255,184,0,0.55)" : "rgba(255,120,30,0.45)"}
+          clipPath="url(#potClip)"
+          style={{ transition: "y 0.4s ease, height 0.4s ease, fill 0.3s" }}
+        />
+
+        {/* Spoon — rotates when spinning */}
+        <g
+          transform="translate(180,120)"
+          className={spinning ? "spinning" : ""}
+          style={{ transformOrigin: "0 0", transformBox: "fill-box" }}
+        >
+          <line x1="0" y1="0" x2="45" y2="-20" stroke="#C8A060" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="45" cy="-20" r="7" fill="#C8A060" />
+        </g>
+
+        {/* Speech bubble */}
+        <rect
+          x="30" y="20" width="170" height="36" rx="8"
+          fill="rgba(10,13,22,0.9)"
+          stroke={conditionTrue ? "#00D9C0" : "#FF5F6E"}
+          strokeWidth="1.5"
+          style={{ transition: "stroke 0.3s" }}
+        />
+        <polygon
+          points="100,56 110,56 105,66"
+          fill={conditionTrue ? "#00D9C0" : "#FF5F6E"}
+          style={{ transition: "fill 0.3s" }}
+        />
+        <text x="115" y="34" textAnchor="middle" fill="#E9EDF8" fontSize="10" fontFamily="monospace">Is it thick yet?</text>
+        <text x="115" y="48" textAnchor="middle" fill={conditionTrue ? "#00D9C0" : "#FF5F6E"} fontSize="9" fontFamily="monospace" style={{ transition: "fill 0.3s" }}>
+          {conditionTrue ? "NO → keep stirring!" : "YES → stop loop"}
+        </text>
+
+        <text x="200" y="186" textAnchor="middle" fill="#7B85A8" fontSize="9" fontFamily="monospace">thickness = {thickness}%</text>
+      </svg>
+
+      {done && (
+        <div style={{ marginBottom: 12, padding: "9px 14px", background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.3)", borderRadius: 9, color: "#FFB800", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12 }}>
+          Sauce ready! Loop stopped — condition (thickness &lt; 100) is now FALSE.
         </div>
-
-        {/* Thickness meter */}
-        <div style={{ flex: 1, minWidth: 140 }}>
-          <div style={{ fontSize: 11, color: "#7B85A8", marginBottom: 6 }}>Thickness meter</div>
-          <div style={{ height: 18, background: "rgba(255,255,255,.06)", borderRadius: 9, overflow: "hidden", border: "1px solid rgba(255,255,255,.10)", marginBottom: 8 }}>
-            <div style={{
-              height: "100%",
-              width: `${thickness}%`,
-              background: done ? "#FFB800" : "#00D9C0",
-              borderRadius: 9,
-              transition: "width .35s ease, background .3s"
-            }} />
-          </div>
-
-          {/* Live condition */}
-          <div style={{
-            padding: "7px 12px",
-            background: conditionTrue ? "rgba(0,217,192,.08)" : "rgba(255,95,110,.09)",
-            border: `1px solid ${conditionTrue ? "rgba(0,217,192,.3)" : "rgba(255,95,110,.3)"}`,
-            borderRadius: 8,
-            fontFamily: "'Courier New',monospace",
-            fontSize: 12,
-            color: conditionTrue ? "#00D9C0" : "#FF5F6E",
-            transition: "all .3s"
-          }}>
-            while (thickness &lt; 100) → {conditionTrue ? "✅ keep stirring" : "❌ stop loop"}
-          </div>
-
-          {done && (
-            <div style={{ marginTop: 10, padding: "8px 14px", background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.3)", borderRadius: 8, color: "#FFB800", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12 }}>
-              🍴 Sauce is ready! Loop exited.
-            </div>
-          )}
-        </div>
-      </div>
+      )}
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-        <button
-          onClick={stir}
-          disabled={done}
-          style={{ padding: "8px 18px", background: done ? "rgba(0,217,192,.1)" : "#00D9C0", color: done ? "#00D9C0" : "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: done ? "not-allowed" : "pointer", letterSpacing: ".06em" }}
-        >
-          🥄 Stir
+        <button onClick={stir} disabled={done} style={{ padding: "8px 18px", background: done ? "rgba(0,217,192,.1)" : "#00D9C0", color: done ? "#00D9C0" : "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: done ? "not-allowed" : "pointer" }}>
+          Stir Once
         </button>
-        <button
-          onClick={reset}
-          style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-        >
+        <button onClick={reset} style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}>
           ↺ Reset
         </button>
       </div>
 
-      <ConceptLock>
-        <code style={{ color: "#00D9C0" }}>while</code> checks its condition <strong>BEFORE</strong> each repetition.
-        If the condition is false from the start, the loop body never runs — not even once.
-      </ConceptLock>
+      {/* Concept Lock */}
+      <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,217,192,.06))", border: "1px solid rgba(167,139,250,.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>CONCEPT LOCK</div>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}><code style={{ color: "#00D9C0" }}>while (condition)</code> — checks <strong>before</strong> each stir. If already thick before you start, the loop never runs.</span>
+      </div>
 
-      <Gotcha>
-        If the condition never becomes false, the loop runs forever and <strong>freezes the program</strong>.
-        Always make sure something inside the loop moves you toward making the condition false.
-      </Gotcha>
-
-      <CodeBlock label="C Code — Stir Until Thick">
-{`int thickness = 0;
+      <pre style={{ background: "#0D1117", border: "1px solid rgba(0,217,192,.15)", borderRadius: 10, padding: 14, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#E9EDF8", overflowX: "auto", marginBottom: 12 }}>{`int thickness = 0;
 while (thickness < 100) {
-    thickness += 20;  // stir raises thickness
-    printf("Thickness: %d%%\\n", thickness);
+    thickness += 20;
 }
-printf("Sauce is ready!\\n");`}
-      </CodeBlock>
+printf("Sauce ready!\\n");`}</pre>
+
+      <div style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: "8px 14px", display: "inline-flex", gap: 8, alignItems: "center" }}>
+        <span style={{ color: "#FF5F6E", fontWeight: 700, fontSize: 11, fontFamily: "'Courier New',monospace" }}>⚠ GOTCHA</span>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}>If nothing inside the loop changes the condition → infinite loop → program freezes!</span>
+      </div>
     </div>
   );
 }
 
-// ─── Sub-step 2: do-while ─────────────────────────────────────────────────────
+// ─── Sub-step 2: do-while — The Door Knocker ─────────────────────────────────
 
 function DoWhileStep() {
   const [knockCount, setKnockCount] = useState(0);
   const [answered, setAnswered] = useState(false);
-  const [running, setRunning] = useState(false);
-  const [showAnswerToggle, setShowAnswerToggle] = useState(false);
-  const [preAnswered, setPreAnswered] = useState(false);
-  const [animating, setAnimating] = useState(false);
+  const [knocking, setKnocking] = useState(false);
+  const [ringing, setRinging] = useState(false);
+  const [showToggle, setShowToggle] = useState(false);
 
   function knock() {
-    if (running || answered) return;
-    setAnimating(true);
-    setRunning(true);
+    if (knocking || answered) return;
+    setKnocking(true);
+    setRinging(true);
+    setTimeout(() => setRinging(false), 700);
     setTimeout(() => {
-      setAnimating(false);
+      setKnocking(false);
       setKnockCount(prev => prev + 1);
-      setShowAnswerToggle(true);
-      setRunning(false);
-    }, 500);
-  }
-
-  function markAnswered() {
-    setAnswered(true);
-    setShowAnswerToggle(false);
+      setShowToggle(true);
+    }, 600);
   }
 
   function reset() {
     setKnockCount(0);
     setAnswered(false);
-    setRunning(false);
-    setShowAnswerToggle(false);
-    setAnimating(false);
+    setKnocking(false);
+    setRinging(false);
+    setShowToggle(false);
   }
 
   return (
     <div>
-      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#00D9C0", fontWeight: 700, marginBottom: 10 }}>do-while — Knocking on the Door</div>
+      <svg width="100%" viewBox="0 0 400 220" style={{ display: "block", marginBottom: 14, borderRadius: 10, background: "#0a0d16" }}>
+        {/* Door frame */}
+        <rect x="140" y="50" width="120" height="160" rx="4" fill="#5a3820" stroke="#3a2010" strokeWidth="3" />
+        {/* Door panel */}
+        <rect x="148" y="58" width="104" height="144" rx="3" fill="#8B6340" />
+        {/* Door panels decoration */}
+        <rect x="156" y="66" width="40" height="55" rx="2" fill="rgba(0,0,0,0.15)" />
+        <rect x="204" y="66" width="40" height="55" rx="2" fill="rgba(0,0,0,0.15)" />
+        <rect x="156" y="130" width="40" height="55" rx="2" fill="rgba(0,0,0,0.15)" />
+        <rect x="204" y="130" width="40" height="55" rx="2" fill="rgba(0,0,0,0.15)" />
+        {/* Door knob */}
+        <circle cx="234" cy="148" r="7" fill="#C8A040" stroke="#a07820" strokeWidth="1.5" />
+        {/* Mail slot */}
+        <rect x="175" y="170" width="50" height="8" rx="3" fill="#3a2010" />
+        {/* Door knocker hinge */}
+        <circle cx="200" cy="120" r="5" fill="#C8A040" />
+        {/* Knocker ring — animates when knocking */}
+        <path
+          d="M 188 120 A 12 12 0 0 1 212 120"
+          fill="none"
+          stroke="#C8A040"
+          strokeWidth="5"
+          strokeLinecap="round"
+          className={knocking ? "knocking" : ""}
+          style={{ transformOrigin: "200px 120px", transformBox: "fill-box" }}
+        />
 
-      <Analogy>
-        You knock at least once — then you listen. If no answer, knock again.
-        You always do the action <strong>FIRST</strong>, then check whether to repeat.
-        A <code style={{ color: "#00D9C0" }}>while</code> loop might never knock if the condition is false upfront.
-        <code style={{ color: "#FFB800" }}> do-while</code> always knocks at least once.
-      </Analogy>
-
-      {/* Pre-answered toggle */}
-      <div style={{ marginBottom: 14, padding: "10px 14px", background: "rgba(167,139,250,.07)", border: "1px solid rgba(167,139,250,.2)", borderRadius: 9 }}>
-        <div style={{ fontSize: 12, color: "#A78BFA", marginBottom: 6, fontFamily: "'Courier New',monospace", fontWeight: 700 }}>Experiment: What if someone is already at the door?</div>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-          <input type="checkbox" checked={preAnswered} onChange={e => { reset(); setPreAnswered(e.target.checked); }} />
-          <span style={{ fontSize: 12.5, color: "#E9EDF8" }}>
-            Someone is already there (answered = true before loop starts)
-          </span>
-        </label>
-        {preAnswered && (
-          <div style={{ marginTop: 8, fontSize: 12, color: "#7B85A8", lineHeight: 1.5 }}>
-            <span style={{ color: "#FF5F6E" }}>while loop</span>: would skip the knock entirely (condition false upfront).<br />
-            <span style={{ color: "#FFB800" }}>do-while loop</span>: still knocks once, THEN checks.
-          </div>
+        {/* Sound waves when ringing */}
+        {ringing && (
+          <>
+            <circle cx="200" cy="120" r="18" fill="none" stroke="#00D9C0" strokeWidth="1.5" className="ringing" style={{ animationDelay: "0s" }} />
+            <circle cx="200" cy="120" r="28" fill="none" stroke="#00D9C0" strokeWidth="1" className="ringing" style={{ animationDelay: "0.15s" }} />
+            <circle cx="200" cy="120" r="38" fill="none" stroke="#00D9C0" strokeWidth="0.7" className="ringing" style={{ animationDelay: "0.3s" }} />
+          </>
         )}
+
+        {/* Stick figure — left side */}
+        <circle cx="90" cy="100" r="14" fill="none" stroke="#A78BFA" strokeWidth="2.5" />
+        <line x1="90" y1="114" x2="90" y2="155" stroke="#A78BFA" strokeWidth="2.5" />
+        <line x1="90" y1="125" x2="70" y2="142" stroke="#A78BFA" strokeWidth="2" />
+        <line x1="90" y1="125" x2={answered ? "130" : "115"} y2={answered ? "118" : "138"} stroke="#A78BFA" strokeWidth="2" style={{ transition: "all 0.3s" }} />
+        <line x1="90" y1="155" x2="74" y2="180" stroke="#A78BFA" strokeWidth="2" />
+        <line x1="90" y1="155" x2="106" y2="180" stroke="#A78BFA" strokeWidth="2" />
+
+        {/* Answered wave */}
+        {answered && (
+          <text x="120" y="108" fill="#00D9C0" fontSize="18">👋</text>
+        )}
+
+        {/* Knock count label */}
+        <text x="200" y="210" textAnchor="middle" fill="#7B85A8" fontSize="9" fontFamily="monospace">
+          Knocks: {knockCount} — answered: {answered ? "YES" : "NO"}
+        </text>
+
+        {/* "They answered!" */}
+        {answered && (
+          <text x="200" y="44" textAnchor="middle" fill="#00D9C0" fontSize="13" fontFamily="monospace" fontWeight="bold">They answered!</text>
+        )}
+      </svg>
+
+      {/* do-while flow info */}
+      <div style={{ marginBottom: 12, padding: "8px 14px", background: "#0D1117", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#E9EDF8" }}>
+        <span style={{ color: "#A78BFA" }}>do</span> {"{ knock(); }"} <span style={{ color: "#A78BFA" }}>while</span>
+        {" (answered == 0)"} →{" "}
+        <span style={{ color: answered ? "#FF5F6E" : "#00D9C0", fontWeight: 700 }}>
+          {answered ? "FALSE — loop exits" : "TRUE — loop continues"}
+        </span>
       </div>
 
-      {/* Door visual */}
-      <div style={{ display: "flex", gap: 20, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
-        <div style={{ position: "relative", textAlign: "center" }}>
-          <div style={{
-            fontSize: 64,
-            transition: "transform .15s",
-            transform: animating ? "scale(1.18) rotate(-5deg)" : "scale(1) rotate(0deg)",
-            filter: answered ? "drop-shadow(0 0 12px #00D9C0)" : "none"
-          }}>
-            {answered ? "🚪🙋" : "🚪"}
-          </div>
-          <div style={{ fontSize: 10, color: "#7B85A8", fontFamily: "'Courier New',monospace" }}>
-            {answered ? "Answered!" : "No answer yet"}
-          </div>
-        </div>
-
-        <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 12, color: "#E9EDF8", marginBottom: 8 }}>
-            Knocks so far: <span style={{ color: "#00D9C0", fontWeight: 700 }}>{knockCount}</span>
-          </div>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, padding: "6px 10px", background: "rgba(0,217,192,.06)", border: "1px solid rgba(0,217,192,.15)", borderRadius: 7, marginBottom: 8 }}>
-            do {"{"}<br />
-            &nbsp;&nbsp;knock();<br />
-            {"}"} while (answered == 0);
-          </div>
-          <div style={{ fontSize: 12, color: "#7B85A8", marginBottom: 6 }}>Condition now: answered == 0 →{" "}
-            <span style={{ color: answered ? "#FF5F6E" : "#00D9C0", fontWeight: 700 }}>
-              {answered ? "false — loop stops" : "true — knock again"}
-            </span>
-          </div>
+      {/* Compare with while box */}
+      <div style={{ marginBottom: 12, padding: "10px 14px", background: "rgba(167,139,250,.07)", border: "1px solid rgba(167,139,250,.2)", borderRadius: 9 }}>
+        <div style={{ fontSize: 11, color: "#A78BFA", fontFamily: "'Courier New',monospace", fontWeight: 700, marginBottom: 4 }}>vs. while loop</div>
+        <div style={{ fontSize: 12, color: "#7B85A8" }}>
+          If answered=YES <em>before</em> starting: <span style={{ color: "#FF5F6E" }}>while</span> would skip entirely — <span style={{ color: "#FFB800" }}>do-while</span> always knocks once.
         </div>
       </div>
 
-      {!answered && (
-        <div style={{ display: "flex", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-          <button
-            onClick={knock}
-            disabled={running}
-            style={{ padding: "8px 18px", background: "#00D9C0", color: "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: running ? "not-allowed" : "pointer" }}
-          >
-            🤛 Knock
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+        {!answered && (
+          <button onClick={knock} disabled={knocking} style={{ padding: "8px 18px", background: knocking ? "rgba(0,217,192,.1)" : "#00D9C0", color: knocking ? "#00D9C0" : "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: knocking ? "not-allowed" : "pointer" }}>
+            Knock!
           </button>
-          <button
-            onClick={reset}
-            style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-          >
-            ↺ Reset
-          </button>
-        </div>
-      )}
+        )}
+        <button onClick={reset} style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}>
+          ↺ Reset
+        </button>
+      </div>
 
-      {showAnswerToggle && !answered && (
+      {showToggle && !answered && (
         <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "center" }}>
-          <span style={{ fontSize: 12.5, color: "#E9EDF8" }}>Did someone answer?</span>
-          <button
-            onClick={markAnswered}
-            style={{ padding: "6px 14px", background: "rgba(0,217,192,.12)", color: "#00D9C0", border: "1px solid rgba(0,217,192,.3)", borderRadius: 7, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-          >
-            YES →
-          </button>
-          <button
-            onClick={knock}
-            disabled={running}
-            style={{ padding: "6px 14px", background: "rgba(255,95,110,.09)", color: "#FF5F6E", border: "1px solid rgba(255,95,110,.3)", borderRadius: 7, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-          >
-            NO, knock again
-          </button>
+          <span style={{ fontSize: 12.5, color: "#E9EDF8" }}>Did they answer?</span>
+          <button onClick={() => { setAnswered(true); setShowToggle(false); }} style={{ padding: "6px 14px", background: "rgba(0,217,192,.12)", color: "#00D9C0", border: "1px solid rgba(0,217,192,.3)", borderRadius: 7, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}>YES</button>
+          <button onClick={knock} disabled={knocking} style={{ padding: "6px 14px", background: "rgba(255,95,110,.09)", color: "#FF5F6E", border: "1px solid rgba(255,95,110,.3)", borderRadius: 7, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}>NO — knock again</button>
         </div>
       )}
 
-      {answered && (
-        <div style={{ marginBottom: 14, padding: "10px 16px", background: "rgba(0,217,192,.08)", border: "1px solid rgba(0,217,192,.25)", borderRadius: 9, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 13 }}>
-          🎉 They answered after {knockCount} knock{knockCount !== 1 ? "s" : ""}! Loop exits.
-        </div>
-      )}
+      {/* Concept Lock */}
+      <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,217,192,.06))", border: "1px solid rgba(167,139,250,.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>CONCEPT LOCK</div>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}><code style={{ color: "#00D9C0" }}>do {"{ ... }"} while(condition)</code> — runs the body <strong>first</strong>, then checks. Always executes at least once.</span>
+      </div>
 
-      {answered && (
-        <button onClick={reset} style={{ marginBottom: 14, padding: "6px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}>↺ Reset</button>
-      )}
-
-      <ConceptLock>
-        <code style={{ color: "#00D9C0" }}>do-while</code> always runs its block <strong>at least once</strong>.
-        The condition is checked <strong>AFTER</strong> the first run.
-      </ConceptLock>
-
-      <Gotcha>
-        Even if the condition is already false before the loop starts, do-while still runs once.
-        This surprises beginners who expect it to behave like while.
-      </Gotcha>
-
-      <CodeBlock label="C Code — Knock Until Answered">
-{`int answered = 0;
-do {
+      <pre style={{ background: "#0D1117", border: "1px solid rgba(0,217,192,.15)", borderRadius: 10, padding: 14, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#E9EDF8", overflowX: "auto", marginBottom: 12 }}>{`do {
     printf("*knock knock*\\n");
-    // check if answered...
-    answered = checkIfAnswered();
-} while (answered == 0);
-printf("They answered!\\n");`}
-      </CodeBlock>
+    answered = checkDoor();
+} while (answered == 0);`}</pre>
+
+      <div style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: "8px 14px", display: "inline-flex", gap: 8, alignItems: "center" }}>
+        <span style={{ color: "#FF5F6E", fontWeight: 700, fontSize: 11, fontFamily: "'Courier New',monospace" }}>⚠ GOTCHA</span>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}>Even if the condition is false before starting, do-while still runs the body once.</span>
+      </div>
     </div>
   );
 }
 
-// ─── Sub-step 3: break & continue ────────────────────────────────────────────
+// ─── Sub-step 3: break & continue — The Printer Hall ─────────────────────────
 
-type PrinterState = "ok" | "jammed" | "alarm";
+type PrinterStatus = "ok" | "jammed" | "alarm";
 
 function BreakContinueStep({ onComplete }: { onComplete: (xp: number) => void }) {
-  const [printers, setPrinters] = useState<PrinterState[]>(["ok", "jammed", "ok", "alarm", "ok", "ok"]);
-  const [visited, setVisited] = useState<number>(-1); // index being visited (-1 = not started)
+  const [printers, setPrinters] = useState<PrinterStatus[]>(["ok", "jammed", "ok", "alarm", "ok", "ok"]);
+  const [figureX, setFigureX] = useState<number>(-1);
   const [running, setRunning] = useState(false);
-  const [stopped, setStopped] = useState<"break" | "done" | null>(null);
+  const [visited, setVisited] = useState<number>(-1);
   const [skipped, setSkipped] = useState<number[]>([]);
   const [printed, setPrinted] = useState<number[]>([]);
-
-  function runLoop() {
-    if (running) return;
-    setRunning(true);
-    setVisited(-1);
-    setStopped(null);
-    setSkipped([]);
-    setPrinted([]);
-
-    let i = 0;
-    const skippedList: number[] = [];
-    const printedList: number[] = [];
-
-    function step() {
-      if (i >= printers.length) {
-        setVisited(printers.length);
-        setStopped("done");
-        setRunning(false);
-        return;
-      }
-      setVisited(i);
-      const p = printers[i];
-      if (p === "jammed") {
-        skippedList.push(i);
-        setSkipped([...skippedList]);
-        i++;
-        setTimeout(step, 600);
-      } else if (p === "alarm") {
-        setStopped("break");
-        setRunning(false);
-      } else {
-        printedList.push(i);
-        setPrinted([...printedList]);
-        i++;
-        setTimeout(step, 600);
-      }
-    }
-
-    setTimeout(step, 300);
-  }
+  const [stopped, setStopped] = useState<"break" | "done" | null>(null);
+  const [stoppedAt, setStoppedAt] = useState<number>(-1);
 
   function resetRun() {
-    setVisited(-1);
+    setFigureX(-1);
     setRunning(false);
-    setStopped(null);
+    setVisited(-1);
     setSkipped([]);
     setPrinted([]);
+    setStopped(null);
+    setStoppedAt(-1);
   }
 
-  function togglePrinter(index: number) {
+  function togglePrinter(idx: number) {
     if (running) return;
     resetRun();
     setPrinters(prev => {
-      const next = [...prev];
-      const cycle: PrinterState[] = ["ok", "jammed", "alarm"];
-      const cur = cycle.indexOf(next[index]);
-      // Don't allow more than one alarm
+      const next = [...prev] as PrinterStatus[];
+      const cycle: PrinterStatus[] = ["ok", "jammed", "alarm"];
+      const cur = cycle.indexOf(next[idx]);
       const newState = cycle[(cur + 1) % cycle.length];
+      // Only one alarm allowed
       if (newState === "alarm" && prev.some(p => p === "alarm")) {
-        next[index] = "ok";
+        next[idx] = "ok";
       } else {
-        next[index] = newState;
+        next[idx] = newState;
       }
       return next;
     });
   }
 
-  const printerEmoji = (state: PrinterState) => state === "jammed" ? "🖨️🔧" : state === "alarm" ? "🖨️🚨" : "🖨️";
-  const printerLabel = (state: PrinterState) => state === "jammed" ? "jammed" : state === "alarm" ? "alarm" : "ok";
+  // SVG: 6 printers evenly across x=20..380, y=20..75. Figure walks at y=120.
+  const printerXs = Array.from({ length: 6 }, (_, i) => 28 + i * 58);
+
+  function runLoop() {
+    if (running) return;
+    resetRun();
+    setRunning(true);
+    let i = 0;
+    const sk: number[] = [];
+    const pr: number[] = [];
+
+    function step() {
+      if (i >= printers.length) {
+        setFigureX(printerXs[5] + 50);
+        setVisited(6);
+        setStopped("done");
+        setRunning(false);
+        return;
+      }
+      const px = printerXs[i];
+      setFigureX(px);
+      setVisited(i);
+      const p = printers[i];
+      if (p === "jammed") {
+        sk.push(i);
+        setSkipped([...sk]);
+        i++;
+        setTimeout(step, 700);
+      } else if (p === "alarm") {
+        setStoppedAt(i);
+        setStopped("break");
+        setRunning(false);
+      } else {
+        pr.push(i);
+        setPrinted([...pr]);
+        i++;
+        setTimeout(step, 700);
+      }
+    }
+    setTimeout(step, 300);
+  }
+
+  const statusColor = (s: PrinterStatus, idx: number) => {
+    if (stopped === "break" && idx > stoppedAt) return "rgba(255,255,255,0.07)";
+    if (printed.includes(idx)) return "rgba(0,217,192,0.18)";
+    if (skipped.includes(idx)) return "rgba(255,184,0,0.14)";
+    if (s === "alarm") return "rgba(255,95,110,0.12)";
+    if (s === "jammed") return "rgba(255,184,0,0.09)";
+    return "rgba(255,255,255,0.04)";
+  };
+
+  const lightColor = (s: PrinterStatus, idx: number) => {
+    if (visited === idx && running) return "#00D9C0";
+    if (printed.includes(idx)) return "#00D9C0";
+    if (skipped.includes(idx)) return "#FFB800";
+    if (stopped === "break" && stoppedAt === idx) return "#FF5F6E";
+    if (s === "alarm") return "#FF5F6E";
+    if (s === "jammed") return "#FFB800";
+    return "#3a4060";
+  };
+
+  const figurePixelX = figureX >= 0 ? figureX + 8 : -40;
 
   return (
     <div>
-      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#00D9C0", fontWeight: 700, marginBottom: 10 }}>break & continue — Row of Printers</div>
-
-      <Analogy>
-        Imagine a row of school printers.
-        <br /><br />
-        🔧 <strong style={{ color: "#FFB800" }}>continue</strong> — "This printer is jammed. Skip it and try the next one." The loop skips the rest of this round and moves on.
-        <br /><br />
-        🚨 <strong style={{ color: "#FF5F6E" }}>break</strong> — "The fire alarm goes off. Everyone stops immediately." The loop exits completely — no more printers visited.
-      </Analogy>
-
-      <div style={{ fontSize: 12, color: "#7B85A8", marginBottom: 10 }}>Click a printer to cycle its state: ok → jammed → alarm</div>
-
-      {/* Printer row */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-        {printers.map((state, i) => {
+      <svg width="100%" viewBox="0 0 400 160" style={{ display: "block", marginBottom: 14, borderRadius: 10, background: "#0a0d16" }}>
+        {/* 6 printer icons */}
+        {printers.map((status, i) => {
+          const x = printerXs[i];
           const isActive = visited === i && running;
-          const isSkipped = skipped.includes(i);
-          const isPrinted = printed.includes(i);
-          const isStopped = stopped === "break" && visited === i;
-          const isUnvisited = visited >= 0 && i > visited && !running;
-
-          let borderColor = "rgba(255,255,255,.12)";
-          let bg = "rgba(255,255,255,.04)";
-          if (isActive) { borderColor = "#00D9C0"; bg = "rgba(0,217,192,.15)"; }
-          else if (isPrinted) { borderColor = "rgba(0,217,192,.4)"; bg = "rgba(0,217,192,.08)"; }
-          else if (isSkipped) { borderColor = "rgba(255,184,0,.35)"; bg = "rgba(255,184,0,.06)"; }
-          else if (isStopped) { borderColor = "#FF5F6E"; bg = "rgba(255,95,110,.12)"; }
-          else if (state === "alarm") { borderColor = "rgba(255,95,110,.4)"; bg = "rgba(255,95,110,.06)"; }
-          else if (state === "jammed") { borderColor = "rgba(255,184,0,.4)"; bg = "rgba(255,184,0,.05)"; }
-
+          const dimmed = stopped === "break" && i > stoppedAt;
           return (
-            <button
-              key={i}
-              onClick={() => togglePrinter(i)}
-              style={{
-                width: 66, padding: "10px 6px",
-                background: bg,
-                border: `1.5px solid ${borderColor}`,
-                borderRadius: 10,
-                cursor: running ? "not-allowed" : "pointer",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                transition: "all .25s",
-                transform: isActive ? "scale(1.1)" : "scale(1)",
-                opacity: (isUnvisited && stopped === "break") ? 0.3 : 1,
-              }}
-            >
-              <span style={{ fontSize: 22 }}>{printerEmoji(state)}</span>
-              <span style={{ fontFamily: "'Courier New',monospace", fontSize: 9, color: state === "alarm" ? "#FF5F6E" : state === "jammed" ? "#FFB800" : "#7B85A8", fontWeight: 700 }}>
-                {printerLabel(state)}
-              </span>
-              <span style={{ fontFamily: "'Courier New',monospace", fontSize: 9, color: "#4A5070" }}>#{i}</span>
-              {isPrinted && <span style={{ fontSize: 10, color: "#00D9C0" }}>✓ printed</span>}
-              {isSkipped && <span style={{ fontSize: 10, color: "#FFB800" }}>↪ skipped</span>}
-              {isStopped && stopped === "break" && <span style={{ fontSize: 10, color: "#FF5F6E" }}>⛔ break</span>}
-            </button>
+            <g key={i} style={{ opacity: dimmed ? 0.28 : 1, transition: "opacity 0.4s", cursor: running ? "not-allowed" : "pointer" }} onClick={() => togglePrinter(i)}>
+              {/* Printer body */}
+              <rect x={x} y={18} width="44" height="36" rx="5"
+                fill={statusColor(status, i)}
+                stroke={isActive ? "#00D9C0" : status === "alarm" ? "#FF5F6E" : status === "jammed" ? "#FFB800" : "rgba(255,255,255,0.1)"}
+                strokeWidth={isActive ? 2 : 1}
+                style={{ transition: "stroke 0.2s, fill 0.2s" }}
+              />
+              {/* Paper tray */}
+              <rect x={x + 6} y={46} width="32" height="6" rx="2" fill="rgba(255,255,255,0.08)" />
+              {/* Status light */}
+              <circle cx={x + 34} cy={26} r="4" fill={lightColor(status, i)} style={{ transition: "fill 0.2s" }}>
+                {isActive && <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />}
+              </circle>
+              {/* Printer slot */}
+              <rect x={x + 8} y={33} width="28" height="4" rx="1" fill="rgba(0,0,0,0.3)" />
+              {/* Label */}
+              <text x={x + 22} y={67} textAnchor="middle" fontSize="7.5" fontFamily="monospace"
+                fill={status === "alarm" ? "#FF5F6E" : status === "jammed" ? "#FFB800" : "#7B85A8"}>
+                {status === "jammed" ? "jammed" : status === "alarm" ? "alarm" : "ok"}
+              </text>
+              <text x={x + 22} y={77} textAnchor="middle" fontSize="7" fontFamily="monospace" fill="#4a5070">#{i}</text>
+
+              {/* Status badge */}
+              {skipped.includes(i) && (
+                <text x={x + 22} y={90} textAnchor="middle" fontSize="7.5" fontFamily="monospace" fill="#FFB800">SKIPPED</text>
+              )}
+              {printed.includes(i) && (
+                <text x={x + 22} y={90} textAnchor="middle" fontSize="7.5" fontFamily="monospace" fill="#00D9C0">PRINTED</text>
+              )}
+              {stopped === "break" && stoppedAt === i && (
+                <text x={x + 22} y={90} textAnchor="middle" fontSize="7.5" fontFamily="monospace" fill="#FF5F6E">STOPPED</text>
+              )}
+            </g>
           );
         })}
+
+        {/* Walking figure */}
+        <g style={{ transform: `translateX(${figurePixelX}px)`, transition: "transform 0.4s ease", transformBox: "fill-box" }}>
+          {/* Head */}
+          <circle cx={0} cy={115} r="8" fill="none" stroke="#A78BFA" strokeWidth="2" />
+          {/* Body */}
+          <line x1={0} y1={123} x2={0} y2={145} stroke="#A78BFA" strokeWidth="2" />
+          {/* Arms */}
+          <line x1={0} y1={130} x2={-10} y2={140} stroke="#A78BFA" strokeWidth="1.5" />
+          <line x1={0} y1={130} x2={10} y2={140} stroke="#A78BFA" strokeWidth="1.5" />
+          {/* Legs */}
+          <line x1={0} y1={145} x2={-8} y2={158} stroke="#A78BFA" strokeWidth="1.5" />
+          <line x1={0} y1={145} x2={8} y2={158} stroke="#A78BFA" strokeWidth="1.5" />
+        </g>
+      </svg>
+
+      <div style={{ fontSize: 11, color: "#7B85A8", marginBottom: 10, fontFamily: "'Courier New',monospace" }}>
+        Click a printer to cycle: ok → jammed → alarm (max 1 alarm)
       </div>
 
-      {/* Status */}
       {stopped === "break" && (
         <div style={{ marginBottom: 12, padding: "9px 14px", background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.3)", borderRadius: 9, color: "#FF5F6E", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12 }}>
-          🚨 Fire alarm! break executed — loop stopped at printer #{visited}. Remaining printers not visited.
+          break at printer #{stoppedAt} — all remaining printers dimmed (not visited).
         </div>
       )}
       {stopped === "done" && (
         <div style={{ marginBottom: 12, padding: "9px 14px", background: "rgba(0,217,192,.08)", border: "1px solid rgba(0,217,192,.25)", borderRadius: 9, color: "#00D9C0", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12 }}>
-          ✅ All printers checked! Printed: {printed.length}, Skipped (jammed): {skipped.length}
+          Done! Printed: {printed.length} — Skipped (jammed): {skipped.length}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <button
-          onClick={runLoop}
-          disabled={running}
-          style={{ padding: "8px 18px", background: running ? "rgba(0,217,192,.1)" : "#00D9C0", color: running ? "#00D9C0" : "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: running ? "not-allowed" : "pointer" }}
-        >
+      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+        <button onClick={runLoop} disabled={running} style={{ padding: "8px 18px", background: running ? "rgba(0,217,192,.1)" : "#00D9C0", color: running ? "#00D9C0" : "#003838", border: "none", borderRadius: 8, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 11, cursor: running ? "not-allowed" : "pointer" }}>
           ▶ Run
         </button>
-        <button
-          onClick={resetRun}
-          style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}
-        >
+        <button onClick={resetRun} style={{ padding: "8px 14px", background: "transparent", color: "#7B85A8", border: "1px solid rgba(255,255,255,.10)", borderRadius: 8, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer" }}>
           ↺ Reset
         </button>
       </div>
 
-      <ConceptLock>
-        <code style={{ color: "#FF5F6E" }}>break</code> exits the entire loop immediately.{" "}
-        <code style={{ color: "#FFB800" }}>continue</code> skips only the current iteration and jumps to the next one.
-      </ConceptLock>
+      {/* Concept Lock */}
+      <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,217,192,.06))", border: "1px solid rgba(167,139,250,.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "#A78BFA", fontWeight: 700, marginBottom: 6 }}>CONCEPT LOCK</div>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}>
+          <code style={{ color: "#FFB800" }}>continue</code> skips the rest of this loop turn and jumps to the next.{" "}
+          <code style={{ color: "#FF5F6E" }}>break</code> exits the loop entirely.
+        </span>
+      </div>
 
-      <Gotcha>
-        <code>break</code> inside a nested loop only exits the <strong>inner loop</strong>, not all loops. Each <code>break</code> exits one level.
-      </Gotcha>
-
-      <CodeBlock label="C Code — Printers with break & continue">
-{`for (int i = 0; i < 6; i++) {
-    if (printer[i] == JAMMED) {
-        continue;  // skip this one, go to next
-    }
-    if (printer[i] == ALARM) {
-        break;     // stop everything now
-    }
+      <pre style={{ background: "#0D1117", border: "1px solid rgba(0,217,192,.15)", borderRadius: 10, padding: 14, fontFamily: "'Courier New',monospace", fontSize: 12, color: "#E9EDF8", overflowX: "auto", marginBottom: 12 }}>{`for (int i = 0; i < 6; i++) {
+    if (printer[i] == JAMMED) continue;
+    if (printer[i] == ALARM)  break;
     printf("Printing on printer %d\\n", i);
-}`}
-      </CodeBlock>
+}`}</pre>
 
-      <button
-        onClick={() => onComplete(50)}
-        style={{ marginTop: 8, padding: "12px 28px", background: "linear-gradient(135deg,#00D9C0,#A78BFA)", color: "#fff", border: "none", borderRadius: 10, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 13, cursor: "pointer", letterSpacing: ".08em", boxShadow: "0 4px 18px rgba(0,217,192,.25)" }}
-      >
-        ✅ Complete Section (+50 XP)
-      </button>
+      <div style={{ background: "rgba(255,95,110,.09)", border: "1px solid rgba(255,95,110,.22)", borderRadius: 10, padding: "8px 14px", display: "inline-flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
+        <span style={{ color: "#FF5F6E", fontWeight: 700, fontSize: 11, fontFamily: "'Courier New',monospace" }}>⚠ GOTCHA</span>
+        <span style={{ color: "#E9EDF8", fontSize: 12 }}><code>break</code> inside a nested loop only exits the <strong>inner</strong> loop — not all loops.</span>
+      </div>
+
+      <div>
+        <button onClick={() => onComplete(50)} style={{ padding: "12px 28px", background: "linear-gradient(135deg,#00D9C0,#A78BFA)", color: "#fff", border: "none", borderRadius: 10, fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 13, cursor: "pointer", letterSpacing: ".08em", boxShadow: "0 4px 18px rgba(0,217,192,.25)" }}>
+          Complete ✓ — Claim XP
+        </button>
+      </div>
     </div>
   );
 }
@@ -648,41 +704,39 @@ function BreakContinueStep({ onComplete }: { onComplete: (xp: number) => void })
 
 export default function SectionLoops({ onComplete }: Props) {
   const [subStep, setSubStep] = useState(0);
-
-  const steps = ["for Loop", "while Loop", "do-while", "break & continue"];
+  const TABS = ["for Loop", "while Loop", "do-while", "break & continue"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Step tabs */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <style>{`
+        @keyframes stamp { 0%{transform:rotate(0deg)} 40%{transform:rotate(30deg)} 100%{transform:rotate(0deg)} }
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes knock { 0%,100%{transform:rotate(0deg)} 40%{transform:rotate(-35deg)} 60%{transform:rotate(-35deg)} }
+        @keyframes ringOut { 0%{opacity:.8;transform:scale(1)} 100%{opacity:0;transform:scale(2.2)} }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+        .spinning { animation: spin 1.2s linear infinite; transform-origin: center; transform-box: fill-box; }
+        .knocking { animation: knock 0.3s ease-in-out 2; transform-origin: bottom center; transform-box: fill-box; }
+        .ringing { animation: ringOut 0.6s ease-out forwards; }
+        .stamping { animation: stamp 0.4s ease-in-out; transform-origin: bottom center; transform-box: fill-box; }
+      `}</style>
+
+      {/* Tab row */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {steps.map((s, i) => (
-          <button key={i} onClick={() => setSubStep(i)} style={{
-            padding: "5px 12px", borderRadius: 8,
-            border: `1px solid ${subStep === i ? "#00D9C0" : "rgba(255,255,255,0.10)"}`,
-            background: subStep === i ? "rgba(0,217,192,.12)" : "transparent",
-            color: subStep === i ? "#00D9C0" : "#7B85A8",
-            fontFamily: "'Courier New',monospace", fontSize: 10, fontWeight: 700,
-            cursor: "pointer", letterSpacing: "0.05em",
-            transition: "all .2s"
-          }}>
-            {i + 1}. {s}
+        {TABS.map((t, i) => (
+          <button key={i} onClick={() => setSubStep(i)} style={{ padding: "5px 14px", borderRadius: 8, border: `1px solid ${subStep === i ? "#00D9C0" : "rgba(255,255,255,.10)"}`, background: subStep === i ? "rgba(0,217,192,.12)" : "transparent", color: subStep === i ? "#00D9C0" : "#7B85A8", fontFamily: "'Courier New',monospace", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+            {i + 1}. {t}
           </button>
         ))}
       </div>
 
-      {/* Step content */}
-      <div style={{ background: "rgba(24,29,46,0.85)", border: "1px solid rgba(255,255,255,0.065)", borderRadius: 14, padding: 20 }}>
+      <div style={{ background: "rgba(24,29,46,.9)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 14, padding: 20 }}>
         {subStep === 0 && <ForLoopStep />}
         {subStep === 1 && <WhileLoopStep />}
         {subStep === 2 && <DoWhileStep />}
         {subStep === 3 && <BreakContinueStep onComplete={onComplete} />}
 
-        {/* Navigation */}
         {subStep < 3 && (
-          <button
-            onClick={() => setSubStep(subStep + 1)}
-            style={{ marginTop: 16, padding: "10px 24px", background: "#00D9C0", color: "#003838", borderRadius: 9, border: "none", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12, cursor: "pointer", letterSpacing: "0.08em" }}
-          >
+          <button onClick={() => setSubStep(s => s + 1)} style={{ marginTop: 16, padding: "10px 28px", background: "#00D9C0", color: "#003838", borderRadius: 9, border: "none", fontFamily: "'Courier New',monospace", fontWeight: 700, fontSize: 12, cursor: "pointer", letterSpacing: ".08em" }}>
             NEXT →
           </button>
         )}

@@ -1,360 +1,616 @@
 "use client";
 
-import React, { useState } from "react";
-import FormatChemistry from "./FormatChemistry";
-import RobotSim from "./RobotSim";
+import React, { useState, useRef, useEffect } from "react";
 
 interface SectionIOProps {
-  onComplete: (xpAward: number) => void;
+  onComplete: (xp: number) => void;
 }
 
-export default function SectionIO({ onComplete }: SectionIOProps) {
-  // Sub-step: 0 = Printf & Alignment, 1 = Scanf & Address Bug, 2 = Specifier Chemistry, 3 = Code-a-Robot
-  const [subStep, setSubStep] = useState<number>(0);
+// ── Keyboard SVG helper ──────────────────────────────────────────────────────
 
-  // Sub-step 1: Escape sequences demo output
-  const [showConsole1, setShowConsole1] = useState<boolean>(false);
+function KeyboardSVG({ x, y }: { x: number; y: number }) {
+  const rows = [
+    Array.from({ length: 8 }, (_, i) => i),
+    Array.from({ length: 8 }, (_, i) => i),
+    Array.from({ length: 8 }, (_, i) => i),
+  ];
+  return (
+    <g>
+      <rect x={x} y={y} width={120} height={60} rx={6} fill="#1e2438" stroke="#2a3050" strokeWidth={1} />
+      {rows.map((row, ri) =>
+        row.map((ci) => (
+          <rect
+            key={`${ri}-${ci}`}
+            x={x + 6 + ci * 14}
+            y={y + 6 + ri * 17}
+            width={11}
+            height={10}
+            rx={2}
+            fill="#2a3050"
+          />
+        ))
+      )}
+    </g>
+  );
+}
 
-  // Sub-step 2: Fix-the-Bug state
-  const [bugCode, setBugCode] = useState<string>('scanf("%d", age);');
-  const [hasFixedBug, setHasFixedBug] = useState<boolean>(false);
-  const [debugLog, setDebugLog] = useState<string>("Run program to test code compiler.");
-  const [isCompiling, setIsCompiling] = useState<boolean>(false);
+// ── Monitor SVG helper ───────────────────────────────────────────────────────
 
-  const [chemistryCompleted, setChemistryCompleted] = useState<boolean>(false);
-  const [robotCompleted, setRobotCompleted] = useState<boolean>(false);
+function MonitorSVG({ x, y, children }: { x: number; y: number; children?: React.ReactNode }) {
+  return (
+    <g>
+      <rect x={x} y={y} width={100} height={68} rx={6} fill="#1e2438" stroke="#2a3050" strokeWidth={1} />
+      <rect x={x + 4} y={y + 4} width={92} height={52} rx={3} fill="#0D1117" />
+      {/* Stand */}
+      <line x1={x + 50} y1={y + 68} x2={x + 50} y2={y + 80} stroke="#2a3050" strokeWidth={3} />
+      <line x1={x + 35} y1={y + 80} x2={x + 65} y2={y + 80} stroke="#2a3050" strokeWidth={3} />
+      {children}
+    </g>
+  );
+}
 
-  // Section completion
-  const [hasCompleted, setHasCompleted] = useState<boolean>(false);
+// ── Sub-step 0: printf Output Machine ───────────────────────────────────────
 
-  // Run printf escape sequence demo
-  const handleRunPrintfDemo = () => {
-    setShowConsole1(true);
+const FORMAT_SPECIFIERS = ["%d", "%s", "%f", "%c"];
+
+function PrintfMachine({ onNext }: { onNext: () => void }) {
+  const [formatStr, setFormatStr] = useState('"Hello, %s!\\n"');
+  const [nameVal, setNameVal] = useState("Ali");
+  const [output, setOutput] = useState("");
+  const [typing, setTyping] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const buildOutput = (fmt: string, val: string): string => {
+    let raw = fmt.replace(/^"|"$/g, "");
+    raw = raw.replace(/%s/g, val).replace(/%d/g, val).replace(/%f/g, val).replace(/%c/g, val[0] ?? "");
+    raw = raw.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+    return raw;
   };
 
-  // Run or fix the bug
-  const handleRunBugProgram = () => {
-    setIsCompiling(true);
-    setDebugLog("Compiling main.c...");
-    setTimeout(() => {
-      setIsCompiling(false);
-      if (hasFixedBug) {
-        setDebugLog("Program output: Enter age: 25\nStored age: 25\nProcess exited successfully.");
+  const runPrintf = (fmt: string, val: string) => {
+    if (typing) return;
+    const result = buildOutput(fmt, val);
+    setOutput("");
+    setTyping(true);
+    let i = 0;
+    const step = () => {
+      if (i < result.length) {
+        setOutput((prev) => prev + result[i]);
+        i++;
+        timerRef.current = setTimeout(step, 80);
       } else {
-        setDebugLog("⚠️ SEGMENTATION FAULT (CRASH)!\n\nThis is computer speak for: 'The program crashed because you told me to deliver keyboard inputs, but you forgot to give me the toy box's mailing address (&)! I got lost trying to find where to store the number.'");
+        setTyping(false);
       }
-    }, 1000);
+    };
+    timerRef.current = setTimeout(step, 80);
   };
 
-  const handleFixBug = () => {
-    setBugCode('scanf("%d", &age);');
-    setHasFixedBug(true);
-    setDebugLog("Bug fixed! Address-of operator '&' added. Run code to verify.");
-  };
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, []);
 
-  const handleResetBug = () => {
-    setBugCode('scanf("%d", age);');
-    setHasFixedBug(false);
-    setDebugLog("Run program to test code compiler.");
-  };
-
-  const handleCompleteSection = () => {
-    if (hasCompleted) return;
-    setHasCompleted(true);
-    onComplete(10); // Award 10 XP
+  const insertSpecifier = (spec: string) => {
+    const inner = formatStr.replace(/^"|"$/, "").replace(/^"/, "");
+    const cleaned = formatStr.startsWith('"') ? formatStr.slice(1, -1) : formatStr;
+    setFormatStr('"' + cleaned + spec + '"');
   };
 
   return (
-    <div className="space-y-6">
-      
-      {/* Sub-step selector */}
-      <div className="flex flex-wrap gap-2 justify-between items-center bg-surface-container-low p-2 rounded-lg border border-white/5 text-xs font-mono">
+    <div style={{ fontFamily: "monospace" }}>
+      <style>{`
+        @keyframes typeChar { from{width:0;opacity:0} to{width:auto;opacity:1} }
+        @keyframes flowRight { from{transform:translateX(0);opacity:1} to{transform:translateX(60px);opacity:0} }
+        @keyframes flowLeft { from{transform:translateX(0);opacity:1} to{transform:translateX(-60px);opacity:0} }
+        @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes screenType { from{width:0} to{width:100%} }
+        .slide-in { animation: slideIn 0.3s ease forwards; }
+      `}</style>
+
+      <h3 style={{ color: "#00D9C0", fontSize: 14, marginBottom: 6 }}>printf: The Output Machine</h3>
+      <p style={{ color: "#7B85A8", fontSize: 12, marginBottom: 12 }}>
+        Build a format string, then fire it at the screen.
+      </p>
+
+      {/* SVG scene */}
+      <div style={{ background: "#0D1117", borderRadius: 12, padding: 8 }}>
+        <svg viewBox="0 0 380 110" style={{ width: "100%", display: "block" }}>
+          {/* Keyboard */}
+          <KeyboardSVG x={10} y={25} />
+          <text x={70} y={98} textAnchor="middle" fontSize={8} fill="#7B85A8" fontFamily="monospace">keyboard</text>
+
+          {/* Arrow pipe */}
+          <line x1={134} y1={55} x2={200} y2={55} stroke="#00D9C0" strokeWidth={2} />
+          <polygon points="200,50 212,55 200,60" fill="#00D9C0" />
+          <text x={170} y={48} textAnchor="middle" fontSize={8} fill="#00D9C0" fontFamily="monospace">printf</text>
+
+          {/* Monitor */}
+          <MonitorSVG x={215} y={15}>
+            <foreignObject x={219} y={19} width={84} height={44}>
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  overflow: "hidden",
+                  fontFamily: "monospace",
+                  fontSize: 9,
+                  color: "#00D9C0",
+                  whiteSpace: "pre-wrap",
+                  padding: 2,
+                }}
+              >
+                {output || (typing ? "" : <span style={{ color: "#2a3050" }}>...</span>)}
+              </div>
+            </foreignObject>
+          </MonitorSVG>
+          <text x={265} y={103} textAnchor="middle" fontSize={8} fill="#7B85A8" fontFamily="monospace">screen</text>
+        </svg>
+      </div>
+
+      {/* Inputs */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label style={{ color: "#7B85A8", fontSize: 11, width: 80 }}>Format:</label>
+          <input
+            value={formatStr}
+            onChange={(e) => setFormatStr(e.target.value)}
+            style={{
+              flex: 1,
+              background: "#0D1117",
+              border: "1px solid #2a3050",
+              borderRadius: 6,
+              padding: "5px 8px",
+              color: "#FFB800",
+              fontFamily: "monospace",
+              fontSize: 12,
+            }}
+          />
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label style={{ color: "#7B85A8", fontSize: 11, width: 80 }}>Value:</label>
+          <input
+            value={nameVal}
+            onChange={(e) => setNameVal(e.target.value)}
+            style={{
+              flex: 1,
+              background: "#0D1117",
+              border: "1px solid #2a3050",
+              borderRadius: 6,
+              padding: "5px 8px",
+              color: "#E9EDF8",
+              fontFamily: "monospace",
+              fontSize: 12,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Specifier palette */}
+      <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+        <span style={{ color: "#7B85A8", fontSize: 11, alignSelf: "center" }}>Insert:</span>
+        {FORMAT_SPECIFIERS.map((sp) => (
+          <button
+            key={sp}
+            onClick={() => insertSpecifier(sp)}
+            style={{
+              background: "#1e2438",
+              border: "1px solid #A78BFA55",
+              borderRadius: 4,
+              padding: "3px 8px",
+              color: "#A78BFA",
+              fontFamily: "monospace",
+              fontSize: 11,
+              cursor: "pointer",
+            }}
+          >
+            {sp}
+          </button>
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
         <button
-          onClick={() => setSubStep(0)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer ${
-            subStep === 0 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
+          onClick={() => runPrintf(formatStr, nameVal)}
+          style={{
+            background: "#00D9C0",
+            color: "#0D1117",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 16px",
+            fontWeight: "bold",
+            fontSize: 12,
+            cursor: "pointer",
+            fontFamily: "monospace",
+          }}
         >
-          1. Loudspeaker (printf) 📢
+          ▶ Printf!
         </button>
         <button
-          onClick={() => setSubStep(1)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer ${
-            subStep === 1 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
+          onClick={() => runPrintf('"Hello!\\n"', "")}
+          style={{
+            background: "#1e2438",
+            color: "#E9EDF8",
+            border: "1px solid #2a3050",
+            borderRadius: 8,
+            padding: "8px 12px",
+            fontSize: 11,
+            cursor: "pointer",
+            fontFamily: "monospace",
+          }}
         >
-          2. Listening Ear &amp; Bug 👂
+          printf(&quot;Hello!\n&quot;)
         </button>
         <button
-          disabled={!hasFixedBug}
-          onClick={() => setSubStep(2)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
-            subStep === 2 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
+          onClick={() => runPrintf('"Score: %d\\n"', "95")}
+          style={{
+            background: "#1e2438",
+            color: "#E9EDF8",
+            border: "1px solid #2a3050",
+            borderRadius: 8,
+            padding: "8px 12px",
+            fontSize: 11,
+            cursor: "pointer",
+            fontFamily: "monospace",
+          }}
         >
-          3. Specifier Chemistry 🧪
-        </button>
-        <button
-          disabled={!chemistryCompleted}
-          onClick={() => setSubStep(3)}
-          className={`px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-30 ${
-            subStep === 3 ? "bg-tertiary-container text-on-tertiary-container font-bold" : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          4. Code-a-Robot 🤖
+          printf(&quot;Score: %d\n&quot;, 95)
         </button>
       </div>
 
-      {/* SUB-STEP 1: OUTPUT (printf) & ALIGNMENT */}
-      {subStep === 0 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          
-          <section className="glass-panel p-4 rounded-xl space-y-2">
-            <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">output</span>
-              Loudspeaker — printf 📢
-            </h3>
-            <p className="text-body-md text-on-surface-variant leading-relaxed">
-              Programs shout messages onto the screen using the **`printf`** loudspeaker! By combining plain text, variables, and format placeholders, you can print messages dynamically:
-            </p>
-            <div className="text-xs font-mono bg-white/5 p-3 rounded space-y-2">
-              <div>
-                <span className="text-on-surface-variant/70">// 1. Shouting plain words</span>
-                <br /><code className="text-primary-fixed-dim">printf(&quot;Hello, World!\n&quot;);</code>
-              </div>
-              <div>
-                <span className="text-on-surface-variant/70">// 2. Shouting toy box values using placeholders</span>
-                <br /><code className="text-primary-fixed-dim">printf(&quot;Age is %d\n&quot;, age);</code>
-              </div>
-              <div>
-                <span className="text-on-surface-variant/70">// 3. Shouting multiple values together</span>
-                <br /><code className="text-primary-fixed-dim">printf(&quot;Grade: %c, Score: %f\n&quot;, grade, score);</code>
-              </div>
-            </div>
-          </section>
+      {/* Code snippet */}
+      <pre
+        style={{
+          background: "#0D1117",
+          color: "#E9EDF8",
+          fontSize: 11,
+          padding: 12,
+          borderRadius: 8,
+          marginTop: 12,
+          overflowX: "auto",
+          lineHeight: 1.7,
+        }}
+      >
+        <span style={{ color: "#00D9C0" }}>printf</span>(<span style={{ color: "#FFB800" }}>&quot;Hello, %s!\n&quot;</span>, name);  <span style={{ color: "#7B85A8" }}>// %s = string slot</span>{"\n"}
+        <span style={{ color: "#00D9C0" }}>printf</span>(<span style={{ color: "#FFB800" }}>&quot;Score: %d\n&quot;</span>, score);  <span style={{ color: "#7B85A8" }}>// %d = integer slot</span>{"\n"}
+        <span style={{ color: "#00D9C0" }}>printf</span>(<span style={{ color: "#FFB800" }}>&quot;Price: %.2f\n&quot;</span>, 4.99); <span style={{ color: "#7B85A8" }}>// %f = decimal slot</span>
+      </pre>
 
-          {/* Escape sequences block */}
-          <section className="glass-panel p-4 rounded-xl space-y-4">
-            <div className="space-y-1">
-              <h4 className="text-xs font-mono font-bold text-tertiary uppercase">Alignment Escape Codes</h4>
-              <p className="text-xs text-on-surface-variant leading-relaxed">
-                Special formatting codes prefixed by a backslash `\` act like invisible keyboard actions (like pressing &apos;Enter&apos; or &apos;Tab&apos;) inside your text:
-              </p>
-              <ul className="list-disc list-inside text-xs text-on-surface-variant space-y-1 pl-2 font-mono">
-                <li><span className="text-on-surface font-bold">\n</span> — Newline (presses &apos;Enter&apos; to push text down to the next line)</li>
-                <li><span className="text-on-surface font-bold">\t</span> — Tab (presses &apos;Tab&apos; to make a wide horizontal space gap)</li>
-              </ul>
-            </div>
+      {/* Concept lock */}
+      <div
+        style={{
+          marginTop: 12,
+          padding: "10px 14px",
+          background: "#00D9C011",
+          border: "1px solid #00D9C055",
+          borderRadius: 8,
+          fontSize: 11,
+        }}
+      >
+        <strong style={{ color: "#00D9C0" }}>Concept Lock:</strong>{" "}
+        <span style={{ color: "#E9EDF8" }}>
+          printf sends text to the screen. %d = int, %f = float, %s = text, %c = char, \n = new line.
+        </span>
+        <br />
+        <span style={{ color: "#FF5F6E" }}>⚠ Gotcha:</span>{" "}
+        <span style={{ color: "#7B85A8" }}>
+          Forgetting \n → next output appears on same line — outputs collide!
+        </span>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-              {/* Code */}
-              <div className="glass-panel rounded-xl overflow-hidden flex flex-col justify-between border border-white/5">
-                <div className="bg-surface-container-high px-3 py-1.5 text-[10px] font-mono text-on-surface-variant">
-                  main.c
-                </div>
-                <div className="p-4 bg-surface-container-low font-code-md text-xs space-y-1.5 flex-1 flex flex-col justify-center">
-                  <div>printf(&quot;Name:\t%s\nAge:\t%d\n&quot;, &quot;Alice&quot;, 20);</div>
-                  <button
-                    onClick={handleRunPrintfDemo}
-                    className="mt-3 py-1.5 bg-tertiary-container text-on-tertiary-container font-bold rounded text-xs active:scale-95 transition-all cursor-pointer select-none text-center"
-                  >
-                    RUN DEMO CODE
-                  </button>
-                </div>
-              </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+        <button
+          onClick={onNext}
+          style={{
+            background: "#00D9C0",
+            color: "#0D1117",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 20px",
+            fontWeight: "bold",
+            fontSize: 12,
+            cursor: "pointer",
+            fontFamily: "monospace",
+          }}
+        >
+          NEXT: scanf Input Collector →
+        </button>
+      </div>
+    </div>
+  );
+}
 
-              {/* Terminal */}
-              <div className="glass-panel rounded-xl overflow-hidden flex flex-col justify-between border border-white/5">
-                <div className="bg-surface-container-high px-3 py-1.5 text-[10px] font-mono text-on-surface-variant">
-                  SCREEN OUTPUT
-                </div>
-                <div className="p-4 bg-surface-container-lowest font-code-md text-xs text-primary-fixed-dim flex-1 flex flex-col justify-center">
-                  {showConsole1 ? (
-                    <div className="space-y-1">
-                      <div className="flex">
-                        <span className="w-16">Name:</span>
-                        <span className="text-on-surface">Alice</span>
-                      </div>
-                      <div className="flex">
-                        <span className="w-16">Age:</span>
-                        <span className="text-on-surface">20</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-on-surface-variant">Awaiting execution...</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
+// ── Sub-step 1: scanf Input Collector ───────────────────────────────────────
 
-          {/* Next step button */}
-          <div className="flex justify-end pt-2">
-            <button
-              onClick={() => setSubStep(1)}
-              className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
-            >
-              NEXT: LISTENING EAR &amp; BUG 👂
-            </button>
-          </div>
+function FunnelSVG({ x, y }: { x: number; y: number }) {
+  return (
+    <g>
+      {/* Funnel body */}
+      <polygon
+        points={`${x},${y} ${x + 60},${y} ${x + 40},${y + 50} ${x + 20},${y + 50}`}
+        fill="#FFB80033"
+        stroke="#FFB800"
+        strokeWidth={1.5}
+      />
+      {/* Spout */}
+      <rect x={x + 20} y={y + 50} width={20} height={16} fill="#FFB80055" stroke="#FFB800" strokeWidth={1} />
+    </g>
+  );
+}
 
-        </div>
-      )}
+interface ScanDemoProps {
+  label: string;
+  placeholder: string;
+  code: string;
+  highlight: string;
+  highlightNote: string;
+  isString?: boolean;
+}
 
-      {/* SUB-STEP 2: INPUT (scanf) & ADDRESS BUG GAME */}
-      {subStep === 1 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          
-          <section className="glass-panel p-4 rounded-xl space-y-2.5">
-            <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">input</span>
-              Listening Ear &amp; Mailing Address — scanf &amp; &amp; 👂
-            </h3>
-            <p className="text-xs text-on-surface-variant leading-relaxed">
-              We read keyboard entries using the **`scanf`** listening ear! 
-              However, the ear needs to know *where* to store the typed values.
-            </p>
-            <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-xs text-on-surface-variant/90 leading-relaxed font-sans">
-              <span className="text-secondary font-bold font-mono">The &amp; Address Symbol:</span>
-              <br />Think of the **`&amp;`** symbol as the **mailing address** of the toy box in memory. 
-              Writing <code className="text-primary-fixed-dim bg-white/5 px-1 rounded">&amp;age</code> tells `scanf` the exact playroom coordinates of the toy box, so it can drop the typed numbers directly inside it! If you don&apos;t give the address, the computer gets lost trying to deliver the toy and crashes with a **Segmentation Fault**!
-            </div>
-          </section>
+function ScanDemo({ label, placeholder, code, highlight, highlightNote, isString = false }: ScanDemoProps) {
+  const [inputVal, setInputVal] = useState("");
+  const [scanned, setScanned] = useState("");
+  const [animKey, setAnimKey] = useState(0);
+  const [dotX, setDotX] = useState(0);
 
-          {/* Debug challenge card */}
-          <section className="glass-panel p-5 rounded-xl space-y-4 border-error/25">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-error font-bold flex items-center gap-1">
-                <span className="material-symbols-outlined text-[15px]">bug_report</span>
-                Fix the Bug: Missing &amp; in scanf
-              </span>
-              {hasFixedBug && (
-                <button
-                  onClick={handleResetBug}
-                  className="text-[10px] text-tertiary hover:underline cursor-pointer"
-                >
-                  Reset Challenge
-                </button>
-              )}
-            </div>
+  const handleScan = () => {
+    if (!inputVal) return;
+    setScanned("");
+    setAnimKey((k) => k + 1);
+    setDotX(0);
+    // animate dot
+    let x = 0;
+    const interval = setInterval(() => {
+      x += 8;
+      setDotX(x);
+      if (x >= 110) {
+        clearInterval(interval);
+        setScanned(inputVal);
+      }
+    }, 40);
+  };
 
-            <div className="space-y-2">
-              <span className="text-[10px] font-mono text-on-surface-variant uppercase">main.c</span>
-              <div className="p-4 bg-surface-container-low font-code-md text-xs space-y-2 rounded-lg border border-white/5">
-                <div><span className="text-secondary font-bold">int</span> age;</div>
-                <div>printf(&quot;Enter age: &quot;);</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-on-surface">{bugCode}</span>
-                  {!hasFixedBug && (
-                    <button
-                      onClick={handleFixBug}
-                      className="px-2.5 py-1 bg-error/20 border border-error/50 hover:bg-error/35 text-error rounded text-[9px] font-mono font-bold transition-all active:scale-95 cursor-pointer animate-pulse"
-                    >
-                      FIX COMPILER BUG
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+  return (
+    <div
+      style={{
+        background: "rgba(24,29,46,0.9)",
+        border: "1px solid #2a3050",
+        borderRadius: 10,
+        padding: 14,
+        marginBottom: 12,
+      }}
+    >
+      <div style={{ color: "#E9EDF8", fontWeight: "bold", fontSize: 12, marginBottom: 10 }}>
+        {label}
+      </div>
 
-            {/* Run controls and Terminal */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-              <div className="flex flex-col justify-center">
-                <button
-                  disabled={isCompiling}
-                  onClick={handleRunBugProgram}
-                  className="py-2.5 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <span className="material-symbols-outlined text-[16px]">play_arrow</span>
-                  RUN COMPILER
-                </button>
-              </div>
+      {/* SVG scene */}
+      <div style={{ background: "#0D1117", borderRadius: 8, padding: 4, marginBottom: 10 }}>
+        <svg viewBox="0 0 380 80" style={{ width: "100%", display: "block" }}>
+          {/* Keyboard */}
+          <KeyboardSVG x={10} y={10} />
 
-              {/* Console log feedback */}
-              <div className={`p-3 rounded-lg border text-[11px] font-mono leading-relaxed whitespace-pre-wrap ${
-                isCompiling
-                  ? "bg-surface-container-low border-white/5 text-primary-fixed-dim"
-                  : debugLog.includes("FAULT")
-                  ? "bg-error/10 border-error/25 text-error animate-shake"
-                  : hasFixedBug
-                  ? "bg-primary/10 border-primary/25 text-primary-fixed-dim"
-                  : "bg-surface-container-lowest border-white/5 text-on-surface-variant"
-              }`}>
-                {debugLog}
-              </div>
-            </div>
-          </section>
+          {/* Funnel */}
+          <FunnelSVG x={160} y={8} />
 
-          {/* Next step button */}
-          <div className="flex justify-end pt-2">
-            <button
-              disabled={!hasFixedBug}
-              onClick={() => setSubStep(2)}
-              className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                hasFixedBug
-                  ? "bg-primary text-on-primary hover:bg-primary-container code-glow active:scale-95"
-                  : "bg-surface-container-high text-on-surface-variant/40 cursor-not-allowed"
-              }`}
-            >
-              NEXT: SPECIFIER CHEMISTRY 🧪
-            </button>
-          </div>
+          {/* Variable box */}
+          <rect x={280} y={20} width={80} height={40} rx={6} fill="#FFB80011" stroke="#FFB800" strokeWidth={1.5} />
+          <text x={320} y={35} textAnchor="middle" fontSize={8} fill="#FFB800" fontFamily="monospace">
+            variable
+          </text>
+          <text x={320} y={50} textAnchor="middle" fontSize={11} fill="#E9EDF8" fontFamily="monospace">
+            {scanned || "?"}
+          </text>
 
-        </div>
-      )}
-
-      {/* SUB-STEP 3: SPECIFIER CHEMISTRY GAME */}
-      {subStep === 2 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          
-          <FormatChemistry onComplete={() => setChemistryCompleted(true)} />
-
-          {chemistryCompleted && (
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setSubStep(3)}
-                className="px-5 py-2 bg-primary text-on-primary font-bold rounded-lg text-xs hover:bg-primary-container code-glow transition-all active:scale-95 cursor-pointer"
-              >
-                NEXT: CODE-A-ROBOT 🤖
-              </button>
-            </div>
+          {/* Animated dot */}
+          {animKey > 0 && dotX < 110 && (
+            <circle key={animKey} cx={130 + dotX} cy={45} r={5} fill="#FFB800" opacity={0.9} />
           )}
 
-        </div>
-      )}
-
-      {/* SUB-STEP 4: CODE-A-ROBOT SIMULATION */}
-      {subStep === 3 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          
-          <RobotSim onComplete={() => setRobotCompleted(true)} />
-
-          {robotCompleted && (
-            <div className="flex justify-end pt-2">
-              <button
-                disabled={hasCompleted}
-                onClick={handleCompleteSection}
-                className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                  hasCompleted
-                    ? "bg-primary/10 text-primary-fixed-dim border border-primary/30"
-                    : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                }`}
-              >
-                {hasCompleted ? (
-                  <>
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
-                    SECTION COMPLETED
-                  </>
-                ) : (
-                  "COMPLETE & EARN 10 XP"
-                )}
-              </button>
-            </div>
+          {/* & symbol highlight for non-string */}
+          {!isString && (
+            <>
+              <text x={255} y={72} textAnchor="middle" fontSize={14} fill="#FFB800" fontFamily="monospace" fontWeight="bold">&amp;</text>
+              <text x={255} y={78} textAnchor="middle" fontSize={6} fill="#7B85A8" fontFamily="monospace">put it HERE</text>
+              <line x1={263} y1={68} x2={280} y2={55} stroke="#FFB800" strokeWidth={1} strokeDasharray="2 2" />
+            </>
           )}
+        </svg>
+      </div>
 
+      {/* Input row */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+        <input
+          placeholder={placeholder}
+          value={inputVal}
+          onChange={(e) => setInputVal(e.target.value)}
+          style={{
+            flex: 1,
+            background: "#0D1117",
+            border: "1px solid #2a3050",
+            borderRadius: 6,
+            padding: "5px 8px",
+            color: "#E9EDF8",
+            fontFamily: "monospace",
+            fontSize: 12,
+          }}
+        />
+        <button
+          onClick={handleScan}
+          style={{
+            background: "#FFB800",
+            color: "#0D1117",
+            border: "none",
+            borderRadius: 6,
+            padding: "6px 12px",
+            fontWeight: "bold",
+            fontSize: 11,
+            cursor: "pointer",
+            fontFamily: "monospace",
+          }}
+        >
+          Scan!
+        </button>
+      </div>
+
+      {/* Code */}
+      <pre
+        style={{
+          background: "#0D1117",
+          borderRadius: 6,
+          padding: 8,
+          fontSize: 11,
+          color: "#E9EDF8",
+          margin: 0,
+          overflowX: "auto",
+        }}
+      >
+        {code.split(highlight).map((part, i, arr) =>
+          i < arr.length - 1 ? (
+            <React.Fragment key={i}>
+              {part}
+              <span style={{ color: "#FFB800", fontWeight: "bold" }}>{highlight}</span>
+            </React.Fragment>
+          ) : (
+            part
+          )
+        )}
+      </pre>
+
+      {!isString && (
+        <div
+          style={{
+            marginTop: 8,
+            padding: "6px 10px",
+            background: "#FFB80011",
+            border: "1px solid #FFB80044",
+            borderRadius: 6,
+            fontSize: 11,
+            color: "#E9EDF8",
+          }}
+        >
+          <span style={{ color: "#FFB800", fontWeight: "bold", fontSize: 16 }}>&amp;</span>{" "}
+          {highlightNote}
         </div>
       )}
+    </div>
+  );
+}
 
+function ScanfCollector({ onComplete }: { onComplete: (xp: number) => void }) {
+  return (
+    <div style={{ fontFamily: "monospace" }}>
+      <h3 style={{ color: "#00D9C0", fontSize: 14, marginBottom: 6 }}>scanf: The Input Collector</h3>
+      <p style={{ color: "#7B85A8", fontSize: 12, marginBottom: 12 }}>
+        scanf reads from the keyboard and stores the value into a variable.
+      </p>
+
+      <ScanDemo
+        label="Demo 1 — Scan a name (string)"
+        placeholder="Type your name..."
+        code={`scanf("%s", name);`}
+        highlight="%s"
+        highlightNote=""
+        isString={true}
+      />
+
+      <ScanDemo
+        label="Demo 2 — Scan a number (int)"
+        placeholder="Type a number..."
+        code={`scanf("%d", &age);`}
+        highlight="&"
+        highlightNote='tells C WHERE in memory to put the value. Always use & before variable name for numbers!'
+        isString={false}
+      />
+
+      {/* Concept lock */}
+      <div
+        style={{
+          padding: "10px 14px",
+          background: "#00D9C011",
+          border: "1px solid #00D9C055",
+          borderRadius: 8,
+          fontSize: 11,
+          marginBottom: 12,
+        }}
+      >
+        <strong style={{ color: "#00D9C0" }}>Concept Lock:</strong>{" "}
+        <span style={{ color: "#E9EDF8" }}>
+          scanf reads from keyboard. For numbers, always use & before the variable name. For char[] (strings), no & needed.
+        </span>
+        <br />
+        <span style={{ color: "#FF5F6E" }}>⚠ Gotcha:</span>{" "}
+        <span style={{ color: "#7B85A8" }}>
+          scanf(&quot;%s&quot;, name) stops at a space. For full sentences use fgets(name, size, stdin).
+        </span>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button
+          onClick={() => onComplete(45)}
+          style={{
+            background: "#00D9C0",
+            color: "#0D1117",
+            border: "none",
+            borderRadius: 8,
+            padding: "10px 24px",
+            fontWeight: "bold",
+            fontSize: 13,
+            cursor: "pointer",
+            fontFamily: "monospace",
+          }}
+        >
+          Complete! Claim 45 XP 🎉
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Root component ────────────────────────────────────────────────────────────
+
+export default function SectionIO({ onComplete }: SectionIOProps) {
+  const [subStep, setSubStep] = useState(0);
+
+  const steps = ["printf Output", "scanf Input"];
+
+  return (
+    <div style={{ fontFamily: "monospace", color: "#E9EDF8" }}>
+      {/* Step tabs */}
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          marginBottom: 20,
+          background: "#0D1117",
+          borderRadius: 8,
+          padding: 6,
+        }}
+      >
+        {steps.map((label, i) => (
+          <button
+            key={i}
+            onClick={() => { if (i <= subStep) setSubStep(i); }}
+            style={{
+              flex: 1,
+              padding: "6px 4px",
+              borderRadius: 6,
+              border: "none",
+              background: subStep === i ? "#00D9C0" : "transparent",
+              color: subStep === i ? "#0D1117" : "#7B85A8",
+              fontWeight: "bold",
+              fontSize: 10,
+              cursor: i <= subStep ? "pointer" : "default",
+              fontFamily: "monospace",
+              opacity: i > subStep ? 0.4 : 1,
+            }}
+          >
+            {i + 1}. {label}
+          </button>
+        ))}
+      </div>
+
+      {subStep === 0 && <PrintfMachine onNext={() => setSubStep(1)} />}
+      {subStep === 1 && <ScanfCollector onComplete={onComplete} />}
     </div>
   );
 }

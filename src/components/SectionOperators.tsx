@@ -1,1222 +1,883 @@
 "use client";
+import React, { useState } from "react";
 
-import React, { useState, useEffect } from "react";
-
-interface SectionOperatorsProps {
+interface Props {
   sectionIndex: number;
-  onComplete: (xpAward: number) => void;
+  onComplete: (xp: number) => void;
 }
 
-export default function SectionOperators({ sectionIndex, onComplete }: SectionOperatorsProps) {
-  const [hasCompleted, setHasCompleted] = useState<boolean>(false);
+// ── Section 0 ── Arithmetic: The Calculation Machine ──────────────────────────
+function Section0({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [a, setA] = useState(6);
+  const [b, setB] = useState(3);
+  const [op, setOp] = useState<"+" | "-" | "*" | "/">("+");
+  const [animating, setAnimating] = useState(false);
+  const [done, setDone] = useState(false);
 
-  // ==========================================
-  // SECTION 0: ARITHMETIC (Pizza Slicer Lab)
-  // ==========================================
-  const pizzaQuestions = [
-    { 
-      question: "22 slices of pizza are shared among 5 people. How many leftover slices are there?", 
-      expr: "22 % 5", 
-      answer: 2, 
-      explanation: "22 % 5 = 2. The remainder is 2 slices!", 
-      code: "int slices = 22;\nint people = 5;\nint leftovers = slices % people; // Solve leftovers" 
-    },
-    { 
-      question: "You have 3 pizzas with 8 slices each. How many total slices do you have?", 
-      expr: "3 * 8", 
-      answer: 24, 
-      explanation: "3 * 8 = 24 total slices.", 
-      code: "int pizzas = 3;\nint slices_per_pizza = 8;\nint total_slices = pizzas * slices_per_pizza;" 
-    },
-    { 
-      question: "15 slices split equally among 4 friends. How many leftover slices are there?", 
-      expr: "15 % 4", 
-      answer: 3, 
-      explanation: "15 % 4 = 3 leftover slices.", 
-      code: "int slices = 15;\nint friends = 4;\nint leftovers = slices % friends;" 
-    },
-    { 
-      question: "You ordered 2 pizzas with 6 slices each, then ate 5 slices. How many remain?", 
-      expr: "2 * 6 - 5", 
-      answer: 7, 
-      explanation: "(2 * 6) - 5 = 7 slices remaining.", 
-      code: "int pizzas = 2;\nint slices_per_pizza = 6;\nint eaten = 5;\nint remaining = (pizzas * slices_per_pizza) - eaten;" 
-    },
-  ];
-  const [pizzaIdx, setPizzaIdx] = useState<number>(0);
-  const [pizzaInput, setPizzaInput] = useState<string>("");
-  const [pizzaFeedback, setPizzaFeedback] = useState<string | null>(null);
-  const [pizzaCorrect, setPizzaCorrect] = useState<boolean>(false);
-  const [pizzaScore, setPizzaScore] = useState<number>(0);
-  const [pizzaSolved, setPizzaSolved] = useState<boolean>(false);
+  const result = op === "+" ? a + b : op === "-" ? a - b : op === "*" ? a * b : b !== 0 ? Math.floor(a / b) : 0;
+  const ops: Array<"+" | "-" | "*" | "/"> = ["+", "-", "*", "/"];
+  const opColors: Record<string, string> = { "+": "#00D9C0", "-": "#FF5F6E", "*": "#FFB800", "/": "#A78BFA" };
 
-  const currentPizza = pizzaQuestions[pizzaIdx];
-
-  const handlePizzaSubmit = () => {
-    const val = parseInt(pizzaInput);
-    if (val === currentPizza.answer) {
-      setPizzaCorrect(true);
-      setPizzaFeedback(`✅ ${currentPizza.explanation}`);
-      const next = pizzaScore + 1;
-      setPizzaScore(next);
-      if (next >= pizzaQuestions.length) {
-        setPizzaSolved(true);
-      }
-    } else {
-      setPizzaCorrect(false);
-      setPizzaFeedback(`❌ Not quite! Hint: Think about what ${currentPizza.expr} means.`);
-    }
-  };
-
-  const handlePizzaNext = () => {
-    setPizzaIdx(prev => prev + 1);
-    setPizzaInput("");
-    setPizzaFeedback(null);
-    setPizzaCorrect(false);
-  };
-
-  // ==========================================
-  // SECTION 1: ASSIGNMENT (Shorthand Transformer)
-  // ==========================================
-  const shorthandQuestions = [
-    { longForm: "x = x + 5",  options: ["x += 5", "x -= 5", "x *= 5", "x++"],   correct: "x += 5"  },
-    { longForm: "x = x - 3",  options: ["x += 3", "x -= 3", "x /= 3", "x--"],   correct: "x -= 3"  },
-    { longForm: "x = x * 4",  options: ["x *= 4", "x += 4", "x /= 4", "x %= 4"], correct: "x *= 4"  },
-    { longForm: "x = x / 2",  options: ["x *= 2", "x /= 2", "x -= 2", "x += 2"], correct: "x /= 2"  },
-    { longForm: "x = x % 7",  options: ["x += 7", "x -= 7", "x /= 7", "x %= 7"], correct: "x %= 7"  },
-  ];
-  const [shIdx, setShIdx] = useState<number>(0);
-  const [shSelected, setShSelected] = useState<string | null>(null);
-  const [shScore, setShScore] = useState<number>(0);
-  const [shSolved, setShSolved] = useState<boolean>(false);
-  const [shFeedback, setShFeedback] = useState<string | null>(null);
-
-  const currentSh = shorthandQuestions[shIdx];
-
-  const handleShorthandPick = (option: string) => {
-    if (shSelected) return;
-    setShSelected(option);
-    if (option === currentSh.correct) {
-      setShFeedback(`✅ Correct! "${currentSh.longForm}" shortens to "${currentSh.correct}"`);
-      const next = shScore + 1;
-      setShScore(next);
-      if (next >= shorthandQuestions.length) setShSolved(true);
-    } else {
-      setShFeedback(`❌ Not quite! The correct shorthand is "${currentSh.correct}"`);
-    }
-    setTimeout(() => {
-      if (shIdx < shorthandQuestions.length - 1) {
-        setShIdx(prev => prev + 1);
-        setShSelected(null);
-        setShFeedback(null);
-      }
-    }, 1400);
-  };
-
-  // ==========================================
-  // SECTION 2: INCREMENT/DECREMENT (Counter Machine)
-  // ==========================================
-  const counterQuestions = [
-    { label: "x = 5; printf(\"%d\", x++);", printedVal: 5, finalVal: 6, note: "POST-increment: value is used FIRST (prints 5), THEN x becomes 6." },
-    { label: "x = 5; printf(\"%d\", ++x);", printedVal: 6, finalVal: 6, note: "PRE-increment: x becomes 6 FIRST, THEN that value is printed." },
-    { label: "x = 8; printf(\"%d\", x--);", printedVal: 8, finalVal: 7, note: "POST-decrement: value is used FIRST (prints 8), THEN x becomes 7." },
-    { label: "x = 8; printf(\"%d\", --x);", printedVal: 7, finalVal: 7, note: "PRE-decrement: x becomes 7 FIRST, THEN that value is printed." },
-  ];
-  const [ctrIdx, setCtrIdx] = useState<number>(0);
-  const [ctrSelected, setCtrSelected] = useState<number | null>(null);
-  const [ctrScore, setCtrScore] = useState<number>(0);
-  const [ctrSolved, setCtrSolved] = useState<boolean>(false);
-  const [ctrFeedback, setCtrFeedback] = useState<string | null>(null);
-  const [ctrDisplayVal, setCtrDisplayVal] = useState<number | null>(null);
-
-  const currentCtr = counterQuestions[ctrIdx];
-
-  const handleCtrPick = (val: number) => {
-    if (ctrSelected !== null) return;
-    setCtrSelected(val);
-    setCtrDisplayVal(val);
-    if (val === currentCtr.printedVal) {
-      setCtrFeedback(`✅ Correct! ${currentCtr.note}`);
-      const next = ctrScore + 1;
-      setCtrScore(next);
-      if (next >= counterQuestions.length) setCtrSolved(true);
-    } else {
-      setCtrFeedback(`❌ Wrong! The printed value is ${currentCtr.printedVal}. ${currentCtr.note}`);
-    }
-    setTimeout(() => {
-      if (ctrIdx < counterQuestions.length - 1) {
-        setCtrIdx(prev => prev + 1);
-        setCtrSelected(null);
-        setCtrFeedback(null);
-        setCtrDisplayVal(null);
-      }
-    }, 1800);
-  };
-
-  // ==========================================
-  // SECTION 3: RELATIONAL (Traffic Light Gate)
-  // ==========================================
-  const trafficQuestions = [
-    { expr: "5 == 5",   correct: true,  reason: "TRUE — 5 equals 5, so the expression is 1." },
-    { expr: "10 < 3",   correct: false, reason: "FALSE — 10 is not less than 3. Result is 0." },
-    { expr: "8 != 8",   correct: false, reason: "FALSE — 8 equals 8, so != returns 0." },
-    { expr: "15 >= 12", correct: true,  reason: "TRUE — 15 is greater than or equal to 12. Result is 1." },
-    { expr: "7 > 7",    correct: false, reason: "FALSE — 7 is not strictly greater than 7. Use >= for that." },
-    { expr: "4 <= 9",   correct: true,  reason: "TRUE — 4 is less than or equal to 9. Result is 1." },
-  ];
-  const [trafficIdx, setTrafficIdx] = useState<number>(0);
-  const [trafficScore, setTrafficScore] = useState<number>(0);
-  const [trafficLight, setTrafficLight] = useState<"idle" | "green" | "red">("idle");
-  const [trafficFeedback, setTrafficFeedback] = useState<string | null>(null);
-  const [trafficCarPos, setTrafficCarPos] = useState<number>(0);
-  const [trafficSolved, setTrafficSolved] = useState<boolean>(false);
-  const [trafficAnswered, setTrafficAnswered] = useState<boolean>(false);
-
-  const currentTraffic = trafficQuestions[trafficIdx];
-
-  const handleTrafficPick = (pick: boolean) => {
-    if (trafficAnswered || trafficSolved) return;
-    setTrafficAnswered(true);
-    const isCorrect = pick === currentTraffic.correct;
-
-    if (isCorrect) {
-      setTrafficLight(currentTraffic.correct ? "green" : "red");
-      setTrafficFeedback(`✅ ${currentTraffic.reason}`);
-      if (currentTraffic.correct) setTrafficCarPos(prev => prev + 140);
-      const nextScore = trafficScore + 1;
-      setTrafficScore(nextScore);
-      setTimeout(() => {
-        setTrafficLight("idle");
-        setTrafficFeedback(null);
-        setTrafficAnswered(false);
-        if (nextScore >= trafficQuestions.length) {
-          setTrafficSolved(true);
-        } else {
-          setTrafficIdx(prev => prev + 1);
-        }
-      }, 1500);
-    } else {
-      setTrafficLight("red");
-      setTrafficFeedback(`❌ Wrong! ${currentTraffic.reason}`);
-      setTimeout(() => {
-        setTrafficLight("idle");
-        setTrafficFeedback(null);
-        setTrafficAnswered(false);
-      }, 1600);
-    }
-  };
-
-
-
-
-  // ==========================================
-  // SECTION 4: LOGICAL (Movie Ticket Gate)
-  // ==========================================
-  const movieScenes = [
-    {
-      title: "Night Action Movie",
-      condition: "age >= 18 && hasTicket",
-      evaluate: (age: number, hasTicket: boolean) => age >= 18 && hasTicket,
-      hint: "AND (&&): BOTH conditions must be true to enter.",
-    },
-    {
-      title: "Family Comedy",
-      condition: "age >= 5 || hasTicket",
-      evaluate: (age: number, hasTicket: boolean) => age >= 5 || hasTicket,
-      hint: "OR (||): Either condition being true is enough to enter.",
-    },
-    {
-      title: "VIP Screening",
-      condition: "!hasTicket === false",
-      evaluate: (_age: number, hasTicket: boolean) => !hasTicket === false,
-      hint: "NOT (!): Flips true to false and false to true. !hasTicket is false when hasTicket is true.",
-    },
-  ];
-  const [movieIdx, setMovieIdx] = useState<number>(0);
-  const [movieAge, setMovieAge] = useState<number>(16);
-  const [movieTicket, setMovieTicket] = useState<boolean>(false);
-  const [movieScore, setMovieScore] = useState<number>(0);
-  const [movieSolved, setMovieSolved] = useState<boolean>(false);
-  const [movieFeedback, setMovieFeedback] = useState<string | null>(null);
-  const [movieAnswered, setMovieAnswered] = useState<boolean>(false);
-
-  const currentMovie = movieScenes[movieIdx];
-  const movieResult = currentMovie.evaluate(movieAge, movieTicket);
-
-  const handleMovieSubmit = () => {
-    if (movieAnswered) return;
-    setMovieAnswered(true);
-    setMovieFeedback(`${ movieResult ? "✅ Gate OPEN!" : "🚫 Gate LOCKED."} ${currentMovie.hint}`);
-    const next = movieScore + 1;
-    setMovieScore(next);
-    setTimeout(() => {
-      setMovieAnswered(false);
-      setMovieFeedback(null);
-      setMovieAge(16);
-      setMovieTicket(false);
-      if (next >= movieScenes.length) {
-        setMovieSolved(true);
-      } else {
-        setMovieIdx(prev => prev + 1);
-      }
-    }, 2000);
-  };
-
-  // ==========================================
-  // SECTION 5: PRECEDENCE (Bubble Popper)
-  // ==========================================
-  const [precLevel, setPrecLevel] = useState<number>(0); // 0 = first level, 1 = parentheses level
-  const [precFeedback, setPrecFeedback] = useState<string>("Click the operator bubble that evaluates first!");
-  const [precSolved, setPrecSolved] = useState<boolean>(false);
-  const [level0Solved, setLevel0Solved] = useState<boolean>(false);
-
-  const handlePopBubble = (operator: "add" | "mul" | "paren") => {
-    if (precLevel === 0) {
-      if (operator === "mul") {
-        setLevel0Solved(true);
-        setPrecFeedback("💥 Pop! Multiplication happens before addition. Expression becomes: 4 + 10 = 14!");
-      } else {
-        setPrecFeedback("❌ Bzz! Multiplication (*) takes precedence over addition (+). Try again.");
-      }
-    } else {
-      if (operator === "paren") {
-        setPrecSolved(true);
-        setPrecFeedback("💥 Pop! Parentheses ( ) override everything! Expression becomes: 5 * 4 = 20!");
-      } else {
-        setPrecFeedback("❌ Bzz! Parentheses ( ) have the absolute highest priority. They must evaluate first!");
-      }
-    }
-  };
-
-  // ==========================================
-  // SECTION 6: CAPSTONE (Robot Bridge)
-  // ==========================================
-  const [capNumber, setCapNumber] = useState<number>(5);
-  const [capSolved, setCapSolved] = useState<boolean>(false);
-  const [capFeedback, setCapFeedback] = useState<string>("Find the canister size to lower the bridge shields.");
-
-  const capEven = capNumber % 2 === 0;
-  const capInRange = capNumber >= 10 && capNumber <= 20;
-  const capValid = capInRange && !capEven;
-
-  useEffect(() => {
-    if (sectionIndex === 6) {
-      if (capValid) {
-        setCapSolved(true);
-        setCapFeedback("🎉 Shield bypassed! Canister value satisfies range and odd conditions. Cross the bridge!");
-      } else {
-        setCapSolved(false);
-        if (!capInRange) {
-          setCapFeedback("Tip: Canister size must be between 10 and 20.");
-        } else {
-          setCapFeedback("Tip: Canister must be an ODD size (modulus rem != 0).");
-        }
-      }
-    }
-  }, [capNumber, capValid, capInRange, sectionIndex]);
-
-  // Complete general section
-  const handleSectionComplete = () => {
-    if (hasCompleted) return;
-    setHasCompleted(true);
-    const xpAward = sectionIndex === 6 ? 20 : 10;
-    onComplete(xpAward);
-  };
-
-  // Reset completion locks on section change
-  useEffect(() => {
-    setHasCompleted(false);
-  }, [sectionIndex]);
+  function handleOp(o: "+" | "-" | "*" | "/") {
+    setOp(o);
+    setAnimating(true);
+    setTimeout(() => setAnimating(false), 700);
+  }
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes fallIn { 0%{transform:translateY(-30px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+        @keyframes popOut { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+        .calc-btn { cursor:pointer; transition: filter 0.15s; }
+        .calc-btn:hover { filter: brightness(1.3); }
+        .fall-anim { animation: fallIn 0.5s ease-out; }
+        .pop-anim { animation: popOut 0.6s ease-out; }
+      `}</style>
 
-      {/* ========================================== */}
-      {/* SECTION 0: ARITHMETIC OPERATORS (Pizza Lab) */}
-      {/* ========================================== */}
-      {sectionIndex === 0 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          <section className="glass-panel p-4 rounded-xl space-y-3">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-primary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">calculate</span>
-                Arithmetic Operators: +, -, *, /, %
-              </h3>
-              <p className="text-body-md text-on-surface-variant leading-relaxed">
-                C performs basic mathematical calculations using operators, just like you do in school!
-              </p>
-            </div>
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0, lineHeight: 1.6 }}>
+        Arithmetic operators work just like math. Pick an operator to see the <strong style={{ color: "#00D9C0" }}>Calculation Machine</strong> in action!
+      </p>
 
-            {/* Operator glossary grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-white/10">
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">+</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Addition:</strong> Adds toys to a pile!</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">-</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Subtraction:</strong> Takes toys away from the pile.</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">*</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Multiplication:</strong> Clones toys into multiple piles!</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left col-span-1">
-                <div className="text-primary font-bold text-xs mb-0.5">/</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Division:</strong> Shares toys equally, throwing away any leftovers! (5/2 = 2).</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left col-span-2 sm:col-span-1">
-                <div className="text-secondary font-bold text-xs mb-0.5">%</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Modulus:</strong> Finds the leftover candy that cannot be shared equally! (5%2 = 1).</div>
-              </div>
-            </div>
-          </section>
+      {/* Operator buttons */}
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        {ops.map(o => (
+          <button
+            key={o}
+            onClick={() => handleOp(o)}
+            style={{
+              width: 52, height: 52, borderRadius: 12, border: "none",
+              background: op === o ? opColors[o] : "rgba(24,29,46,0.9)",
+              color: op === o ? "#0D1117" : opColors[o],
+              fontSize: 22, fontWeight: 800, cursor: "pointer",
+              boxShadow: op === o ? `0 0 16px ${opColors[o]}88` : "none",
+              transition: "all 0.2s",
+            }}
+          >{o}</button>
+        ))}
+      </div>
 
-          <section className="glass-panel p-5 rounded-xl space-y-4 border border-primary/20">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-primary font-bold">🍕 Pizza Slicer Lab</span>
-              <span className="text-primary-fixed-dim">Question: {pizzaScore + (pizzaSolved ? 0 : 1)} / {pizzaQuestions.length}</span>
-            </div>
+      {/* SVG Scene */}
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(0,217,192,0.2)" }}>
+        <svg viewBox="0 0 400 180" style={{ width: "100%", display: "block" }}>
+          {/* Machine body */}
+          <rect x="120" y="10" width="160" height="160" rx="14" fill="rgba(24,29,46,0.95)" stroke="#00D9C0" strokeWidth="2" />
 
-            {!pizzaSolved ? (
-              <div className="space-y-4">
-                {/* Pizza visual */}
-                <div className="flex justify-center">
-                  <div className="relative w-24 h-24">
-                    <div className="w-24 h-24 rounded-full bg-amber-500/30 border-4 border-amber-500/60 flex items-center justify-center text-4xl shadow-lg">
-                      🍕
-                    </div>
-                    <div className="absolute -top-1 -right-1 bg-primary text-on-primary text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-full">
-                      {currentPizza.expr}
-                    </div>
-                  </div>
-                </div>
+          {/* Input A */}
+          <rect x="130" y="22" width="60" height="32" rx="8" fill="#0D1117" stroke="#7B85A8" strokeWidth="1.5" />
+          <text x="160" y="43" textAnchor="middle" fill="#FFB800" fontSize="16" fontWeight="bold">{a}</text>
+          <text x="160" y="20" textAnchor="middle" fill="#7B85A8" fontSize="9">A</text>
 
-                {/* Question */}
-                <div className="bg-surface-container-low p-3 rounded-xl border border-white/5 text-xs text-on-surface leading-relaxed font-sans text-center">
-                  {currentPizza.question}
-                </div>
+          {/* Input B */}
+          <rect x="210" y="22" width="60" height="32" rx="8" fill="#0D1117" stroke="#7B85A8" strokeWidth="1.5" />
+          <text x="240" y="43" textAnchor="middle" fill="#FFB800" fontSize="16" fontWeight="bold">{b}</text>
+          <text x="240" y="20" textAnchor="middle" fill="#7B85A8" fontSize="9">B</text>
 
-                {/* C Code Box */}
-                <div className="bg-surface-container-lowest p-3 border border-white/10 rounded-xl font-mono text-[10px] sm:text-[11px] leading-relaxed text-primary-fixed-dim/95 max-w-full sm:max-w-md mx-auto shadow-inner relative overflow-x-auto">
-                  <div className="absolute top-2 right-2 text-[8px] text-outline-variant select-none">main.c</div>
-                  <pre className="whitespace-pre min-w-max p-1 text-left">{currentPizza.code}</pre>
-                </div>
+          {/* Operator badge */}
+          <rect x="183" y="24" width="34" height="30" rx="8" fill={opColors[op]} />
+          <text x="200" y="44" textAnchor="middle" fill="#0D1117" fontSize="18" fontWeight="900">{op}</text>
 
-                {/* Input */}
-                <div className="flex gap-2 w-full max-w-xs mx-auto">
-                  <input
-                    type="number"
-                    value={pizzaInput}
-                    onChange={e => { setPizzaInput(e.target.value); setPizzaFeedback(null); }}
-                    onKeyDown={e => e.key === "Enter" && handlePizzaSubmit()}
-                    placeholder="Your answer..."
-                    className="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2.5 text-xs font-mono text-on-surface focus:outline-none focus:border-primary w-full"
-                  />
-                  <button
-                    onClick={handlePizzaSubmit}
-                    disabled={pizzaInput === ""}
-                    className="px-4 py-2.5 bg-primary text-on-primary text-xs font-bold rounded-lg cursor-pointer active:scale-95 transition-all disabled:opacity-40"
-                  >
-                    CHECK
-                  </button>
-                </div>
+          {/* Funnel */}
+          <path d="M135,62 L200,100 L265,62" fill="none" stroke="#7B85A8" strokeWidth="2" />
+          <line x1="200" y1="100" x2="200" y2="120" stroke="#7B85A8" strokeWidth="2" />
 
-                {/* Feedback */}
-                {pizzaFeedback && (
-                  <div className={`text-xs font-mono text-center p-2 rounded-lg ${pizzaCorrect ? "text-primary bg-primary/10" : "text-error bg-error/10"}`}>
-                    {pizzaFeedback}
-                  </div>
-                )}
+          {/* Falling A and B animation */}
+          {animating && (
+            <>
+              <circle cx="165" cy="82" r="10" fill={opColors[op]} opacity="0.7" className="fall-anim" />
+              <circle cx="235" cy="82" r="10" fill={opColors[op]} opacity="0.7" className="fall-anim" />
+            </>
+          )}
 
-                {pizzaCorrect && pizzaIdx < pizzaQuestions.length - 1 && (
-                  <div className="flex justify-end">
-                    <button onClick={handlePizzaNext} className="px-4 py-1.5 bg-secondary text-on-secondary text-xs font-bold rounded-lg cursor-pointer active:scale-95 transition-all">
-                      NEXT SLICE ➜
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-3 py-2">
-                <span className="text-4xl">🏆</span>
-                <p className="text-primary font-bold text-sm font-mono animate-pulse">All pizzas sliced! Arithmetic mastered!</p>
-                <button
-                  disabled={hasCompleted}
-                  onClick={handleSectionComplete}
-                  className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 mx-auto ${
-                    hasCompleted ? "bg-primary/10 text-primary-fixed-dim border border-primary/30" : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                  }`}
-                >
-                  {hasCompleted ? "SECTION COMPLETED" : "COMPLETE & EARN 10 XP"}
-                </button>
-              </div>
-            )}
-          </section>
+          {/* Result display */}
+          <rect x="152" y="122" width="96" height="36" rx="10" fill="#0D1117" stroke="#00D9C0" strokeWidth="2" />
+          <text
+            x="200" y="146"
+            textAnchor="middle"
+            fill="#00D9C0"
+            fontSize="20"
+            fontWeight="900"
+            className={animating ? "pop-anim" : ""}
+          >{result}</text>
+
+          {/* Left slider - A */}
+          <text x="60" y="45" textAnchor="middle" fill="#7B85A8" fontSize="9">A value</text>
+          <rect x="20" y="50" width="80" height="6" rx="3" fill="#1a1f2e" />
+          <rect x="20" y="50" width={(a / 10) * 80} height="6" rx="3" fill="#FFB800" />
+          <circle cx={20 + (a / 10) * 80} cy="53" r="7" fill="#FFB800" stroke="#0D1117" strokeWidth="2" />
+
+          {/* Right slider - B */}
+          <text x="340" y="45" textAnchor="middle" fill="#7B85A8" fontSize="9">B value</text>
+          <rect x="300" y="50" width="80" height="6" rx="3" fill="#1a1f2e" />
+          <rect x="300" y="50" width={(b / 10) * 80} height="6" rx="3" fill="#A78BFA" />
+          <circle cx={300 + (b / 10) * 80} cy="53" r="7" fill="#A78BFA" stroke="#0D1117" strokeWidth="2" />
+
+          {/* Labels */}
+          <text x="60" y="160" textAnchor="middle" fill="#7B85A8" fontSize="9">drag → A</text>
+          <text x="340" y="160" textAnchor="middle" fill="#7B85A8" fontSize="9">drag → B</text>
+        </svg>
+      </div>
+
+      {/* Sliders */}
+      <div style={{ display: "flex", gap: 16 }}>
+        <div style={{ flex: 1 }}>
+          <label style={{ color: "#FFB800", fontSize: 12 }}>A = {a}</label>
+          <input type="range" min={1} max={10} value={a} onChange={e => setA(Number(e.target.value))}
+            style={{ width: "100%", accentColor: "#FFB800" }} />
         </div>
-      )}
-
-      {/* ========================================== */}
-      {/* SECTION 1: ASSIGNMENT (Shorthand Transformer) */}
-      {/* ========================================== */}
-      {sectionIndex === 1 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          <section className="glass-panel p-4 rounded-xl space-y-3">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-secondary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">border_color</span>
-                Assignment Operators: =, +=, -=, *=, /=, %=
-              </h3>
-              <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Assignment operators are **shorthand machines** to update the toy box value! Instead of writing <code className="text-secondary font-mono">x = x + 5</code>, C lets you write <code className="text-primary font-mono font-bold">x += 5</code>. Same result, less typing!
-              </p>
-            </div>
-
-            {/* Operator glossary grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Assignment:</strong> Drops a new toy directly into the toy box.</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">+=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Add-Assign:</strong> Adds toys to the box (x = x + y).</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">-=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Sub-Assign:</strong> Takes toys away from the box (x = x - y).</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">*=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Mul-Assign:</strong> Clones the toys inside the box (x = x * y).</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">/=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Div-Assign:</strong> Shares the toys inside the box (x = x / y).</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">%=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Mod-Assign:</strong> Puts only the leftover candy inside the box (x = x % y).</div>
-              </div>
-            </div>
-          </section>
-
-          <section className="glass-panel p-5 rounded-xl space-y-5 border border-secondary/20">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-secondary font-bold">⚡ Shorthand Transformer</span>
-              <span className="text-secondary-fixed">{shScore} / {shorthandQuestions.length} correct</span>
-            </div>
-
-            {!shSolved ? (
-              <div className="space-y-5">
-                {/* Long form display */}
-                <div className="flex flex-col items-center gap-2">
-                  <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Transform this long form:</p>
-                  <div className="px-6 py-3 bg-surface-container-lowest border-2 border-white/10 rounded-xl font-mono font-black text-xl text-on-surface shadow-inner">
-                    {currentSh.longForm}
-                  </div>
-                  <p className="text-[10px] font-mono text-on-surface-variant">Pick the matching shorthand:</p>
-                </div>
-
-                {/* Options grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  {currentSh.options.map(opt => (
-                    <button
-                      key={opt}
-                      disabled={!!shSelected}
-                      onClick={() => handleShorthandPick(opt)}
-                      className={`py-3 px-4 rounded-xl border-2 font-mono font-bold text-sm cursor-pointer transition-all active:scale-95 disabled:cursor-not-allowed ${
-                        shSelected === opt
-                          ? opt === currentSh.correct
-                            ? "bg-primary/20 border-primary text-primary-fixed-dim"
-                            : "bg-error/20 border-error text-error"
-                          : shSelected && opt === currentSh.correct
-                          ? "bg-primary/10 border-primary/50 text-primary-fixed-dim"
-                          : "bg-surface-container-high border-white/10 text-on-surface hover:border-secondary"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Feedback */}
-                {shFeedback && (
-                  <div className={`text-xs font-mono text-center p-2 rounded-lg ${
-                    shSelected === currentSh.correct ? "text-primary bg-primary/10" : "text-error bg-error/10"
-                  }`}>
-                    {shFeedback}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-3 py-2">
-                <span className="text-4xl">⚡</span>
-                <p className="text-secondary font-bold text-sm font-mono animate-pulse">All expressions transformed! Assignment operators mastered!</p>
-                <button
-                  disabled={hasCompleted}
-                  onClick={handleSectionComplete}
-                  className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 mx-auto ${
-                    hasCompleted ? "bg-primary/10 text-primary-fixed-dim border border-primary/30" : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                  }`}
-                >
-                  {hasCompleted ? "SECTION COMPLETED" : "COMPLETE & EARN 10 XP"}
-                </button>
-              </div>
-            )}
-          </section>
+        <div style={{ flex: 1 }}>
+          <label style={{ color: "#A78BFA", fontSize: 12 }}>B = {b}</label>
+          <input type="range" min={1} max={10} value={b} onChange={e => setB(Number(e.target.value))}
+            style={{ width: "100%", accentColor: "#A78BFA" }} />
         </div>
-      )}
+      </div>
 
-      {/* ========================================== */}
-      {/* SECTION 2: INCREMENT/DECREMENT (Counter Machine) */}
-      {/* ========================================== */}
-      {sectionIndex === 2 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          <section className="glass-panel p-4 rounded-xl space-y-3">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">exposure_plus_1</span>
-                Add-One Machine: ++, --
-              </h3>
-              <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Special machines to add or subtract exactly 1 toy from a toy box!
-              </p>
-            </div>
+      {/* Live code */}
+      <div style={{ background: "#0D1117", borderRadius: 10, padding: "10px 14px", border: "1px solid rgba(0,217,192,0.15)", fontFamily: "monospace", fontSize: 15 }}>
+        <span style={{ color: "#A78BFA" }}>int </span>
+        <span style={{ color: "#E9EDF8" }}>result = </span>
+        <span style={{ color: "#FFB800" }}>{a}</span>
+        <span style={{ color: opColors[op], fontWeight: 800 }}> {op} </span>
+        <span style={{ color: "#A78BFA" }}>{b}</span>
+        <span style={{ color: "#E9EDF8" }}>; </span>
+        <span style={{ color: "#7B85A8" }}>// = {result}</span>
+      </div>
 
-            {/* Operator glossary grid */}
-            <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-white/10">
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-tertiary font-bold text-xs mb-0.5">x++</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Post-Increment (Use then Add):</strong> The computer plays with the toy value FIRST, and then adds 1 to the box afterward.</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-tertiary font-bold text-xs mb-0.5">++x</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Pre-Increment (Add then Use):</strong> The computer adds 1 to the box FIRST, and then plays with the new value.</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-tertiary font-bold text-xs mb-0.5">x--</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Post-Decrement (Use then Sub):</strong> The computer plays with the toy value FIRST, and then subtracts 1 afterward.</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-tertiary font-bold text-xs mb-0.5">--x</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Pre-Decrement (Sub then Use):</strong> The computer subtracts 1 FIRST, and then plays with the new value.</div>
-              </div>
-            </div>
-          </section>
+      {/* Concept lock */}
+      <div style={{ borderLeft: "3px solid #A78BFA", paddingLeft: 12, color: "#E9EDF8", fontSize: 13 }}>
+        <strong style={{ color: "#A78BFA" }}>Concept Lock:</strong> Arithmetic operators work just like math:{" "}
+        <code style={{ color: "#00D9C0" }}>+</code> <code style={{ color: "#00D9C0" }}>-</code>{" "}
+        <code style={{ color: "#00D9C0" }}>*</code> <code style={{ color: "#00D9C0" }}>/</code>{" "}
+        <code style={{ color: "#00D9C0" }}>%</code> (remainder/modulo)
+      </div>
 
-          <section className="glass-panel p-5 rounded-xl space-y-4 border border-tertiary/20">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-tertiary font-bold">🔢 Counter Machine</span>
-              <span className="text-on-surface-variant">{ctrScore} / {counterQuestions.length}</span>
-            </div>
+      <button
+        onClick={() => { if (!done) { setDone(true); onComplete(10); } }}
+        disabled={done}
+        style={{ background: done ? "#7B85A8" : "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: done ? "default" : "pointer", fontSize: 14 }}
+      >{done ? "✓ XP Earned!" : "Complete & Earn XP"}</button>
+    </div>
+  );
+}
 
-            {!ctrSolved ? (
-              <div className="space-y-5">
-                {/* Counter display */}
-                <div className="flex justify-center">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Display Output</span>
-                    <div className={`w-24 h-24 rounded-2xl border-4 font-mono font-black text-4xl flex items-center justify-center transition-all duration-300 ${
-                      ctrSelected === null
-                        ? "border-white/20 bg-surface-container-lowest text-on-surface-variant"
-                        : ctrSelected === currentCtr.printedVal
-                        ? "border-primary bg-primary/10 text-primary shadow-[0_0_20px_rgba(0,218,243,0.3)]"
-                        : "border-error bg-error/10 text-error"
-                    }`}>
-                      {ctrDisplayVal ?? "?"}
-                    </div>
-                    <span className="text-[10px] font-mono text-on-surface-variant">printf() prints this</span>
-                  </div>
-                </div>
+// ── Section 1 ── Assignment: The Arrow Machine ─────────────────────────────────
+function Section1({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [mode, setMode] = useState<"assign" | "compare">("assign");
+  const [x, setX] = useState(5);
+  const [animArrow, setAnimArrow] = useState(false);
+  const [done, setDone] = useState(false);
 
-                {/* Code line */}
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Code running:</span>
-                  <div className="px-4 py-2.5 bg-surface-container-lowest border-2 border-white/10 rounded-xl font-mono text-sm font-bold text-on-surface">
-                    {currentCtr.label}
-                  </div>
-                </div>
+  function trigger() {
+    setAnimArrow(true);
+    setTimeout(() => setAnimArrow(false), 800);
+  }
 
-                {/* Answer buttons — what does printf print? */}
-                <div className="space-y-2">
-                  <p className="text-[10px] font-mono text-on-surface-variant text-center uppercase tracking-widest">What does printf() print?</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[currentCtr.printedVal - 1, currentCtr.printedVal, currentCtr.finalVal + 1]
-                      .filter((v, i, arr) => arr.indexOf(v) === i)
-                      .sort(() => Math.random() - 0.5)
-                      .map(opt => (
-                        <button
-                          key={opt}
-                          disabled={ctrSelected !== null}
-                          onClick={() => handleCtrPick(opt)}
-                          className={`py-3 rounded-xl border-2 font-mono font-bold text-lg cursor-pointer transition-all active:scale-95 disabled:cursor-not-allowed ${
-                            ctrSelected === opt
-                              ? opt === currentCtr.printedVal
-                                ? "bg-primary/20 border-primary text-primary-fixed-dim"
-                                : "bg-error/20 border-error text-error"
-                              : ctrSelected !== null && opt === currentCtr.printedVal
-                              ? "bg-primary/10 border-primary/50 text-primary-fixed-dim"
-                              : "bg-surface-container-high border-white/10 text-on-surface hover:border-tertiary"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                  </div>
-                </div>
+  const isEqual = x === 5;
 
-                {/* Feedback */}
-                {ctrFeedback && (
-                  <div className={`text-xs font-mono text-center p-2 rounded-lg leading-relaxed ${
-                    ctrFeedback.startsWith("✅") ? "text-primary bg-primary/10" : "text-error bg-error/10"
-                  }`}>
-                    {ctrFeedback}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-3 py-2">
-                <span className="text-4xl">🏆</span>
-                <p className="text-tertiary font-bold text-sm font-mono animate-pulse">Counter mastered! Pre vs Post increment clear!</p>
-                <button
-                  disabled={hasCompleted}
-                  onClick={handleSectionComplete}
-                  className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 mx-auto ${
-                    hasCompleted ? "bg-primary/10 text-primary-fixed-dim border border-primary/30" : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                  }`}
-                >
-                  {hasCompleted ? "SECTION COMPLETED" : "COMPLETE & EARN 10 XP"}
-                </button>
-              </div>
-            )}
-          </section>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes arrowSlide { 0%{transform:translateX(60px);opacity:0} 100%{transform:translateX(0);opacity:1} }
+        @keyframes questionPop { 0%{transform:scale(0);opacity:0} 70%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+        .arrow-anim { animation: arrowSlide 0.6s ease-out; }
+        .q-anim { animation: questionPop 0.5s ease-out; }
+      `}</style>
+
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0, lineHeight: 1.6 }}>
+        <code style={{ color: "#FF5F6E" }}>=</code> assigns a value. <code style={{ color: "#00D9C0" }}>==</code> compares two values. They look similar but do very different things!
+      </p>
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        {(["assign", "compare"] as const).map(m => (
+          <button key={m} onClick={() => setMode(m)}
+            style={{ padding: "8px 18px", borderRadius: 10, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13,
+              background: mode === m ? (m === "assign" ? "#FF5F6E" : "#00D9C0") : "rgba(24,29,46,0.9)",
+              color: mode === m ? "#0D1117" : "#E9EDF8" }}>
+            {m === "assign" ? "= (assign)" : "== (compare)"}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(0,217,192,0.2)" }}>
+        <svg viewBox="0 0 400 160" style={{ width: "100%", display: "block" }}>
+          {/* Variable box (left) */}
+          <rect x="30" y="55" width="90" height="55" rx="10" fill="rgba(24,29,46,0.9)" stroke="#A78BFA" strokeWidth="2" />
+          <text x="75" y="75" textAnchor="middle" fill="#7B85A8" fontSize="9">variable x</text>
+          <text x="75" y="98" textAnchor="middle" fill="#A78BFA" fontSize="22" fontWeight="900">{x}</text>
+
+          {/* Factory (right) */}
+          <rect x="280" y="45" width="90" height="70" rx="10" fill="rgba(24,29,46,0.9)" stroke="#FFB800" strokeWidth="2" />
+          <text x="325" y="68" textAnchor="middle" fill="#7B85A8" fontSize="9">value factory</text>
+          <text x="325" y="98" textAnchor="middle" fill="#FFB800" fontSize="22" fontWeight="900">5</text>
+
+          {/* Arrow or eyes */}
+          {mode === "assign" ? (
+            <>
+              <line x1="280" y1="83" x2="130" y2="83" stroke="#FF5F6E" strokeWidth="3"
+                markerEnd="url(#arr)" className={animArrow ? "arrow-anim" : ""} />
+              <defs>
+                <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#FF5F6E" />
+                </marker>
+              </defs>
+              <text x="200" y="78" textAnchor="middle" fill="#FF5F6E" fontSize="16" fontWeight="900">=</text>
+            </>
+          ) : (
+            <>
+              {/* Eyes comparing */}
+              <circle cx="185" cy="75" r="10" fill="none" stroke="#00D9C0" strokeWidth="2" />
+              <circle cx="215" cy="75" r="10" fill="none" stroke="#00D9C0" strokeWidth="2" />
+              <circle cx="185" cy="75" r="4" fill="#00D9C0" />
+              <circle cx="215" cy="75" r="4" fill="#00D9C0" />
+              <text x="200" y="108" textAnchor="middle" fill={isEqual ? "#00D9C0" : "#FF5F6E"} fontSize="20" fontWeight="900"
+                className="q-anim">{isEqual ? "TRUE ✓" : "FALSE ✗"}</text>
+              <text x="200" y="125" textAnchor="middle" fill="#7B85A8" fontSize="9">x == 5 ?</text>
+            </>
+          )}
+
+          {/* Warning banner */}
+          {mode === "assign" && (
+            <rect x="60" y="125" width="280" height="22" rx="6" fill="rgba(255,95,110,0.15)" stroke="#FF5F6E" strokeWidth="1" />
+          )}
+          {mode === "assign" && (
+            <text x="200" y="140" textAnchor="middle" fill="#FF5F6E" fontSize="10">
+              ⚠  if(x = 5) ASSIGNS — almost always a bug! Use if(x == 5)
+            </text>
+          )}
+        </svg>
+      </div>
+
+      {/* Slider for x */}
+      <div>
+        <label style={{ color: "#A78BFA", fontSize: 12 }}>x = {x}</label>
+        <input type="range" min={1} max={10} value={x} onChange={e => setX(Number(e.target.value))}
+          style={{ width: "100%", accentColor: "#A78BFA" }} />
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 10, padding: "10px 14px", border: "1px solid rgba(0,217,192,0.15)", fontFamily: "monospace", fontSize: 14 }}>
+        {mode === "assign"
+          ? <><span style={{ color: "#E9EDF8" }}>x </span><span style={{ color: "#FF5F6E", fontWeight: 800 }}>=</span><span style={{ color: "#E9EDF8" }}> 5; </span><span style={{ color: "#7B85A8" }}>// x now holds 5</span></>
+          : <><span style={{ color: "#E9EDF8" }}>x </span><span style={{ color: "#00D9C0", fontWeight: 800 }}>==</span><span style={{ color: "#E9EDF8" }}> 5 </span><span style={{ color: "#7B85A8" }}>// is x equal to 5? → {isEqual ? "1 (true)" : "0 (false)"}</span></>
+        }
+      </div>
+
+      <div style={{ borderLeft: "3px solid #A78BFA", paddingLeft: 12, color: "#E9EDF8", fontSize: 13 }}>
+        <strong style={{ color: "#A78BFA" }}>Concept Lock:</strong> <code style={{ color: "#FF5F6E" }}>=</code> stores a value into a variable.{" "}
+        <code style={{ color: "#00D9C0" }}>==</code> checks if two values are equal (returns true or false).
+      </div>
+
+      <button onClick={() => { if (!done) { setDone(true); onComplete(10); } }} disabled={done}
+        style={{ background: done ? "#7B85A8" : "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: done ? "default" : "pointer", fontSize: 14 }}>
+        {done ? "✓ XP Earned!" : "Complete & Earn XP"}
+      </button>
+    </div>
+  );
+}
+
+// ── Section 2 ── Increment: The Step Counter ───────────────────────────────────
+function Section2({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [count, setCount] = useState(5);
+  const [mode, setMode] = useState<"pre" | "post">("pre");
+  const [bouncing, setBouncing] = useState(false);
+  const [usedVal, setUsedVal] = useState<number | null>(null);
+  const [done, setDone] = useState(false);
+
+  function step(dir: 1 | -1) {
+    setBouncing(true);
+    if (mode === "pre") {
+      const next = count + dir;
+      setCount(next);
+      setUsedVal(next);
+    } else {
+      setUsedVal(count);
+      setCount(c => c + dir);
+    }
+    setTimeout(() => setBouncing(false), 500);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes bounce { 0%{transform:scale(1)} 30%{transform:scale(1.35)} 60%{transform:scale(0.9)} 100%{transform:scale(1)} }
+        @keyframes slideUp { 0%{transform:translateY(10px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+        .bounce { animation: bounce 0.45s ease-out; }
+        .slide-up { animation: slideUp 0.35s ease-out; }
+      `}</style>
+
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0 }}>
+        <code style={{ color: "#00D9C0" }}>++</code> adds 1, <code style={{ color: "#FF5F6E" }}>--</code> subtracts 1.
+        But <em>when</em> it happens depends on prefix vs postfix!
+      </p>
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        {(["pre", "post"] as const).map(m => (
+          <button key={m} onClick={() => { setMode(m); setUsedVal(null); }}
+            style={{ padding: "8px 18px", borderRadius: 10, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13,
+              background: mode === m ? "#A78BFA" : "rgba(24,29,46,0.9)",
+              color: mode === m ? "#0D1117" : "#E9EDF8" }}>
+            {m === "pre" ? "++x (prefix)" : "x++ (postfix)"}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(0,217,192,0.2)" }}>
+        <svg viewBox="0 0 400 160" style={{ width: "100%", display: "block" }}>
+          {/* Pedometer body */}
+          <rect x="140" y="15" width="120" height="130" rx="20" fill="rgba(24,29,46,0.95)" stroke="#A78BFA" strokeWidth="2.5" />
+
+          {/* Screen */}
+          <rect x="158" y="30" width="84" height="55" rx="8" fill="#0D1117" stroke="#00D9C0" strokeWidth="1.5" />
+          <text x="200" y="53" textAnchor="middle" fill="#7B85A8" fontSize="10">x</text>
+          <text x="200" y="75" textAnchor="middle" fill="#00D9C0" fontSize="26" fontWeight="900"
+            className={bouncing ? "bounce" : ""}>{count}</text>
+
+          {/* Used value badge */}
+          {usedVal !== null && (
+            <>
+              <rect x="280" y="45" width="80" height="35" rx="8" fill="rgba(255,184,0,0.15)" stroke="#FFB800" strokeWidth="1.5" />
+              <text x="320" y="60" textAnchor="middle" fill="#7B85A8" fontSize="9">used value</text>
+              <text x="320" y="75" textAnchor="middle" fill="#FFB800" fontSize="18" fontWeight="700"
+                className="slide-up">{usedVal}</text>
+            </>
+          )}
+
+          {/* Prefix label */}
+          {mode === "pre" && (
+            <text x="200" y="108" textAnchor="middle" fill="#A78BFA" fontSize="10">increments FIRST, then uses</text>
+          )}
+          {mode === "post" && (
+            <text x="200" y="108" textAnchor="middle" fill="#FFB800" fontSize="10">uses value FIRST, then increments</text>
+          )}
+
+          {/* Step dots */}
+          {[0, 1, 2, 3, 4].map(i => (
+            <circle key={i} cx={165 + i * 18} cy="125" r="5"
+              fill={i < (count % 5) ? "#A78BFA" : "#1a1f2e"} />
+          ))}
+        </svg>
+      </div>
+
+      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+        <button onClick={() => step(-1)}
+          style={{ width: 52, height: 52, borderRadius: 12, border: "none", background: "#FF5F6E", color: "#0D1117", fontSize: 24, fontWeight: 900, cursor: "pointer" }}>−−</button>
+        <button onClick={() => step(1)}
+          style={{ width: 52, height: 52, borderRadius: 12, border: "none", background: "#00D9C0", color: "#0D1117", fontSize: 24, fontWeight: 900, cursor: "pointer" }}>++</button>
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 10, padding: "10px 14px", fontFamily: "monospace", fontSize: 14, border: "1px solid rgba(0,217,192,0.15)" }}>
+        {mode === "pre"
+          ? <><span style={{ color: "#7B85A8" }}>// prefix: </span><span style={{ color: "#E9EDF8" }}>printf(&quot;%d&quot;, </span><span style={{ color: "#A78BFA" }}>++x</span><span style={{ color: "#E9EDF8" }}>);</span><span style={{ color: "#7B85A8" }}> // prints incremented value</span></>
+          : <><span style={{ color: "#7B85A8" }}>// postfix: </span><span style={{ color: "#E9EDF8" }}>printf(&quot;%d&quot;, </span><span style={{ color: "#FFB800" }}>x++</span><span style={{ color: "#E9EDF8" }}>);</span><span style={{ color: "#7B85A8" }}> // prints original, THEN increments</span></>
+        }
+      </div>
+
+      <div style={{ borderLeft: "3px solid #A78BFA", paddingLeft: 12, color: "#E9EDF8", fontSize: 13 }}>
+        <strong style={{ color: "#A78BFA" }}>Concept Lock:</strong> <code style={{ color: "#A78BFA" }}>++x</code> increments x <em>before</em> using it.{" "}
+        <code style={{ color: "#FFB800" }}>x++</code> uses x first, <em>then</em> increments.
+      </div>
+
+      <button onClick={() => { if (!done) { setDone(true); onComplete(10); } }} disabled={done}
+        style={{ background: done ? "#7B85A8" : "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: done ? "default" : "pointer", fontSize: 14 }}>
+        {done ? "✓ XP Earned!" : "Complete & Earn XP"}
+      </button>
+    </div>
+  );
+}
+
+// ── Section 3 ── Relational: The Comparison Court ─────────────────────────────
+function Section3({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [a, setA] = useState(7);
+  const [b, setB] = useState(4);
+  const [op, setOp] = useState<">" | "<" | ">=" | "<=" | "==" | "!=">(">");
+  const [gavel, setGavel] = useState(false);
+  const [done, setDone] = useState(false);
+
+  type RelOp = ">" | "<" | ">=" | "<=" | "==" | "!=";
+  const ops: RelOp[] = [">", "<", ">=", "<=", "==", "!="];
+  const opColors: Record<string, string> = {
+    ">": "#00D9C0", "<": "#A78BFA", ">=": "#00D9C0", "<=": "#A78BFA", "==": "#FFB800", "!=": "#FF5F6E"
+  };
+
+  function evaluate(o: RelOp): boolean {
+    switch (o) {
+      case ">": return a > b;
+      case "<": return a < b;
+      case ">=": return a >= b;
+      case "<=": return a <= b;
+      case "==": return a === b;
+      case "!=": return a !== b;
+    }
+  }
+
+  const result = evaluate(op);
+
+  function judge(o: RelOp) {
+    setOp(o);
+    setGavel(true);
+    setTimeout(() => setGavel(false), 600);
+  }
+
+  const aHeight = 50 + (a / 10) * 40;
+  const bHeight = 50 + (b / 10) * 40;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes gavelDown { 0%{transform:rotate(-30deg)} 50%{transform:rotate(20deg)} 100%{transform:rotate(0deg)} }
+        @keyframes verdictIn { 0%{transform:scale(0) rotate(-10deg);opacity:0} 70%{transform:scale(1.15) rotate(2deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+        .gavel-anim { transform-box:fill-box; transform-origin:bottom left; animation:gavelDown 0.5s ease-out; }
+        .verdict-anim { animation:verdictIn 0.5s ease-out; }
+      `}</style>
+
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0 }}>
+        The Comparison Court! Pick an operator and the judge will deliver a verdict.
+      </p>
+
+      <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+        {ops.map(o => (
+          <button key={o} onClick={() => judge(o)}
+            style={{ padding: "6px 12px", borderRadius: 8, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "monospace",
+              background: op === o ? opColors[o] : "rgba(24,29,46,0.9)",
+              color: op === o ? "#0D1117" : opColors[o],
+              boxShadow: op === o ? `0 0 12px ${opColors[o]}66` : "none" }}>
+            {o}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(0,217,192,0.2)" }}>
+        <svg viewBox="0 0 400 180" style={{ width: "100%", display: "block" }}>
+          {/* Judge bench */}
+          <rect x="150" y="10" width="100" height="35" rx="8" fill="rgba(24,29,46,0.9)" stroke="#FFB800" strokeWidth="1.5" />
+          <text x="200" y="28" textAnchor="middle" fill="#FFB800" fontSize="11" fontWeight="700">JUDGE</text>
+          {/* Gavel */}
+          <rect x="210" y="18" width="18" height="8" rx="3" fill="#FFB800" className={gavel ? "gavel-anim" : ""} />
+          <line x1="218" y1="26" x2="218" y2="38" stroke="#FFB800" strokeWidth="2" />
+
+          {/* Podium A */}
+          <rect x="30" y={130 - aHeight} width="70" height={aHeight} rx="4" fill="rgba(0,217,192,0.2)" stroke="#00D9C0" strokeWidth="1.5" />
+          <text x="65" y={125 - aHeight} textAnchor="middle" fill="#00D9C0" fontSize="18" fontWeight="900">{a}</text>
+          <text x="65" y="148" textAnchor="middle" fill="#7B85A8" fontSize="10">A</text>
+
+          {/* Podium B */}
+          <rect x="300" y={130 - bHeight} width="70" height={bHeight} rx="4" fill="rgba(167,139,250,0.2)" stroke="#A78BFA" strokeWidth="1.5" />
+          <text x="335" y={125 - bHeight} textAnchor="middle" fill="#A78BFA" fontSize="18" fontWeight="900">{b}</text>
+          <text x="335" y="148" textAnchor="middle" fill="#7B85A8" fontSize="10">B</text>
+
+          {/* Floor */}
+          <line x1="20" y1="133" x2="380" y2="133" stroke="#7B85A8" strokeWidth="1" />
+
+          {/* Operator in center */}
+          <text x="200" y="100" textAnchor="middle" fill={opColors[op]} fontSize="22" fontWeight="900">{op}</text>
+
+          {/* Verdict bubble */}
+          <rect x="148" y="145" width="104" height="28" rx="10"
+            fill={result ? "rgba(0,217,192,0.2)" : "rgba(255,95,110,0.2)"}
+            stroke={result ? "#00D9C0" : "#FF5F6E"} strokeWidth="2"
+            className={gavel ? "verdict-anim" : ""} />
+          <text x="200" y="164" textAnchor="middle"
+            fill={result ? "#00D9C0" : "#FF5F6E"} fontSize="14" fontWeight="900"
+            className={gavel ? "verdict-anim" : ""}>
+            {result ? "TRUE ✓" : "FALSE ✗"}
+          </text>
+        </svg>
+      </div>
+
+      <div style={{ display: "flex", gap: 16 }}>
+        <div style={{ flex: 1 }}>
+          <label style={{ color: "#00D9C0", fontSize: 12 }}>A = {a}</label>
+          <input type="range" min={0} max={10} value={a} onChange={e => setA(Number(e.target.value))} style={{ width: "100%", accentColor: "#00D9C0" }} />
         </div>
-      )}
-
-      {/* ========================================== */}
-      {/* SECTION 3: RELATIONAL (Traffic Light Gate) */}
-      {/* ========================================== */}
-      {sectionIndex === 3 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          <section className="glass-panel p-4 rounded-xl space-y-3">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-primary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
-                Truth Detector Gate: ==, !=, &lt;, &gt;, &lt;=, &gt;=
-              </h3>
-              <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Relational operators are **Truth Detector Gates**! They compare two values and output <code className="text-primary font-mono font-bold">1</code> (representing TRUE) or <code className="text-error font-mono font-bold">0</code> (representing FALSE) in C.
-              </p>
-            </div>
-
-            {/* Operator glossary grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">==</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Equal to:</strong> checks if both values are exactly equal!</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">!=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Not equal:</strong> checks if both values are different!</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">&lt;</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Less than:</strong> is the left side smaller than the right?</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">&gt;</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Greater than:</strong> is the left side bigger than the right?</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">&lt;=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Less/Equal:</strong> is the left side smaller or identical?</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-primary font-bold text-xs mb-0.5">&gt;=</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Greater/Equal:</strong> is the left side bigger or identical?</div>
-              </div>
-            </div>
-          </section>
-
-          <section className="glass-panel p-5 rounded-xl space-y-4 border border-primary/20">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-primary font-bold">🚦 Traffic Light Gate</span>
-              <span className="text-primary-fixed-dim">{trafficScore} / {trafficQuestions.length} correct</span>
-            </div>
-
-            {!trafficSolved ? (
-              <div className="space-y-4">
-
-                {/* Road + Car + Light */}
-                <div className="relative w-full h-28 bg-surface-container-lowest border border-white/5 rounded-xl overflow-hidden">
-                  {/* Road stripes */}
-                  <div className="absolute bottom-0 left-0 right-0 h-10 bg-white/5 border-t border-white/10" />
-                  <div className="absolute bottom-3 left-0 right-0 flex gap-4 px-4">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <div key={i} className="h-1 w-8 bg-white/20 rounded-full flex-shrink-0" />
-                    ))}
-                  </div>
-
-                  {/* Car */}
-                  <div
-                    className="absolute bottom-3 text-2xl transition-all duration-700 ease-in-out"
-                    style={{ left: `${24 + (trafficCarPos % 220)}px` }}
-                  >
-                    🚗
-                  </div>
-
-                  {/* Traffic light pole */}
-                  <div className="absolute right-8 top-1 bottom-10 flex flex-col items-center gap-1">
-                    <div className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${
-                      trafficLight === "green" ? "bg-green-500 border-green-400 shadow-[0_0_10px_rgba(34,197,94,0.8)]" : "bg-green-900/40 border-green-900/30"
-                    }`} />
-                    <div className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${
-                      trafficLight === "idle" ? "bg-yellow-500/60 border-yellow-500/50" : "bg-yellow-900/30 border-yellow-900/20"
-                    }`} />
-                    <div className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${
-                      trafficLight === "red" ? "bg-red-500 border-red-400 shadow-[0_0_10px_rgba(239,68,68,0.8)]" : "bg-red-900/40 border-red-900/30"
-                    }`} />
-                    <div className="w-1 flex-1 bg-white/20 rounded-full" />
-                  </div>
-                </div>
-
-                {/* Expression display */}
-                <div className="flex flex-col items-center gap-2">
-                  <p className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Does this open the gate?</p>
-                  <div className="px-8 py-3 bg-surface-container-lowest border-2 border-white/10 rounded-xl font-mono font-black text-xl text-on-surface shadow-inner">
-                    {currentTraffic.expr}
-                  </div>
-                </div>
-
-                {/* TRUE / FALSE buttons */}
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    disabled={trafficAnswered}
-                    onClick={() => handleTrafficPick(true)}
-                    className="py-3.5 bg-green-500/10 border-2 border-green-500/30 hover:border-green-500 text-green-400 font-mono font-bold text-sm rounded-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ✅ TRUE (1)
-                  </button>
-                  <button
-                    disabled={trafficAnswered}
-                    onClick={() => handleTrafficPick(false)}
-                    className="py-3.5 bg-red-500/10 border-2 border-red-500/30 hover:border-red-500 text-red-400 font-mono font-bold text-sm rounded-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ❌ FALSE (0)
-                  </button>
-                </div>
-
-                {/* Feedback */}
-                {trafficFeedback && (
-                  <div className={`text-xs font-mono text-center p-2 rounded-lg ${
-                    trafficFeedback.startsWith("✅") ? "text-primary bg-primary/10" : "text-error bg-error/10"
-                  }`}>
-                    {trafficFeedback}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-3 py-2">
-                <span className="text-4xl">🏆</span>
-                <p className="text-primary font-bold text-sm font-mono animate-pulse">All gates cleared! Relational operators mastered!</p>
-                <button
-                  disabled={hasCompleted}
-                  onClick={handleSectionComplete}
-                  className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 mx-auto ${
-                    hasCompleted ? "bg-primary/10 text-primary-fixed-dim border border-primary/30" : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                  }`}
-                >
-                  {hasCompleted ? "SECTION COMPLETED" : "COMPLETE & EARN 10 XP"}
-                </button>
-              </div>
-            )}
-          </section>
+        <div style={{ flex: 1 }}>
+          <label style={{ color: "#A78BFA", fontSize: 12 }}>B = {b}</label>
+          <input type="range" min={0} max={10} value={b} onChange={e => setB(Number(e.target.value))} style={{ width: "100%", accentColor: "#A78BFA" }} />
         </div>
-      )}
+      </div>
 
-      {/* ========================================== */}
-      {/* SECTION 4: LOGICAL (Movie Ticket Gate)     */}
-      {/* ========================================== */}
-      {sectionIndex === 4 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          <section className="glass-panel p-4 rounded-xl space-y-3">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-secondary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">filter_list</span>
-                Logical combination: &amp;&amp;, ||, ! ⚡
-              </h3>
-              <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Logical operators combine multiple condition checks or flip a true/false state around!
-              </p>
-            </div>
+      <div style={{ background: "#0D1117", borderRadius: 10, padding: "10px 14px", fontFamily: "monospace", fontSize: 14, border: "1px solid rgba(0,217,192,0.15)" }}>
+        <span style={{ color: "#FFB800" }}>{a}</span>
+        <span style={{ color: opColors[op], fontWeight: 800 }}> {op} </span>
+        <span style={{ color: "#A78BFA" }}>{b}</span>
+        <span style={{ color: "#7B85A8" }}> → {result ? "1 (true)" : "0 (false)"}</span>
+      </div>
 
-            {/* Operator glossary grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
-              <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">&amp;&amp;</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical AND:</strong> Both must be TRUE! E.g. you can enter the play area only if you are age 5 AND have a ticket.</div>
-              </div>
-              <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">||</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical OR:</strong> At least one must be TRUE! E.g. you can enter if you are a student OR have a ticket.</div>
-              </div>
-              <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-secondary font-bold text-xs mb-0.5">!</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Logical NOT:</strong> Opposite day! Flips TRUE to FALSE, and FALSE to TRUE.</div>
-              </div>
-            </div>
-          </section>
+      <div style={{ borderLeft: "3px solid #FFB800", paddingLeft: 12, color: "#E9EDF8", fontSize: 13 }}>
+        <strong style={{ color: "#FFB800" }}>Concept Lock:</strong> Relational operators compare two values and return <code style={{ color: "#00D9C0" }}>1</code> (true) or <code style={{ color: "#FF5F6E" }}>0</code> (false).
+      </div>
 
-          <section className="glass-panel p-5 rounded-xl space-y-5 border border-secondary/20">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-secondary font-bold">🎞️ Movie Ticket Gate</span>
-              <span className="text-on-surface-variant">{movieScore} / {movieScenes.length} scenes</span>
-            </div>
+      <button onClick={() => { if (!done) { setDone(true); onComplete(10); } }} disabled={done}
+        style={{ background: done ? "#7B85A8" : "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: done ? "default" : "pointer", fontSize: 14 }}>
+        {done ? "✓ XP Earned!" : "Complete & Earn XP"}
+      </button>
+    </div>
+  );
+}
 
-            {!movieSolved ? (
-              <div className="space-y-4">
-                {/* Movie title + condition */}
-                <div className="bg-surface-container-low p-3 rounded-xl border border-white/5 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-on-surface-variant uppercase">Now Showing</span>
-                    <span className="text-xs font-bold text-secondary">{currentMovie.title}</span>
-                  </div>
-                  <div className="font-mono font-bold text-sm text-on-surface bg-surface-container-lowest px-3 py-2 rounded-lg border border-white/10">
-                    {currentMovie.condition}
-                  </div>
-                </div>
+// ── Section 4 ── Logical: The Gate Factory ─────────────────────────────────────
+function Section4({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [a, setA] = useState(true);
+  const [b, setB] = useState(false);
+  const [gate, setGate] = useState<"AND" | "OR" | "NOT">("AND");
+  const [done, setDone] = useState(false);
 
-                {/* Sliders / toggles */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Age control */}
-                  <div className="space-y-2 bg-surface-container-low p-3 rounded-xl border border-white/5">
-                    <div className="flex justify-between text-xs font-mono">
-                      <span className="text-on-surface-variant">age</span>
-                      <span className="text-primary font-bold">{movieAge}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={1}
-                      max={30}
-                      value={movieAge}
-                      disabled={movieAnswered}
-                      onChange={e => setMovieAge(Number(e.target.value))}
-                      className="w-full h-1 rounded accent-primary cursor-pointer disabled:opacity-50"
-                    />
-                    <div className="flex justify-between text-[9px] font-mono text-on-surface-variant">
-                      <span>1</span><span>30</span>
-                    </div>
-                  </div>
+  const output = gate === "AND" ? (a && b) : gate === "OR" ? (a || b) : !a;
+  const gateColor = gate === "AND" ? "#00D9C0" : gate === "OR" ? "#A78BFA" : "#FFB800";
 
-                  {/* Ticket toggle */}
-                  <div className="space-y-2 bg-surface-container-low p-3 rounded-xl border border-white/5 flex flex-col justify-between">
-                    <span className="text-xs font-mono text-on-surface-variant">hasTicket</span>
-                    <button
-                      disabled={movieAnswered}
-                      onClick={() => setMovieTicket(t => !t)}
-                      className={`w-full py-2 rounded-lg font-mono font-bold text-xs cursor-pointer transition-all active:scale-95 disabled:opacity-50 border-2 ${
-                        movieTicket
-                          ? "bg-primary/20 border-primary text-primary-fixed-dim"
-                          : "bg-surface-container-high border-white/20 text-on-surface-variant"
-                      }`}
-                    >
-                      {movieTicket ? "🎫 true" : "❌ false"}
-                    </button>
-                  </div>
-                </div>
+  const truth = gate === "AND"
+    ? [{ a: false, b: false, r: false }, { a: false, b: true, r: false }, { a: true, b: false, r: false }, { a: true, b: true, r: true }]
+    : gate === "OR"
+    ? [{ a: false, b: false, r: false }, { a: false, b: true, r: true }, { a: true, b: false, r: true }, { a: true, b: true, r: true }]
+    : [{ a: false, b: false, r: true }, { a: true, b: true, r: false }];
 
-                {/* Live gate preview */}
-                <div className={`flex items-center justify-center gap-3 p-3 rounded-xl border-2 transition-all duration-300 ${
-                  movieResult
-                    ? "bg-green-500/10 border-green-500/40"
-                    : "bg-red-500/10 border-red-500/30"
-                }`}>
-                  <span className="text-3xl">{movieResult ? "🎬" : "🚫"}</span>
-                  <div className="font-mono text-xs">
-                    <span className="text-on-surface-variant">Gate status: </span>
-                    <span className={`font-bold ${ movieResult ? "text-green-400" : "text-red-400"}`}>
-                      {movieResult ? "OPEN — Enter!" : "LOCKED — Denied"}
-                    </span>
-                  </div>
-                </div>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes glow { 0%,100%{filter:drop-shadow(0 0 4px #00D9C0)} 50%{filter:drop-shadow(0 0 12px #00D9C0)} }
+        .led-on { animation: glow 1.2s ease-in-out infinite; }
+      `}</style>
 
-                {/* Submit */}
-                <button
-                  disabled={movieAnswered}
-                  onClick={handleMovieSubmit}
-                  className="w-full py-2.5 bg-secondary text-on-secondary font-bold text-xs rounded-lg cursor-pointer active:scale-95 transition-all disabled:opacity-50"
-                >
-                  CONFIRM &amp; NEXT SCENE
-                </button>
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0 }}>
+        Logic gates control whether code runs. Toggle inputs A and B to see the output change!
+      </p>
 
-                {/* Feedback */}
-                {movieFeedback && (
-                  <div className={`text-xs font-mono text-center p-2 rounded-lg leading-relaxed ${
-                    movieFeedback.startsWith("✅") ? "text-primary bg-primary/10" : "text-on-surface-variant bg-surface-container-low"
-                  }`}>
-                    {movieFeedback}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-3 py-2">
-                <span className="text-4xl">🎬</span>
-                <p className="text-secondary font-bold text-sm font-mono animate-pulse">All scenes passed! Logical operators mastered!</p>
-                <button
-                  disabled={hasCompleted}
-                  onClick={handleSectionComplete}
-                  className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 mx-auto ${
-                    hasCompleted ? "bg-primary/10 text-primary-fixed-dim border border-primary/30" : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                  }`}
-                >
-                  {hasCompleted ? "SECTION COMPLETED" : "COMPLETE & EARN 10 XP"}
-                </button>
-              </div>
-            )}
-          </section>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        {(["AND", "OR", "NOT"] as const).map(g => (
+          <button key={g} onClick={() => setGate(g)}
+            style={{ padding: "8px 16px", borderRadius: 10, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13,
+              background: gate === g ? gateColor : "rgba(24,29,46,0.9)",
+              color: gate === g ? "#0D1117" : "#E9EDF8" }}>
+            {g}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(0,217,192,0.2)" }}>
+        <svg viewBox="0 0 400 200" style={{ width: "100%", display: "block" }}>
+          {/* Switch A */}
+          <rect x="20" y="60" width="60" height="28" rx="14" fill={a ? "#00D9C0" : "#1a1f2e"} stroke="#7B85A8" strokeWidth="1.5"
+            style={{ cursor: "pointer" }} onClick={() => setA(v => !v)} />
+          <circle cx={a ? 66 : 34} cy="74" r="11" fill={a ? "#0D1117" : "#7B85A8"}
+            style={{ cursor: "pointer" }} onClick={() => setA(v => !v)} />
+          <text x="50" y="50" textAnchor="middle" fill="#7B85A8" fontSize="10">A = {a ? "T" : "F"}</text>
+
+          {/* Switch B (hidden for NOT) */}
+          {gate !== "NOT" && (
+            <>
+              <rect x="20" y="115" width="60" height="28" rx="14" fill={b ? "#00D9C0" : "#1a1f2e"} stroke="#7B85A8" strokeWidth="1.5"
+                style={{ cursor: "pointer" }} onClick={() => setB(v => !v)} />
+              <circle cx={b ? 66 : 34} cy="129" r="11" fill={b ? "#0D1117" : "#7B85A8"}
+                style={{ cursor: "pointer" }} onClick={() => setB(v => !v)} />
+              <text x="50" y="108" textAnchor="middle" fill="#7B85A8" fontSize="10">B = {b ? "T" : "F"}</text>
+            </>
+          )}
+
+          {/* Wires */}
+          <line x1="80" y1="74" x2="160" y2="100" stroke="#7B85A8" strokeWidth="2" />
+          {gate !== "NOT" && <line x1="80" y1="129" x2="160" y2="110" stroke="#7B85A8" strokeWidth="2" />}
+
+          {/* Gate shape */}
+          {gate === "AND" && <path d="M160,80 L185,80 Q215,80 215,105 Q215,130 185,130 L160,130 Z" fill="rgba(0,217,192,0.15)" stroke={gateColor} strokeWidth="2" />}
+          {gate === "OR" && <path d="M160,80 Q175,80 215,105 Q175,130 160,130 Q175,105 160,80 Z" fill="rgba(167,139,250,0.15)" stroke={gateColor} strokeWidth="2" />}
+          {gate === "NOT" && <path d="M160,85 L200,105 L160,125 Z" fill="rgba(255,184,0,0.15)" stroke={gateColor} strokeWidth="2" />}
+          {gate === "NOT" && <circle cx="205" cy="105" r="5" fill="none" stroke={gateColor} strokeWidth="2" />}
+
+          <text x="187" y="108" textAnchor="middle" fill={gateColor} fontSize="9" fontWeight="700">{gate}</text>
+
+          {/* Output wire */}
+          <line x1={gate === "NOT" ? 210 : 215} y1="105" x2="285" y2="105" stroke="#7B85A8" strokeWidth="2" />
+
+          {/* LED */}
+          <circle cx="310" cy="105" r="22" fill={output ? "rgba(0,217,192,0.2)" : "rgba(30,35,50,0.9)"} stroke={output ? "#00D9C0" : "#7B85A8"} strokeWidth="2.5"
+            className={output ? "led-on" : ""} />
+          <circle cx="310" cy="105" r="10" fill={output ? "#00D9C0" : "#2a3040"} />
+          <text x="310" y="140" textAnchor="middle" fill={output ? "#00D9C0" : "#7B85A8"} fontSize="10" fontWeight="700">{output ? "ON" : "OFF"}</text>
+
+          {/* Plain English */}
+          <text x="187" y="160" textAnchor="middle" fill="#7B85A8" fontSize="9">
+            {gate === "AND" ? "both must be true" : gate === "OR" ? "at least one must be true" : "flips true ↔ false"}
+          </text>
+        </svg>
+      </div>
+
+      {/* Truth table */}
+      <div style={{ background: "#0D1117", borderRadius: 10, padding: 10, border: "1px solid rgba(0,217,192,0.1)" }}>
+        <div style={{ color: "#7B85A8", fontSize: 11, marginBottom: 6 }}>Truth Table — {gate}</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr>
+              <th style={{ color: "#00D9C0", padding: "2px 8px", textAlign: "center" }}>A</th>
+              {gate !== "NOT" && <th style={{ color: "#A78BFA", padding: "2px 8px", textAlign: "center" }}>B</th>}
+              <th style={{ color: gateColor, padding: "2px 8px", textAlign: "center" }}>Out</th>
+            </tr>
+          </thead>
+          <tbody>
+            {truth.map((row, i) => (
+              <tr key={i} style={{ background: row.a === a && (gate === "NOT" || row.b === b) ? "rgba(0,217,192,0.08)" : "transparent" }}>
+                <td style={{ color: row.a ? "#00D9C0" : "#FF5F6E", textAlign: "center", padding: "2px 8px" }}>{row.a ? "T" : "F"}</td>
+                {gate !== "NOT" && <td style={{ color: row.b ? "#A78BFA" : "#FF5F6E", textAlign: "center", padding: "2px 8px" }}>{row.b ? "T" : "F"}</td>}
+                <td style={{ color: row.r ? "#00D9C0" : "#FF5F6E", textAlign: "center", fontWeight: 700, padding: "2px 8px" }}>{row.r ? "T" : "F"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <button onClick={() => { if (!done) { setDone(true); onComplete(10); } }} disabled={done}
+        style={{ background: done ? "#7B85A8" : "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: done ? "default" : "pointer", fontSize: 14 }}>
+        {done ? "✓ XP Earned!" : "Complete & Earn XP"}
+      </button>
+    </div>
+  );
+}
+
+// ── Section 5 ── Precedence: The Math Traffic Lights ──────────────────────────
+function Section5({ onComplete }: { onComplete: (xp: number) => void }) {
+  const [useParens, setUseParens] = useState(false);
+  const [step, setStep] = useState(0);
+  const [done, setDone] = useState(false);
+
+  // 2 + 3 * 4  vs  (2+3)*4
+  const stepsNoParens = [
+    { expr: "2 + 3 * 4", highlight: "*", sub: "3 * 4 = 12", level: 0 },
+    { expr: "2 + 12", highlight: "+", sub: "2 + 12 = 14", level: 1 },
+    { expr: "14", highlight: "=", sub: "Result: 14", level: 2 },
+  ];
+  const stepsParens = [
+    { expr: "(2 + 3) * 4", highlight: "()", sub: "(2 + 3) = 5", level: 2 },
+    { expr: "5 * 4", highlight: "*", sub: "5 * 4 = 20", level: 0 },
+    { expr: "20", highlight: "=", sub: "Result: 20", level: 2 },
+  ];
+
+  const steps = useParens ? stepsParens : stepsNoParens;
+  const current = steps[Math.min(step, steps.length - 1)];
+
+  const levelColors = ["#FF5F6E", "#FFB800", "#00D9C0"];
+  const levelLabels = ["High Priority (* / %)", "Medium Priority (+ -)", "Comparison / Logical"];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes lightPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.1)} }
+        .light-active { animation: lightPulse 0.8s ease-in-out infinite; }
+      `}</style>
+
+      <p style={{ color: "#E9EDF8", fontSize: 15, margin: 0 }}>
+        Operators have a priority order — like traffic lights. Higher priority goes first!
+      </p>
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        <button onClick={() => { setUseParens(false); setStep(0); }}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13,
+            background: !useParens ? "#FF5F6E" : "rgba(24,29,46,0.9)", color: !useParens ? "#0D1117" : "#E9EDF8" }}>
+          2 + 3 * 4
+        </button>
+        <button onClick={() => { setUseParens(true); setStep(0); }}
+          style={{ padding: "8px 16px", borderRadius: 10, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13,
+            background: useParens ? "#00D9C0" : "rgba(24,29,46,0.9)", color: useParens ? "#0D1117" : "#E9EDF8" }}>
+          (2 + 3) * 4
+        </button>
+      </div>
+
+      <div style={{ background: "#0D1117", borderRadius: 16, padding: 8, border: "1px solid rgba(0,217,192,0.2)" }}>
+        <svg viewBox="0 0 400 180" style={{ width: "100%", display: "block" }}>
+          {/* Traffic light post */}
+          <rect x="30" y="20" width="60" height="140" rx="10" fill="rgba(24,29,46,0.9)" stroke="#7B85A8" strokeWidth="1.5" />
+
+          {/* Lights */}
+          {[0, 1, 2].map(i => (
+            <circle key={i} cx="60" cy={50 + i * 38} r="15"
+              fill={current.level === i ? levelColors[i] : "#1a1f2e"}
+              stroke={levelColors[i]} strokeWidth="2"
+              className={current.level === i ? "light-active" : ""} />
+          ))}
+
+          {/* Level labels */}
+          {levelLabels.map((lbl, i) => (
+            <text key={i} x="105" y={55 + i * 38} fill={current.level === i ? levelColors[i] : "#7B85A8"} fontSize="9"
+              fontWeight={current.level === i ? "700" : "400"}>{lbl}</text>
+          ))}
+
+          {/* Expression display */}
+          <rect x="105" y="130" width="270" height="38" rx="8" fill="#0D1117" stroke={levelColors[current.level]} strokeWidth="1.5" />
+          <text x="240" y="148" textAnchor="middle" fill={levelColors[current.level]} fontSize="14" fontWeight="700">{current.expr}</text>
+          <text x="240" y="162" textAnchor="middle" fill="#7B85A8" fontSize="9">{current.sub}</text>
+        </svg>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", alignItems: "center" }}>
+        <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}
+          style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "rgba(24,29,46,0.9)", color: "#E9EDF8", cursor: step === 0 ? "default" : "pointer", opacity: step === 0 ? 0.4 : 1 }}>
+          ← Prev
+        </button>
+        <span style={{ color: "#7B85A8", fontSize: 13 }}>Step {step + 1} / {steps.length}</span>
+        <button onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}
+          style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "rgba(24,29,46,0.9)", color: "#E9EDF8", cursor: step === steps.length - 1 ? "default" : "pointer", opacity: step === steps.length - 1 ? 0.4 : 1 }}>
+          Next →
+        </button>
+      </div>
+
+      <div style={{ borderLeft: "3px solid #FFB800", paddingLeft: 12, color: "#E9EDF8", fontSize: 13 }}>
+        <strong style={{ color: "#FFB800" }}>Concept Lock:</strong> <code style={{ color: "#FF5F6E" }}>* / %</code> have higher priority than <code style={{ color: "#FFB800" }}>+ -</code>. Use <code style={{ color: "#00D9C0" }}>()</code> parentheses to override priority.
+      </div>
+
+      <button onClick={() => { if (!done) { setDone(true); onComplete(10); } }} disabled={done}
+        style={{ background: done ? "#7B85A8" : "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: done ? "default" : "pointer", fontSize: 14 }}>
+        {done ? "✓ XP Earned!" : "Complete & Earn XP"}
+      </button>
+    </div>
+  );
+}
+
+// ── Section 6 ── Capstone: Operator Challenge ─────────────────────────────────
+interface Question { expr: string; correct: number; options: number[]; explanation: string; }
+
+function Section6({ onComplete }: { onComplete: (xp: number) => void }) {
+  const questions: Question[] = [
+    { expr: "2 + 3 * 4", correct: 14, options: [14, 20, 24, 11], explanation: "* goes before +: 3*4=12, then 2+12=14" },
+    { expr: "10 % 3", correct: 1, options: [3, 1, 0, 2], explanation: "10 ÷ 3 = 3 remainder 1" },
+    { expr: "int x=5; x++; printf(\"%d\",x)", correct: 6, options: [5, 6, 4, 7], explanation: "x++ increments after assignment, so printf prints 6" },
+    { expr: "7 >= 7", correct: 1, options: [0, 1, 7, -1], explanation: ">= includes equals, so 7>=7 is true (1)" },
+    { expr: "!0 && 1", correct: 1, options: [0, 1, -1, 2], explanation: "!0 = true, true && 1 = true (1)" },
+  ];
+
+  const [idx, setIdx] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const [shake, setShake] = useState(false);
+  const [flash, setFlash] = useState<"correct" | "wrong" | null>(null);
+  const [done, setDone] = useState(false);
+
+  function pick(opt: number) {
+    if (selected !== null) return;
+    setSelected(opt);
+    if (opt === questions[idx].correct) {
+      setScore(s => s + 12);
+      setFlash("correct");
+    } else {
+      setShake(true);
+      setFlash("wrong");
+      setTimeout(() => setShake(false), 600);
+    }
+  }
+
+  function next() {
+    if (idx < questions.length - 1) {
+      setIdx(i => i + 1);
+      setSelected(null);
+      setFlash(null);
+    } else {
+      setDone(true);
+      onComplete(60);
+    }
+  }
+
+  const q = questions[idx];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @keyframes correctFlash { 0%{background:rgba(0,217,192,0.3)} 100%{background:transparent} }
+        @keyframes wrongFlash { 0%{background:rgba(255,95,110,0.3)} 100%{background:transparent} }
+        @keyframes shakeIt { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)} }
+        @keyframes xpBadge { 0%{transform:scale(0) translateY(10px);opacity:0} 60%{transform:scale(1.2) translateY(-5px)} 100%{transform:scale(1) translateY(0);opacity:1} }
+        .shake { animation:shakeIt 0.5s ease-out; }
+        .xp-badge { animation:xpBadge 0.5s ease-out; }
+      `}</style>
+
+      {done ? (
+        <div style={{ textAlign: "center", padding: 24 }}>
+          <div style={{ fontSize: 56 }}>🏆</div>
+          <div style={{ color: "#00D9C0", fontSize: 24, fontWeight: 900, margin: "10px 0" }}>Challenge Complete!</div>
+          <div style={{ color: "#FFB800", fontSize: 18 }}>Score: {score} / 60 XP</div>
+          <div style={{ color: "#7B85A8", fontSize: 14, marginTop: 8 }}>You have mastered operators!</div>
         </div>
-      )}
-
-
-
-
-      {/* ========================================== */}
-      {/* SECTION 5: OPERATOR PRECEDENCE (Bubble Popper) */}
-      {/* ========================================== */}
-      {sectionIndex === 5 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          <section className="glass-panel p-4 rounded-xl space-y-3">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-tertiary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">format_list_numbered</span>
-                Precedence order: Who is the Boss? 👑
-              </h3>
-              <p className="text-body-md text-on-surface-variant leading-relaxed">
-                Precedence rules decide which operator gets evaluated first inside complex math statements.
-              </p>
-            </div>
-
-            {/* Operator glossary grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-white/10">
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-tertiary font-bold text-xs mb-0.5">Priority 1: ( )</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Parentheses:</strong> The absolute Boss! Whatever is inside parentheses must be solved first.</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-tertiary font-bold text-xs mb-0.5">Priority 2: *, /, %</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Multipliers &amp; Remainder:</strong> Solved next, going from left to right.</div>
-              </div>
-              <div className="bg-white/5 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-left">
-                <div className="text-tertiary font-bold text-xs mb-0.5">Priority 3: +, -</div>
-                <div className="text-on-surface-variant font-sans leading-tight"><strong>Adders &amp; Subtractors:</strong> Solved last of all.</div>
-              </div>
-            </div>
-          </section>
-
-          <section className="glass-panel p-5 rounded-xl space-y-4 border border-tertiary/20">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 text-xs font-mono">
-              <span className="text-tertiary font-bold">Popping Board</span>
-              <span className="text-primary-fixed-dim">{precLevel === 0 ? "Level 1: 4 + 5 * 2" : "Level 2: (3 + 2) * 4"}</span>
-            </div>
-
-            <div className="h-28 bg-surface-container-lowest border border-white/5 rounded-xl flex items-center justify-center gap-4 relative">
-              {precLevel === 0 ? (
-                !level0Solved ? (
-                  <div className="flex items-center gap-3 font-code-md text-sm">
-                    <span>4</span>
-                    <button
-                      onClick={() => handlePopBubble("add")}
-                      className="w-8 h-8 rounded-full border border-white/20 hover:border-error hover:bg-error/15 text-xs font-bold cursor-pointer transition-all flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                    <span>5</span>
-                    <button
-                      onClick={() => handlePopBubble("mul")}
-                      className="w-8 h-8 rounded-full border border-primary hover:bg-primary/20 hover:scale-110 text-xs font-bold cursor-pointer transition-all flex items-center justify-center shadow"
-                    >
-                      *
-                    </button>
-                    <span>2</span>
-                  </div>
-                ) : (
-                  <div className="text-center space-y-2">
-                    <span className="font-mono text-sm text-primary font-bold">Solved Level 1: 14</span>
-                    <button
-                      onClick={() => {
-                        setPrecLevel(1);
-                        setPrecFeedback("Level 2: Popping override parameters! Click the operator bubble that evaluates first.");
-                      }}
-                      className="block mx-auto px-4 py-1.5 bg-tertiary-container text-on-tertiary-container rounded font-bold text-xs"
-                    >
-                      GO TO LEVEL 2
-                    </button>
-                  </div>
-                )
-              ) : (
-                !precSolved ? (
-                  <div className="flex items-center gap-3 font-code-md text-sm">
-                    <button
-                      onClick={() => handlePopBubble("paren")}
-                      className="px-3.5 py-1.5 rounded-full border-2 border-primary bg-primary/10 hover:scale-110 text-xs font-bold cursor-pointer transition-all shadow"
-                    >
-                      ( 3 + 2 )
-                    </button>
-                    <button
-                      onClick={() => handlePopBubble("mul")}
-                      className="w-8 h-8 rounded-full border border-white/20 hover:border-error hover:bg-error/15 text-xs font-bold cursor-pointer transition-all flex items-center justify-center"
-                    >
-                      *
-                    </button>
-                    <span>4</span>
-                  </div>
-                ) : (
-                  <span className="text-primary font-bold text-xs">🎉 Precedence Mastery Achieved! (Output: 20)</span>
-                )
-              )}
-            </div>
-
-            <p className="text-xs font-mono text-center text-primary-fixed">
-              {precFeedback}
-            </p>
-
-            {precSolved && (
-              <div className="flex justify-end pt-2">
-                <button
-                  disabled={hasCompleted}
-                  onClick={handleSectionComplete}
-                  className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                    hasCompleted
-                      ? "bg-primary/10 text-primary-fixed-dim border border-primary/30"
-                      : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                  }`}
-                >
-                  {hasCompleted ? "SECTION COMPLETED" : "COMPLETE & EARN 10 XP"}
-                </button>
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-
-      {/* ========================================== */}
-      {/* SECTION 6: LESSON 2 CAPSTONE (Robot Bridge)*/}
-      {/* ========================================== */}
-      {sectionIndex === 6 && (
-        <div className="space-y-6 animate-fadeIn text-left">
-          <section className="glass-panel p-4 rounded-xl space-y-2">
-            <h3 className="text-sm font-bold text-primary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px]">verified</span>
-              Lesson 2 Capstone: Robot Canister Mission
-            </h3>
-            <p className="text-body-md text-on-surface-variant leading-relaxed font-sans">
-              Load an **ODD** canister size **between 10 and 20** to satisfy bridge security checks and drive the robot home.
-            </p>
-          </section>
-
-          {/* Bridge Arena */}
-          <div className="w-full h-24 bg-surface-container-lowest border border-white/5 rounded-xl flex items-center justify-between p-4 relative overflow-hidden">
-            {/* Robot */}
-            <div className={`text-4xl transition-all duration-1000 ${capSolved ? "translate-x-[75%]" : "translate-x-0"}`}>
-              🤖
-            </div>
-
-            {/* Toxic lasers bridge */}
-            <div className="flex-1 h-6 border-y-2 border-white/10 mx-6 relative flex items-center justify-center">
-              {!capSolved ? (
-                <div className="absolute inset-0 bg-error/20 flex items-center justify-center font-bold text-[9px] text-error font-mono tracking-widest animate-pulse">
-                  ⚡ TOXIC LASER WALL ⚡
-                </div>
-              ) : (
-                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center font-bold text-[9px] text-primary font-mono tracking-widest">
-                  🔓 BRIDGE SHIELDS DOWN
-                </div>
-              )}
-            </div>
-
-            <div className="text-2xl">🏠</div>
+      ) : (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "#7B85A8", fontSize: 13 }}>Question {idx + 1} / {questions.length}</span>
+            <span style={{ color: "#FFB800", fontWeight: 700, fontSize: 13 }}>XP: {score}</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-            {/* Canister slider */}
-            <div className="md:col-span-6 glass-panel p-4 rounded-xl border border-white/5 flex flex-col justify-between space-y-3">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-mono">
-                  <span>Canister Size:</span>
-                  <span className="text-primary font-bold">{capNumber}</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="30"
-                  value={capNumber}
-                  onChange={(e) => setCapNumber(parseInt(e.target.value, 10))}
-                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
-                />
-              </div>
-
-              <div className="bg-surface-container-low p-3 rounded font-code-md text-xs space-y-1">
-                <div>isValid = inRange &amp;&amp; isOdd;</div>
-                <div className="text-[10px] text-outline-variant">
-                  • inRange = (canister &gt;= 10 &amp;&amp; canister &lt;= 20)
-                  <br />• isOdd = (canister % 2 != 0)
-                </div>
-              </div>
-            </div>
-
-            {/* Variable display HUD */}
-            <div className="md:col-span-6 glass-panel p-4 rounded-xl border border-white/5 flex flex-col justify-between space-y-2">
-              <span className="text-[10px] font-mono text-outline-variant uppercase">Logic HUD status</span>
-              <div className="font-code-md text-xs space-y-1.5">
-                <div className="flex justify-between">
-                  <span>isOdd:</span>
-                  <span className={!capEven ? "text-primary font-bold" : "text-error"}>{!capEven ? "1 (True)" : "0 (False)"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>inRange:</span>
-                  <span className={capInRange ? "text-primary font-bold" : "text-error"}>{capInRange ? "1 (True)" : "0 (False)"}</span>
-                </div>
-                <div className="flex justify-between border-t border-white/5 pt-1">
-                  <span>isValid (Shield key):</span>
-                  <span className={capValid ? "text-primary font-black animate-pulse" : "text-error font-bold"}>
-                    {capValid ? "1 (SUCCESS)" : "0 (LOCKED)"}
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div style={{ background: "#0D1117", borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(0,217,192,0.2)", fontFamily: "monospace", fontSize: 17, color: "#E9EDF8", textAlign: "center" } as React.CSSProperties}
+            className={shake ? "shake" : ""}>
+            {q.expr}
           </div>
 
-          <p className="text-xs font-mono text-center text-primary-fixed-dim">
-            {capFeedback}
-          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {q.options.map(opt => {
+              const isCorrect = opt === q.correct;
+              const isSelected = opt === selected;
+              let bg = "rgba(24,29,46,0.9)";
+              let border = "1px solid rgba(123,133,168,0.3)";
+              if (selected !== null) {
+                if (isCorrect) { bg = "rgba(0,217,192,0.2)"; border = "1px solid #00D9C0"; }
+                else if (isSelected) { bg = "rgba(255,95,110,0.2)"; border = "1px solid #FF5F6E"; }
+              }
+              return (
+                <button key={opt} onClick={() => pick(opt)}
+                  style={{ padding: "12px", borderRadius: 10, border, background: bg, color: "#E9EDF8", fontSize: 16, fontWeight: 700, cursor: selected !== null ? "default" : "pointer", transition: "all 0.2s", fontFamily: "monospace" }}>
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
 
-          {/* Complete capstone */}
-          {capSolved && (
-            <div className="flex justify-end pt-2 animate-fadeIn">
-              <button
-                disabled={hasCompleted}
-                onClick={handleSectionComplete}
-                className={`px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                  hasCompleted
-                    ? "bg-primary/10 text-primary-fixed-dim border border-primary/30"
-                    : "bg-primary text-on-primary hover:bg-primary-container code-glow"
-                }`}
-              >
-                {hasCompleted ? (
-                  <>
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
-                    LESSON COMPLETE
-                  </>
-                ) : (
-                  "COMPLETE LESSON & EARN 20 XP"
-                )}
-              </button>
+          {selected !== null && (
+            <div style={{ borderRadius: 10, padding: "10px 14px", background: flash === "correct" ? "rgba(0,217,192,0.1)" : "rgba(255,95,110,0.1)", border: `1px solid ${flash === "correct" ? "#00D9C0" : "#FF5F6E"}`, color: "#E9EDF8", fontSize: 13 }}>
+              {flash === "correct" ? <span style={{ color: "#00D9C0", fontWeight: 700 }}>✓ Correct! </span> : <span style={{ color: "#FF5F6E", fontWeight: 700 }}>✗ Not quite! </span>}
+              {q.explanation}
             </div>
           )}
-        </div>
-      )}
 
+          {selected !== null && (
+            <button onClick={next}
+              style={{ background: "#00D9C0", color: "#0D1117", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+              {idx < questions.length - 1 ? "Next Question →" : "Finish Challenge!"}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Main Export ────────────────────────────────────────────────────────────────
+export default function SectionOperators({ sectionIndex, onComplete }: Props) {
+  const titles = [
+    "Arithmetic: The Calculation Machine",
+    "Assignment: The Arrow Machine",
+    "Increment: The Step Counter",
+    "Relational: The Comparison Court",
+    "Logical: The Gate Factory",
+    "Precedence: The Math Traffic Lights",
+    "Capstone: Operator Challenge",
+  ];
+
+  const sections = [
+    <Section0 key={0} onComplete={onComplete} />,
+    <Section1 key={1} onComplete={onComplete} />,
+    <Section2 key={2} onComplete={onComplete} />,
+    <Section3 key={3} onComplete={onComplete} />,
+    <Section4 key={4} onComplete={onComplete} />,
+    <Section5 key={5} onComplete={onComplete} />,
+    <Section6 key={6} onComplete={onComplete} />,
+  ];
+
+  return (
+    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#00D9C0" }} />
+          <span style={{ color: "#7B85A8", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Operators · {sectionIndex + 1} / 7
+          </span>
+        </div>
+        <h2 style={{ color: "#E9EDF8", fontSize: 20, fontWeight: 800, margin: 0 }}>{titles[sectionIndex]}</h2>
+      </div>
+
+      {sections[sectionIndex]}
     </div>
   );
 }
