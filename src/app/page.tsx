@@ -358,7 +358,7 @@ export default function Home() {
       </header>
 
       {/* Main content viewport */}
-      <main className="pt-20 pb-32 px-4 space-y-6 max-w-5xl mx-auto w-full">
+      <main className="pt-4 md:pt-20 pb-4 md:pb-32 px-4 space-y-6 max-w-5xl mx-auto w-full">
         
         {/* LEARN VIEW */}
         {activeTab === "learn" && (
