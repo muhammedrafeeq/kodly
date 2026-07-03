@@ -275,26 +275,24 @@ export default function Home() {
   return (
     <>
       {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 border-b glass-panel" style={{ borderColor: "var(--border)" }}>
-        <div className="max-w-5xl mx-auto w-full h-14 px-5 flex justify-between items-center">
-          <div className="flex items-center gap-2.5 select-none">
-            <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(0,217,192,0.15)", border: "1px solid rgba(0,217,192,0.30)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 15, color: "#00D9C0" }}>terminal</span>
-            </div>
-            <span style={{ fontFamily: "monospace", fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em" }}>
-              <span style={{ color: "#A78BFA" }}>Ko</span><span style={{ color: "#00D9C0" }}>dly</span>
+      <header className="fixed top-0 left-0 w-full z-50 border-b border-white/10 bg-surface-dim/80 backdrop-blur-xl">
+        <div className="max-w-5xl mx-auto w-full h-16 px-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 select-none">
+            <span className="material-symbols-outlined text-primary-fixed-dim" data-icon="terminal">
+              terminal
+            </span>
+            <span 
+              className="text-headline-lg-mobile font-bold tracking-normal"
+              style={{ fontFamily: "var(--font-share-tech-mono), monospace" }}
+            >
+              <span className="text-secondary">Ko</span>
+              <span className="text-primary-fixed-dim">dly</span>
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", background: "rgba(0,217,192,0.09)", border: "1px solid rgba(0,217,192,0.20)", borderRadius: 99 }}>
-              <span style={{ fontFamily: "monospace", fontSize: 11, fontWeight: 700, color: "#00D9C0", letterSpacing: "0.05em" }}>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-surface-container-high rounded-full border border-white/5">
+              <span className="text-label-sm font-label-sm text-on-surface">
                 {xp.toLocaleString()} XP
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 12px", background: "rgba(167,139,250,0.09)", border: "1px solid rgba(167,139,250,0.20)", borderRadius: 99 }}>
-              <span style={{ fontSize: 12 }}>🔥</span>
-              <span style={{ fontFamily: "monospace", fontSize: 11, fontWeight: 700, color: "#A78BFA", letterSpacing: "0.05em" }}>
-                {streak}d
               </span>
             </div>
           </div>
@@ -310,175 +308,123 @@ export default function Home() {
             {/* 1. MODULES CATALOG HOME PAGE VIEW */}
             {activeLessonId === null ? (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-
-                {/* Left Column: Learning Syllabus */}
-                <div className="md:col-span-8 space-y-8">
-
-                  {/* Page header */}
-                  <div style={{ paddingTop: 4 }}>
-                    <p style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#00D9C0", fontWeight: 700, marginBottom: 6 }}>
-                      C Programming · Beginner Path
-                    </p>
-                    <h1 style={{ fontSize: 26, fontWeight: 700, color: "#E9EDF8", letterSpacing: "-0.01em", lineHeight: 1.25 }}>
+                
+                {/* Left Column: Learning Syllabus modules list */}
+                <div className="md:col-span-8 space-y-6">
+                  
+                  <section className="space-y-1">
+                    <span className="text-label-sm font-label-sm text-primary uppercase tracking-widest">
+                      Chapters
+                    </span>
+                    <h1 className="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">
                       Learning Syllabus
                     </h1>
-                    <p style={{ fontSize: 13, color: "#7B85A8", marginTop: 6, lineHeight: 1.55 }}>
-                      Complete lessons in order to unlock the next. Each concept builds on the last.
-                    </p>
-                  </div>
+                  </section>
 
-                  {/* Modules list */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-                    {modules.map((mod, modIdx) => {
-                      const modColors = ["#00D9C0", "#A78BFA"];
-                      const modIcons = ["rocket_launch", "psychology"];
-                      const modColor = modColors[modIdx % modColors.length];
-                      const modIcon = modIcons[modIdx % modIcons.length];
-
+                  {/* Modules map list */}
+                  <div className="space-y-6">
+                    {modules.map((mod) => {
+                      // Module 2 unlocks after lesson_1_3 is completed
                       const isModLocked = mod.locked &&
                         !(mod.id === "mod_2" ? unlockedLessons.has("lesson_2_1") : unlockedLessons.has("lesson_1_2"));
 
                       return (
-                        <div key={mod.id}>
-                          {/* Module header */}
-                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                            <div style={{
-                              width: 32, height: 32, borderRadius: 8,
-                              background: `${modColor}18`,
-                              border: `1px solid ${modColor}30`,
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              flexShrink: 0,
-                              opacity: isModLocked ? 0.4 : 1,
-                            }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: 17, color: isModLocked ? "#4A5070" : modColor }}>
-                                {isModLocked ? "lock" : modIcon}
-                              </span>
-                            </div>
-                            <div>
-                              <p style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: isModLocked ? "#4A5070" : modColor, fontWeight: 700 }}>
-                                Module {modIdx + 1}
-                              </p>
-                              <h2 style={{ fontSize: 13, fontWeight: 700, color: isModLocked ? "#4A5070" : "#E9EDF8", lineHeight: 1.2 }}>
-                                {mod.title.replace(/^Module \d+: /, "")}
-                              </h2>
-                            </div>
-                          </div>
+                        <section key={mod.id} className="space-y-3">
+                          <h2 className="text-xs font-mono font-bold text-outline-variant uppercase tracking-wider flex items-center gap-1.5">
+                            {isModLocked ? (
+                              <span className="material-symbols-outlined text-[16px] text-outline-variant/60">lock</span>
+                            ) : (
+                              <span className="material-symbols-outlined text-[16px] text-primary">circle</span>
+                            )}
+                            {mod.title}
+                          </h2>
 
-                          {/* Lesson cards */}
-                          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingLeft: 42 }}>
-                            {mod.lessons.map((lesson, lessonIdx) => {
+                          <div className="space-y-2.5">
+                            {mod.lessons.map((lesson) => {
                               const isLessonUnlocked = unlockedLessons.has(lesson.id) || lesson.id === "lesson_1_1";
                               const isCompleted = completedLessons.has(lesson.id);
-                              const sectionCount = (LESSON_SECTIONS[lesson.id] || []).length;
-
-                              const borderColor = isCompleted
-                                ? "rgba(0,217,192,0.35)"
-                                : isLessonUnlocked
-                                ? "rgba(0,217,192,0.18)"
-                                : "rgba(255,255,255,0.055)";
-                              const leftAccent = isCompleted ? "#00D9C0" : isLessonUnlocked ? "#00D9C040" : "transparent";
-                              const cardBg = isLessonUnlocked ? "rgba(24,29,46,0.85)" : "rgba(13,17,23,0.60)";
 
                               return (
                                 <div
                                   key={lesson.id}
                                   onClick={() => isLessonUnlocked && handleOpenLesson(lesson.id)}
-                                  style={{
-                                    background: cardBg,
-                                    border: `1px solid ${borderColor}`,
-                                    borderRadius: 12,
-                                    borderLeft: `3px solid ${isCompleted ? "#00D9C0" : isLessonUnlocked ? "#00D9C050" : "#ffffff10"}`,
-                                    padding: "14px 16px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 12,
-                                    cursor: isLessonUnlocked ? "pointer" : "not-allowed",
-                                    opacity: isLessonUnlocked ? 1 : 0.42,
-                                    transition: "all 0.18s ease",
-                                    backdropFilter: "blur(8px)",
-                                  }}
-                                  onMouseEnter={e => {
-                                    if (isLessonUnlocked) {
-                                      (e.currentTarget as HTMLDivElement).style.borderColor = isCompleted ? "rgba(0,217,192,0.55)" : "rgba(0,217,192,0.35)";
-                                      (e.currentTarget as HTMLDivElement).style.background = "rgba(24,29,46,1)";
-                                    }
-                                  }}
-                                  onMouseLeave={e => {
-                                    (e.currentTarget as HTMLDivElement).style.borderColor = borderColor;
-                                    (e.currentTarget as HTMLDivElement).style.background = cardBg;
-                                  }}
+                                  className={`glass-panel p-4 rounded-xl flex items-center justify-between border transition-all ${
+                                    isLessonUnlocked
+                                      ? "cursor-pointer border-white/5 hover:border-primary/30 hover:bg-white/10 active:scale-[0.99]"
+                                      : "opacity-45 cursor-not-allowed border-white/5 bg-white/0"
+                                  }`}
                                 >
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <p style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: isLessonUnlocked ? "#00D9C0" : "#4A5070", fontWeight: 700, marginBottom: 4 }}>
-                                      {isLessonUnlocked ? `Lesson ${lessonIdx + 1}` : "Locked"}
-                                    </p>
-                                    <h3 style={{ fontSize: 13, fontWeight: 600, color: isLessonUnlocked ? "#E9EDF8" : "#7B85A8", lineHeight: 1.3 }}>
-                                      {lesson.title.replace(/^Lesson \d+: /, "")}
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] font-mono text-outline-variant">
+                                      {isLessonUnlocked
+                                        ? lesson.id.replace("lesson_", "MODULE ").replace("_", " — LESSON ").toUpperCase()
+                                        : "LOCKED"}
+                                    </span>
+                                    <h3 className="text-xs font-bold text-on-surface text-left">
+                                      {lesson.title}
                                     </h3>
-                                    {isLessonUnlocked && sectionCount > 0 && (
-                                      <p style={{ fontFamily: "monospace", fontSize: 10, color: "#4A5070", marginTop: 5 }}>
-                                        {sectionCount} sections
-                                      </p>
-                                    )}
                                   </div>
 
-                                  <div style={{ flexShrink: 0 }}>
+                                  {/* Status icons */}
+                                  <div className="flex items-center gap-2">
                                     {isCompleted ? (
-                                      <div style={{ width: 28, height: 28, borderRadius: 99, background: "rgba(0,217,192,0.15)", border: "1px solid rgba(0,217,192,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 15, color: "#00D9C0" }}>check</span>
-                                      </div>
+                                      <span className="material-symbols-outlined text-primary text-[20px]">
+                                        verified
+                                      </span>
                                     ) : isLessonUnlocked ? (
-                                      <div style={{ width: 28, height: 28, borderRadius: 99, background: "rgba(0,217,192,0.10)", border: "1px solid rgba(0,217,192,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 15, color: "#00D9C0" }}>play_arrow</span>
-                                      </div>
+                                      <span className="material-symbols-outlined text-primary-fixed-dim text-[20px] animate-pulse">
+                                        play_circle
+                                      </span>
                                     ) : (
-                                      <div style={{ width: 28, height: 28, borderRadius: 99, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 14, color: "#4A5070" }}>lock</span>
-                                      </div>
+                                      <span className="material-symbols-outlined text-outline-variant/50 text-[18px]">
+                                        lock
+                                      </span>
                                     )}
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
-                        </div>
+                        </section>
                       );
                     })}
                   </div>
+
                 </div>
 
-                {/* Right Column: Stats Sidebar */}
-                <div className="hidden md:block md:col-span-4 space-y-4">
-
-                  {/* Progress card */}
-                  <div style={{ background: "rgba(24,29,46,0.85)", border: "1px solid var(--border)", borderRadius: 14, padding: "18px 18px 16px", backdropFilter: "blur(12px)" }}>
-                    <p style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#A78BFA", fontWeight: 700, marginBottom: 14 }}>
-                      Your Progress
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                      {[
-                        { label: "Rank", value: "C Apprentice", color: "#00D9C0" },
-                        { label: "XP Earned", value: `${xp.toLocaleString()} XP`, color: "#00D9C0" },
-                        { label: "Daily Streak", value: `${streak} Days 🔥`, color: "#A78BFA" },
-                        { label: "Completed", value: `${completedLessons.size} Lessons`, color: "#5EEAD4" },
-                      ].map(row => (
-                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontFamily: "monospace", fontSize: 11, color: "#7B85A8" }}>{row.label}</span>
-                          <span style={{ fontFamily: "monospace", fontSize: 11, fontWeight: 700, color: row.color }}>{row.value}</span>
-                        </div>
-                      ))}
+                {/* Right Column: Profile & Stats Sidebar (Visible on desktop) */}
+                <div className="hidden md:block md:col-span-4 space-y-6">
+                  
+                  {/* Profile & XP Status Card */}
+                  <div className="glass-panel p-4 rounded-xl space-y-4">
+                    <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px]">account_circle</span>
+                      Progress Panel
+                    </h3>
+                    <div className="space-y-2.5 text-xs font-mono text-outline-variant">
+                      <div className="flex justify-between items-center">
+                        <span>Current Rank:</span>
+                        <span className="text-primary-fixed-dim font-bold">C Apprentice</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>XP Earned:</span>
+                        <span className="text-primary-fixed-dim font-bold">{xp.toLocaleString()} XP</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Daily Streak:</span>
+                        <span className="text-secondary font-bold">{streak} Days 🔥</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Tip card */}
-                  <div style={{ background: "rgba(255,184,0,0.06)", border: "1px solid rgba(255,184,0,0.18)", borderRadius: 14, padding: "14px 16px" }}>
-                    <p style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#FFB800", fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 13 }}>lightbulb</span>
-                      Tip
-                    </p>
-                    <p style={{ fontSize: 12, color: "#7B85A8", lineHeight: 1.6 }}>
-                      In C, every variable needs a <span style={{ color: "#A78BFA", fontFamily: "monospace", fontWeight: 700 }}>type</span>. An <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#A78BFA" }}>int</span> uses 4 bytes, a <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#A78BFA" }}>char</span> uses 1 byte. Choosing the right type saves memory!
+                  {/* Syllabus Tips Card */}
+                  <div className="glass-panel p-4 rounded-xl space-y-2">
+                    <h3 className="text-xs font-mono font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px]">lightbulb</span>
+                      Programming Tip
+                    </h3>
+                    <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                      In C programming, declarations reserve exact bytes in RAM (e.g. 4 bytes for an <code className="text-secondary font-bold">int</code>, 1 byte for a <code className="text-secondary font-bold">char</code>). Always use appropriate types to save system memory!
                     </p>
                   </div>
 
@@ -496,15 +442,13 @@ export default function Home() {
                   <div className="max-w-3xl mx-auto w-full space-y-6">
                     
                     {/* Lesson Header Navigation */}
-                    <div style={{ background: "rgba(24,29,46,0.90)", border: "1px solid var(--border)", borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(14px)", display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div className="glass-panel p-4 rounded-2xl border border-white/5 space-y-3">
                       <div className="flex items-center justify-between">
                         <button
                           onClick={() => setActiveLessonId(null)}
-                          style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 11, fontWeight: 700, color: "#7B85A8", letterSpacing: "0.05em", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
-                          onMouseEnter={e => (e.currentTarget.style.color = "#00D9C0")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "#7B85A8")}
+                          className="flex items-center gap-1 text-xs font-mono font-bold text-on-surface-variant hover:text-primary cursor-pointer active:scale-95 transition-all"
                         >
-                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_back</span>
+                          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
                           Syllabus
                         </button>
                         
@@ -926,43 +870,81 @@ export default function Home() {
       )}
 
       {/* BottomNavBar */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 glass-panel" style={{ borderTop: "1px solid var(--border)", borderBottom: "none", borderLeft: "none", borderRight: "none" }}>
+      <nav className="fixed bottom-0 left-0 w-full z-50 border-t border-white/10 bg-surface-container-lowest/90 backdrop-blur-lg">
         <div className="max-w-5xl mx-auto w-full flex justify-around items-center px-4 py-2">
-          {([
-            { tab: "learn", icon: "school", label: "Learn", color: "#00D9C0" },
-            { tab: "practice", icon: "extension", label: "Practice", color: "#A78BFA" },
-            { tab: "code", icon: "keyboard", label: "Code", color: "#00D9C0" },
-            { tab: "stats", icon: "insights", label: "Stats", color: "#5EEAD4" },
-          ] as const).map(({ tab, icon, label, color }) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  display: "flex", flexDirection: "column", alignItems: "center",
-                  gap: 2, padding: "6px 14px", borderRadius: 12,
-                  background: isActive ? `${color}15` : "transparent",
-                  border: "none", cursor: "pointer",
-                  transition: "all 0.18s ease",
-                  color: isActive ? color : "#4A5070",
-                }}
-              >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 22, color: isActive ? color : "#4A5070", fontVariationSettings: `'FILL' ${isActive ? 1 : 0}` }}
-                >
-                  {icon}
-                </span>
-                <span style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, color: isActive ? color : "#4A5070" }}>
-                  {label}
-                </span>
-              </button>
-            );
-          })}
+          <button
+            onClick={() => setActiveTab("learn")}
+            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
+              activeTab === "learn"
+                ? "text-primary-fixed-dim font-bold bg-primary/10"
+                : "text-on-surface-variant hover:text-primary"
+            }`}
+          >
+            <span
+              className="material-symbols-outlined"
+              data-icon="school"
+              style={{ fontVariationSettings: `'FILL' ${activeTab === "learn" ? 1 : 0}` }}
+            >
+              school
+            </span>
+            <span className="text-label-sm font-label-sm">Learn</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("practice")}
+            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
+              activeTab === "practice"
+                ? "text-secondary font-bold bg-secondary-container/20"
+                : "text-on-surface-variant hover:text-secondary"
+            }`}
+          >
+            <span
+              className="material-symbols-outlined"
+              data-icon="extension"
+              style={{ fontVariationSettings: `'FILL' ${activeTab === "practice" ? 1 : 0}` }}
+            >
+              extension
+            </span>
+            <span className="text-label-sm font-label-sm">Practice</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("code")}
+            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
+              activeTab === "code"
+                ? "text-primary-fixed-dim font-bold bg-primary/10"
+                : "text-on-surface-variant hover:text-primary"
+            }`}
+          >
+            <span
+              className="material-symbols-outlined"
+              data-icon="keyboard"
+              style={{ fontVariationSettings: `'FILL' ${activeTab === "code" ? 1 : 0}` }}
+            >
+              keyboard
+            </span>
+            <span className="text-label-sm font-label-sm">Code</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("stats")}
+            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
+              activeTab === "stats"
+                ? "text-tertiary font-bold bg-tertiary/10"
+                : "text-on-surface-variant hover:text-tertiary"
+            }`}
+          >
+            <span
+              className="material-symbols-outlined"
+              data-icon="insights"
+              style={{ fontVariationSettings: `'FILL' ${activeTab === "stats" ? 1 : 0}` }}
+            >
+              insights
+            </span>
+            <span className="text-label-sm font-label-sm">Stats</span>
+          </button>
         </div>
       </nav>
-
     </>
   );
 }
