@@ -5,6 +5,9 @@ import SectionVariables from "@/components/SectionVariables";
 import SectionDatatypes from "@/components/SectionDatatypes";
 import SectionIO from "@/components/SectionIO";
 import SectionOperators from "@/components/SectionOperators";
+import SectionComments from "@/components/SectionComments";
+import SectionIfStatement from "@/components/SectionIfStatement";
+import SectionSwitch from "@/components/SectionSwitch";
 
 // Structure for a C Quiz Question
 interface QuizQuestion {
@@ -91,7 +94,16 @@ export default function Home() {
       lessons: [
         { id: "lesson_1_1", title: "Lesson 1: Variables, Datatypes & I/O Operations", locked: false },
         { id: "lesson_1_2", title: "Lesson 2: Operators & Arithmetic", locked: true },
-        { id: "lesson_1_3", title: "Lesson 3: Conditionals & Flow Control", locked: true },
+        { id: "lesson_1_3", title: "Lesson 3: Comments & Program Structure", locked: true },
+      ],
+    },
+    {
+      id: "mod_2",
+      title: "Module 2: Decision Making",
+      locked: true,
+      lessons: [
+        { id: "lesson_2_1", title: "Lesson 1: The if Statement", locked: true },
+        { id: "lesson_2_2", title: "Lesson 2: The switch Statement", locked: true },
       ],
     },
   ];
@@ -144,7 +156,7 @@ export default function Home() {
     setActiveSectionIndex(0);
   };
 
-  // Dynamic LESSON_SECTIONS map for Lesson 1 & Lesson 2
+  // Dynamic LESSON_SECTIONS map for all lessons
   const LESSON_SECTIONS: Record<string, { label: string; index: number }[]> = {
     lesson_1_1: [
       { label: "Variables", index: 0 },
@@ -159,6 +171,23 @@ export default function Home() {
       { label: "Logical", index: 4 },
       { label: "Precedence", index: 5 },
       { label: "Capstone", index: 6 },
+    ],
+    lesson_1_3: [
+      { label: "Sticky Notes", index: 0 },
+      { label: "A Recipe", index: 1 },
+      { label: "Baking the Cake", index: 2 },
+    ],
+    lesson_2_1: [
+      { label: "The Bouncer", index: 0 },
+      { label: "Two Doors", index: 1 },
+      { label: "Mail Slots", index: 2 },
+      { label: "Rules in Rules", index: 3 },
+      { label: "Capstone", index: 4 },
+    ],
+    lesson_2_2: [
+      { label: "Vending Machine", index: 0 },
+      { label: "Falling Dominoes", index: 1 },
+      { label: "Capstone", index: 2 },
     ],
   };
 
@@ -182,11 +211,10 @@ export default function Home() {
         setCompletedLessons(nextCompleted);
 
         const nextUnlocked = new Set(unlockedLessons);
-        if (activeLessonId === "lesson_1_1") {
-          nextUnlocked.add("lesson_1_2"); // Unlock Lesson 2!
-        } else if (activeLessonId === "lesson_1_2") {
-          nextUnlocked.add("lesson_1_3"); // Unlock Lesson 3!
-        }
+        if (activeLessonId === "lesson_1_1") nextUnlocked.add("lesson_1_2");
+        else if (activeLessonId === "lesson_1_2") nextUnlocked.add("lesson_1_3");
+        else if (activeLessonId === "lesson_1_3") nextUnlocked.add("lesson_2_1");
+        else if (activeLessonId === "lesson_2_1") nextUnlocked.add("lesson_2_2");
         setUnlockedLessons(nextUnlocked);
 
         if (typeof window !== "undefined") {
@@ -194,8 +222,11 @@ export default function Home() {
           localStorage.setItem("kodly_unlocked", JSON.stringify(Array.from(nextUnlocked)));
         }
 
-        const lessonTitle = activeLessonId === "lesson_1_1" ? "Lesson 1" : "Lesson 2";
-        triggerXP(20, `+20 XP (${lessonTitle} Completed!)`);
+        const lessonTitles: Record<string, string> = {
+          lesson_1_1: "Lesson 1", lesson_1_2: "Lesson 2", lesson_1_3: "Lesson 3",
+          lesson_2_1: "Module 2 — Lesson 1", lesson_2_2: "Module 2 — Lesson 2",
+        };
+        triggerXP(20, `+20 XP (${lessonTitles[activeLessonId ?? ""] ?? "Lesson"} Completed!)`);
         setActiveLessonId(null); // Back to syllabus homepage
       }, 2000);
     }
@@ -293,8 +324,9 @@ export default function Home() {
                   {/* Modules map list */}
                   <div className="space-y-6">
                     {modules.map((mod) => {
-                      // Check if module is locked
-                      const isModLocked = mod.locked && !unlockedLessons.has("lesson_1_2");
+                      // Module 2 unlocks after lesson_1_3 is completed
+                      const isModLocked = mod.locked &&
+                        !(mod.id === "mod_2" ? unlockedLessons.has("lesson_2_1") : unlockedLessons.has("lesson_1_2"));
 
                       return (
                         <section key={mod.id} className="space-y-3">
@@ -324,7 +356,9 @@ export default function Home() {
                                 >
                                   <div className="space-y-1">
                                     <span className="text-[10px] font-mono text-outline-variant">
-                                      {lesson.id === "lesson_1_1" ? "MODULE 1 — LESSON 1" : "LOCKED"}
+                                      {isLessonUnlocked
+                                        ? lesson.id.replace("lesson_", "MODULE ").replace("_", " — LESSON ").toUpperCase()
+                                        : "LOCKED"}
                                     </span>
                                     <h3 className="text-xs font-bold text-on-surface text-left">
                                       {lesson.title}
@@ -511,6 +545,18 @@ export default function Home() {
                           sectionIndex={activeSectionIndex}
                           onComplete={handleSectionComplete}
                         />
+                      )}
+
+                      {activeLessonId === "lesson_1_3" && (
+                        <SectionComments onComplete={handleSectionComplete} />
+                      )}
+
+                      {activeLessonId === "lesson_2_1" && (
+                        <SectionIfStatement onComplete={handleSectionComplete} />
+                      )}
+
+                      {activeLessonId === "lesson_2_2" && (
+                        <SectionSwitch onComplete={handleSectionComplete} />
                       )}
                     </div>
 

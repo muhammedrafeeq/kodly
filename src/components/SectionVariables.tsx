@@ -167,7 +167,16 @@ export default function SectionVariables({ onComplete }: SectionVariablesProps) 
       {/* SUB-STEP 1: THE TOY BOX CONCEPT */}
       {subStep === 0 && (
         <div className="space-y-6 animate-fadeIn">
-          
+
+          {/* Analogy */}
+          <div className="rounded-xl p-4 text-left text-sm leading-relaxed font-sans"
+            style={{ background: "rgba(255,184,0,.09)", border: "1px solid rgba(255,184,0,.22)" }}>
+            <div className="text-[10px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "#FFB800" }}>💡 Analogy</div>
+            A labeled jar on a kitchen shelf. You can <strong>look inside</strong> to see what&apos;s there,
+            <strong> swap the contents</strong> anytime, but it only holds <strong>one thing at a time</strong>.
+            The label is the variable name. The contents are the value.
+          </div>
+
           {/* Concept definition */}
           <section className="glass-panel p-4 rounded-xl space-y-2 text-left">
             <h3 className="text-sm font-bold text-primary flex items-center gap-1.5">
@@ -175,9 +184,9 @@ export default function SectionVariables({ onComplete }: SectionVariablesProps) 
               What is a Variable?
             </h3>
             <p className="text-body-md text-on-surface-variant leading-relaxed font-sans">
-              Think of a <span className="text-primary font-bold font-semibold">variable</span> as a labeled **toy box** inside your computer&apos;s memory. 
-              It is a special place where your program can keep, read, and change values. 
-              Each box has a **name tag** on the front so you can find it easily, and a **type** that says what kinds of toys fit inside (like letters or numbers)!
+              Think of a <span className="text-primary font-bold">variable</span> as a labeled <strong>jar</strong> inside your computer&apos;s memory.
+              It is a special place where your program can keep, read, and change values.
+              Each jar has a <strong>label</strong> on the front so you can find it easily, and a <strong>type</strong> that says what kinds of things fit inside!
             </p>
           </section>
 
@@ -366,6 +375,29 @@ export default function SectionVariables({ onComplete }: SectionVariablesProps) 
               </div>
 
             </div>
+          </div>
+
+          {/* Concept Lock */}
+          <div className="rounded-xl p-4 text-left space-y-1.5"
+            style={{ background: "linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,218,243,.07))", border: "1px solid rgba(167,139,250,.30)" }}>
+            <div className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: "#A78BFA" }}>
+              🔒 Non-Replaceable Concept
+            </div>
+            <div className="text-sm text-on-surface leading-relaxed font-sans">
+              A variable is a <strong>named container</strong> that holds exactly one value at a time.
+              You can read what&apos;s inside. You can replace it. The name stays the same; the value can change.
+              Declaring without initializing leaves <strong style={{ color: "#FF5F6E" }}>garbage (cobweb values)</strong> inside — always initialize.
+            </div>
+          </div>
+
+          {/* Code reveal */}
+          <div className="rounded-xl overflow-hidden text-left" style={{ border: "1px solid rgba(0,218,243,.18)" }}>
+            <div className="px-4 py-2 text-[10px] font-mono font-bold uppercase tracking-widest" style={{ background: "rgba(0,218,243,.08)", color: "#00daf3" }}>
+              Code Reveal — three stages
+            </div>
+            <pre className="p-4 text-xs leading-relaxed bg-surface-container-lowest font-mono overflow-x-auto">{`int age;       // jar created, but has cobweb garbage inside ⚠️
+int age = 25;  // jar created AND filled — always do this
+age = 30;      // old value (25) thrown out, 30 takes its place`}</pre>
           </div>
 
         </div>
