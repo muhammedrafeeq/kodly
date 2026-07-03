@@ -275,25 +275,27 @@ export default function Home() {
   return (
     <>
       {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 border-b border-white/10 bg-surface-dim/80 backdrop-blur-xl">
-        <div className="max-w-5xl mx-auto w-full h-16 px-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 select-none">
-            <span className="material-symbols-outlined text-primary-fixed-dim" data-icon="terminal">
-              terminal
-            </span>
-            <span 
-              className="text-headline-lg-mobile font-bold tracking-normal"
-              style={{ fontFamily: "var(--font-share-tech-mono), monospace" }}
-            >
-              <span className="text-secondary">Ko</span>
-              <span className="text-primary-fixed-dim">dly</span>
+      <header className="fixed top-0 left-0 w-full z-50 glass-panel" style={{ borderBottom: "1px solid var(--border)", borderTop: "none", borderLeft: "none", borderRight: "none" }}>
+        <div className="max-w-5xl mx-auto w-full h-14 px-5 flex justify-between items-center">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 select-none">
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(0,217,192,0.14)", border: "1px solid rgba(0,217,192,0.28)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#00D9C0" }}>terminal</span>
+            </div>
+            <span style={{ fontFamily: "'Courier New', monospace", fontSize: 18, fontWeight: 800, letterSpacing: "-0.01em" }}>
+              <span style={{ color: "#A78BFA" }}>Ko</span><span style={{ color: "#00D9C0" }}>dly</span>
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-surface-container-high rounded-full border border-white/5">
-              <span className="text-label-sm font-label-sm text-on-surface">
+          {/* XP + Streak pills */}
+          <div className="flex items-center gap-2">
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", background: "rgba(0,217,192,0.10)", border: "1px solid rgba(0,217,192,0.22)", borderRadius: 99 }}>
+              <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700, color: "#00D9C0", letterSpacing: "0.06em" }}>
                 {xp.toLocaleString()} XP
               </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", background: "rgba(255,184,0,0.10)", border: "1px solid rgba(255,184,0,0.22)", borderRadius: 99 }}>
+              <span style={{ fontSize: 12 }}>🔥</span>
+              <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700, color: "#FFB800", letterSpacing: "0.06em" }}>{streak}d</span>
             </div>
           </div>
         </div>
@@ -308,123 +310,228 @@ export default function Home() {
             {/* 1. MODULES CATALOG HOME PAGE VIEW */}
             {activeLessonId === null ? (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-                
-                {/* Left Column: Learning Syllabus modules list */}
-                <div className="md:col-span-8 space-y-6">
-                  
-                  <section className="space-y-1">
-                    <span className="text-label-sm font-label-sm text-primary uppercase tracking-widest">
-                      Chapters
-                    </span>
-                    <h1 className="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">
+
+                {/* Left: Module cards with tree-nested lessons */}
+                <div className="md:col-span-8 space-y-8">
+
+                  {/* Page heading */}
+                  <div style={{ paddingTop: 2 }}>
+                    <p style={{ fontFamily: "'Courier New', monospace", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#00D9C0", fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ display: "inline-block", width: 20, height: 1, background: "#00D9C0", verticalAlign: "middle" }}></span>
+                      C Programming · Beginner Path
+                    </p>
+                    <h1 style={{ fontSize: 26, fontWeight: 800, color: "#E9EDF8", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
                       Learning Syllabus
                     </h1>
-                  </section>
+                    <p style={{ fontSize: 13, color: "#7B85A8", marginTop: 6, lineHeight: 1.6 }}>
+                      Complete lessons in order. Each concept unlocks the next.
+                    </p>
+                  </div>
 
-                  {/* Modules map list */}
-                  <div className="space-y-6">
-                    {modules.map((mod) => {
-                      // Module 2 unlocks after lesson_1_3 is completed
+                  {/* Module cards */}
+                  {(() => {
+                    const modMeta: Record<string, { icon: string; color: string; desc: string }> = {
+                      mod_1: { icon: "📦", color: "#00D9C0", desc: "Variables, types, and I/O — everything a program needs to remember and communicate." },
+                      mod_2: { icon: "🚦", color: "#A78BFA", desc: "Make programs smart — branch on conditions with if, else if, and switch." },
+                    };
+                    return modules.map((mod, modIdx) => {
+                      const meta = modMeta[mod.id] ?? { icon: "📋", color: "#5EEAD4", desc: "" };
                       const isModLocked = mod.locked &&
                         !(mod.id === "mod_2" ? unlockedLessons.has("lesson_2_1") : unlockedLessons.has("lesson_1_2"));
+                      const completedCount = mod.lessons.filter(l => completedLessons.has(l.id)).length;
 
                       return (
-                        <section key={mod.id} className="space-y-3">
-                          <h2 className="text-xs font-mono font-bold text-outline-variant uppercase tracking-wider flex items-center gap-1.5">
-                            {isModLocked ? (
-                              <span className="material-symbols-outlined text-[16px] text-outline-variant/60">lock</span>
-                            ) : (
-                              <span className="material-symbols-outlined text-[16px] text-primary">circle</span>
-                            )}
-                            {mod.title}
-                          </h2>
+                        <div
+                          key={mod.id}
+                          style={{
+                            background: "rgba(24,29,46,0.88)",
+                            border: `1px solid ${isModLocked ? "var(--border)" : `${meta.color}28`}`,
+                            borderRadius: 14,
+                            overflow: "hidden",
+                            opacity: isModLocked ? 0.55 : 1,
+                            backdropFilter: "blur(14px)",
+                          }}
+                        >
+                          {/* Module header */}
+                          <div style={{ padding: "18px 20px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: 14 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 12, background: `${meta.color}18`, border: `1px solid ${meta.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                              {isModLocked ? "🔒" : meta.icon}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <p style={{ fontFamily: "'Courier New', monospace", fontSize: 9.5, letterSpacing: "0.15em", textTransform: "uppercase", color: isModLocked ? "#4A5070" : meta.color, fontWeight: 700, marginBottom: 3 }}>
+                                Module {String(modIdx + 1).padStart(2, "0")} · {isModLocked ? "Locked" : `${completedCount}/${mod.lessons.length} complete`}
+                              </p>
+                              <h2 style={{ fontSize: 16, fontWeight: 800, color: isModLocked ? "#4A5070" : "#E9EDF8", letterSpacing: "-0.01em", lineHeight: 1.25 }}>
+                                {mod.title.replace(/^Module \d+: /, "")}
+                              </h2>
+                              <p style={{ fontSize: 12.5, color: "#7B85A8", marginTop: 4, lineHeight: 1.55 }}>{meta.desc}</p>
+                            </div>
+                          </div>
 
-                          <div className="space-y-2.5">
-                            {mod.lessons.map((lesson) => {
+                          {/* Tree-nested lessons */}
+                          <div style={{ padding: "8px 20px 12px 20px", position: "relative" }}>
+                            {/* Vertical connector line */}
+                            <div style={{ position: "absolute", left: 36, top: 16, bottom: 20, width: 1, background: "var(--border)" }} />
+                            {mod.lessons.map((lesson, lessonIdx) => {
+                              const isLast = lessonIdx === mod.lessons.length - 1;
                               const isLessonUnlocked = unlockedLessons.has(lesson.id) || lesson.id === "lesson_1_1";
                               const isCompleted = completedLessons.has(lesson.id);
+                              const sectionCount = (LESSON_SECTIONS[lesson.id] || []).length;
 
                               return (
                                 <div
                                   key={lesson.id}
-                                  onClick={() => isLessonUnlocked && handleOpenLesson(lesson.id)}
-                                  className={`glass-panel p-4 rounded-xl flex items-center justify-between border transition-all ${
-                                    isLessonUnlocked
-                                      ? "cursor-pointer border-white/5 hover:border-primary/30 hover:bg-white/10 active:scale-[0.99]"
-                                      : "opacity-45 cursor-not-allowed border-white/5 bg-white/0"
-                                  }`}
+                                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", position: "relative" }}
                                 >
-                                  <div className="space-y-1">
-                                    <span className="text-[10px] font-mono text-outline-variant">
-                                      {isLessonUnlocked
-                                        ? lesson.id.replace("lesson_", "MODULE ").replace("_", " — LESSON ").toUpperCase()
-                                        : "LOCKED"}
-                                    </span>
-                                    <h3 className="text-xs font-bold text-on-surface text-left">
-                                      {lesson.title}
-                                    </h3>
+                                  {/* Tree dot */}
+                                  <div style={{ width: 32, flexShrink: 0, display: "flex", justifyContent: "center", position: "relative", zIndex: 1 }}>
+                                    <div style={{
+                                      width: 10, height: 10, borderRadius: 99,
+                                      background: isCompleted ? "#00D9C0" : isLessonUnlocked ? `${meta.color}80` : "var(--border)",
+                                      border: `2px solid ${isCompleted ? "#00D9C0" : isLessonUnlocked ? meta.color : "#4A5070"}`,
+                                    }} />
                                   </div>
-
-                                  {/* Status icons */}
-                                  <div className="flex items-center gap-2">
-                                    {isCompleted ? (
-                                      <span className="material-symbols-outlined text-primary text-[20px]">
-                                        verified
-                                      </span>
-                                    ) : isLessonUnlocked ? (
-                                      <span className="material-symbols-outlined text-primary-fixed-dim text-[20px] animate-pulse">
-                                        play_circle
-                                      </span>
-                                    ) : (
-                                      <span className="material-symbols-outlined text-outline-variant/50 text-[18px]">
-                                        lock
-                                      </span>
-                                    )}
+                                  {/* Connector arrow symbol */}
+                                  <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, color: "#4A5070", flexShrink: 0, userSelect: "none" }}>
+                                    {isLast ? "└─" : "├─"}
+                                  </span>
+                                  {/* Lesson card */}
+                                  <div
+                                    onClick={() => isLessonUnlocked && handleOpenLesson(lesson.id)}
+                                    style={{
+                                      flex: 1,
+                                      background: isLessonUnlocked ? "rgba(255,255,255,0.03)" : "transparent",
+                                      border: `1px solid ${isCompleted ? "rgba(0,217,192,0.30)" : isLessonUnlocked ? "rgba(255,255,255,0.08)" : "transparent"}`,
+                                      borderRadius: 9,
+                                      padding: "9px 13px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                      gap: 8,
+                                      cursor: isLessonUnlocked ? "pointer" : "default",
+                                      opacity: isLessonUnlocked ? 1 : 0.4,
+                                      transition: "all 0.16s ease",
+                                    }}
+                                    onMouseEnter={e => {
+                                      if (isLessonUnlocked) {
+                                        (e.currentTarget as HTMLDivElement).style.background = "rgba(0,217,192,0.06)";
+                                        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,217,192,0.25)";
+                                      }
+                                    }}
+                                    onMouseLeave={e => {
+                                      (e.currentTarget as HTMLDivElement).style.background = isLessonUnlocked ? "rgba(255,255,255,0.03)" : "transparent";
+                                      (e.currentTarget as HTMLDivElement).style.borderColor = isCompleted ? "rgba(0,217,192,0.30)" : isLessonUnlocked ? "rgba(255,255,255,0.08)" : "transparent";
+                                    }}
+                                  >
+                                    <div>
+                                      <p style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: isLessonUnlocked ? meta.color : "#4A5070", fontWeight: 700, marginBottom: 3 }}>
+                                        {isLessonUnlocked ? `Lesson ${lessonIdx + 1}` : "Locked"}{isLessonUnlocked && sectionCount > 0 ? ` · ${sectionCount} sections` : ""}
+                                      </p>
+                                      <p style={{ fontSize: 13, fontWeight: 600, color: isLessonUnlocked ? "#E9EDF8" : "#7B85A8", lineHeight: 1.3 }}>
+                                        {lesson.title.replace(/^Lesson \d+: /, "")}
+                                      </p>
+                                    </div>
+                                    <div style={{ flexShrink: 0 }}>
+                                      {isCompleted ? (
+                                        <div style={{ width: 26, height: 26, borderRadius: 99, background: "rgba(0,217,192,0.15)", border: "1px solid rgba(0,217,192,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                          <span className="material-symbols-outlined" style={{ fontSize: 14, color: "#00D9C0" }}>check</span>
+                                        </div>
+                                      ) : isLessonUnlocked ? (
+                                        <div style={{ width: 26, height: 26, borderRadius: 99, background: `${meta.color}14`, border: `1px solid ${meta.color}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                          <span className="material-symbols-outlined" style={{ fontSize: 14, color: meta.color }}>play_arrow</span>
+                                        </div>
+                                      ) : (
+                                        <span className="material-symbols-outlined" style={{ fontSize: 15, color: "#4A5070" }}>lock</span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
-                        </section>
+                        </div>
                       );
-                    })}
-                  </div>
+                    });
+                  })()}
 
+                  {/* Coming soon modules (grayed) */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+                    {[
+                      { icon: "🔁", title: "Loops", num: "04", color: "#5EEAD4" },
+                      { icon: "📋", title: "Functions", num: "05", color: "#38BDF8" },
+                      { icon: "📚", title: "Arrays & Strings", num: "06–07", color: "#FFB800" },
+                      { icon: "📌", title: "Pointers & Structs", num: "08–09", color: "#FF5F6E" },
+                    ].map(item => (
+                      <div key={item.num} style={{ background: "rgba(13,17,23,0.70)", border: "1px solid var(--border)", borderRadius: 11, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, opacity: 0.45 }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 9, background: `${item.color}0F`, border: `1px solid ${item.color}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
+                          {item.icon}
+                        </div>
+                        <div>
+                          <p style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#4A5070", fontWeight: 700, marginBottom: 2 }}>Module {item.num}</p>
+                          <p style={{ fontSize: 12.5, fontWeight: 700, color: "#4A5070" }}>{item.title}</p>
+                        </div>
+                        <div style={{ marginLeft: "auto" }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 14, color: "#4A5070" }}>lock</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Right Column: Profile & Stats Sidebar (Visible on desktop) */}
-                <div className="hidden md:block md:col-span-4 space-y-6">
-                  
-                  {/* Profile & XP Status Card */}
-                  <div className="glass-panel p-4 rounded-xl space-y-4">
-                    <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px]">account_circle</span>
-                      Progress Panel
-                    </h3>
-                    <div className="space-y-2.5 text-xs font-mono text-outline-variant">
-                      <div className="flex justify-between items-center">
-                        <span>Current Rank:</span>
-                        <span className="text-primary-fixed-dim font-bold">C Apprentice</span>
+                {/* Right: Sidebar */}
+                <div className="hidden md:block md:col-span-4 space-y-4">
+
+                  {/* Progress card */}
+                  <div style={{ background: "rgba(24,29,46,0.88)", border: "1px solid var(--border)", borderRadius: 14, padding: "18px 18px 16px", backdropFilter: "blur(12px)" }}>
+                    <p style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "#A78BFA", fontWeight: 700, marginBottom: 16 }}>
+                      Your Progress
+                    </p>
+                    {[
+                      { label: "Rank", value: "C Apprentice", color: "#00D9C0" },
+                      { label: "XP Earned", value: `${xp.toLocaleString()} XP`, color: "#00D9C0" },
+                      { label: "Streak", value: `${streak} Days 🔥`, color: "#FFB800" },
+                      { label: "Completed", value: `${completedLessons.size} Lessons`, color: "#5EEAD4" },
+                    ].map(row => (
+                      <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
+                        <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, color: "#7B85A8" }}>{row.label}</span>
+                        <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700, color: row.color }}>{row.value}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span>XP Earned:</span>
-                        <span className="text-primary-fixed-dim font-bold">{xp.toLocaleString()} XP</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Daily Streak:</span>
-                        <span className="text-secondary font-bold">{streak} Days 🔥</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
-                  {/* Syllabus Tips Card */}
-                  <div className="glass-panel p-4 rounded-xl space-y-2">
-                    <h3 className="text-xs font-mono font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px]">lightbulb</span>
-                      Programming Tip
-                    </h3>
-                    <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                      In C programming, declarations reserve exact bytes in RAM (e.g. 4 bytes for an <code className="text-secondary font-bold">int</code>, 1 byte for a <code className="text-secondary font-bold">char</code>). Always use appropriate types to save system memory!
+                  {/* Learning path preview */}
+                  <div style={{ background: "rgba(24,29,46,0.88)", border: "1px solid var(--border)", borderRadius: 14, padding: "16px 18px", backdropFilter: "blur(12px)" }}>
+                    <p style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "#00D9C0", fontWeight: 700, marginBottom: 14 }}>
+                      Learning Path
+                    </p>
+                    {[
+                      { phase: "Phase 1", label: "Store, type & talk", color: "#00D9C0", done: true },
+                      { phase: "Phase 2", label: "Operate on data", color: "#FFB800", done: false },
+                      { phase: "Phase 3", label: "Branch & loop", color: "#A78BFA", done: false },
+                      { phase: "Phase 4", label: "Organise & reuse", color: "#5EEAD4", done: false },
+                      { phase: "Phase 5", label: "Pointers & memory", color: "#FF5F6E", done: false },
+                      { phase: "Phase 6", label: "Algorithms & projects", color: "#38BDF8", done: false },
+                    ].map((item, i, arr) => (
+                      <div key={item.phase} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, width: 16 }}>
+                          <div style={{ width: 10, height: 10, borderRadius: 99, background: item.done ? item.color : "var(--border)", border: `2px solid ${item.done ? item.color : "#4A5070"}`, marginTop: 2 }} />
+                          {i < arr.length - 1 && <div style={{ width: 1, flex: 1, background: "var(--border)", minHeight: 14, marginTop: 2 }} />}
+                        </div>
+                        <div style={{ paddingBottom: i < arr.length - 1 ? 12 : 0 }}>
+                          <p style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: "0.12em", color: item.done ? item.color : "#4A5070", fontWeight: 700, textTransform: "uppercase" }}>{item.phase}</p>
+                          <p style={{ fontSize: 12, color: item.done ? "#E9EDF8" : "#4A5070" }}>{item.label}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tip card */}
+                  <div style={{ background: "rgba(255,184,0,0.06)", border: "1px solid rgba(255,184,0,0.18)", borderRadius: 14, padding: "14px 16px" }}>
+                    <p style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#FFB800", fontWeight: 700, marginBottom: 8 }}>
+                      💡 Tip
+                    </p>
+                    <p style={{ fontSize: 12, color: "#7B85A8", lineHeight: 1.65 }}>
+                      Every section follows the same pattern: <span style={{ color: "#FFB800" }}>Analogy</span> → <span style={{ color: "#00D9C0" }}>Interact</span> → <span style={{ color: "#A78BFA" }}>Concept Lock</span> → <span style={{ color: "#00D9C0" }}>Code</span>. Understand the concept before you see the syntax.
                     </p>
                   </div>
 
@@ -442,13 +549,15 @@ export default function Home() {
                   <div className="max-w-3xl mx-auto w-full space-y-6">
                     
                     {/* Lesson Header Navigation */}
-                    <div className="glass-panel p-4 rounded-2xl border border-white/5 space-y-3">
+                    <div style={{ background: "rgba(24,29,46,0.90)", border: "1px solid var(--border)", borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(14px)", display: "flex", flexDirection: "column", gap: 12 }}>
                       <div className="flex items-center justify-between">
                         <button
                           onClick={() => setActiveLessonId(null)}
-                          className="flex items-center gap-1 text-xs font-mono font-bold text-on-surface-variant hover:text-primary cursor-pointer active:scale-95 transition-all"
+                          style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700, color: "#7B85A8", letterSpacing: "0.06em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
+                          onMouseEnter={e => (e.currentTarget.style.color = "#00D9C0")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "#7B85A8")}
                         >
-                          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>arrow_back</span>
                           Syllabus
                         </button>
                         
@@ -870,79 +979,38 @@ export default function Home() {
       )}
 
       {/* BottomNavBar */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 border-t border-white/10 bg-surface-container-lowest/90 backdrop-blur-lg">
+      <nav className="fixed bottom-0 left-0 w-full z-50 glass-panel" style={{ borderTop: "1px solid var(--border)", borderBottom: "none", borderLeft: "none", borderRight: "none" }}>
         <div className="max-w-5xl mx-auto w-full flex justify-around items-center px-4 py-2">
-          <button
-            onClick={() => setActiveTab("learn")}
-            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
-              activeTab === "learn"
-                ? "text-primary-fixed-dim font-bold bg-primary/10"
-                : "text-on-surface-variant hover:text-primary"
-            }`}
-          >
-            <span
-              className="material-symbols-outlined"
-              data-icon="school"
-              style={{ fontVariationSettings: `'FILL' ${activeTab === "learn" ? 1 : 0}` }}
-            >
-              school
-            </span>
-            <span className="text-label-sm font-label-sm">Learn</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("practice")}
-            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
-              activeTab === "practice"
-                ? "text-secondary font-bold bg-secondary-container/20"
-                : "text-on-surface-variant hover:text-secondary"
-            }`}
-          >
-            <span
-              className="material-symbols-outlined"
-              data-icon="extension"
-              style={{ fontVariationSettings: `'FILL' ${activeTab === "practice" ? 1 : 0}` }}
-            >
-              extension
-            </span>
-            <span className="text-label-sm font-label-sm">Practice</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("code")}
-            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
-              activeTab === "code"
-                ? "text-primary-fixed-dim font-bold bg-primary/10"
-                : "text-on-surface-variant hover:text-primary"
-            }`}
-          >
-            <span
-              className="material-symbols-outlined"
-              data-icon="keyboard"
-              style={{ fontVariationSettings: `'FILL' ${activeTab === "code" ? 1 : 0}` }}
-            >
-              keyboard
-            </span>
-            <span className="text-label-sm font-label-sm">Code</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("stats")}
-            className={`flex flex-col items-center justify-center rounded-xl px-4 py-1 transition-all ${
-              activeTab === "stats"
-                ? "text-tertiary font-bold bg-tertiary/10"
-                : "text-on-surface-variant hover:text-tertiary"
-            }`}
-          >
-            <span
-              className="material-symbols-outlined"
-              data-icon="insights"
-              style={{ fontVariationSettings: `'FILL' ${activeTab === "stats" ? 1 : 0}` }}
-            >
-              insights
-            </span>
-            <span className="text-label-sm font-label-sm">Stats</span>
-          </button>
+          {([
+            { tab: "learn",    icon: "school",    label: "Learn",    color: "#00D9C0" },
+            { tab: "practice", icon: "extension", label: "Practice", color: "#A78BFA" },
+            { tab: "code",     icon: "keyboard",  label: "Code",     color: "#00D9C0" },
+            { tab: "stats",    icon: "insights",  label: "Stats",    color: "#5EEAD4" },
+          ] as const).map(({ tab, icon, label, color }) => {
+            const active = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                  padding: "6px 16px", borderRadius: 12,
+                  background: active ? `${color}14` : "transparent",
+                  border: "none", cursor: "pointer", transition: "all 0.18s ease",
+                }}
+              >
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 22, color: active ? color : "#4A5070", fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
+                >
+                  {icon}
+                </span>
+                <span style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: "0.10em", textTransform: "uppercase", fontWeight: 700, color: active ? color : "#4A5070" }}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </nav>
     </>
